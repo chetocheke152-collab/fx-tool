@@ -43,10 +43,11 @@ padding: 13px 14px;
 color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
 font-size: 16px;
-font-weight: 500;
+font-weight: 600;
 outline: none;
 -webkit-appearance: none;
 appearance: none;
+-webkit-font-smoothing: antialiased;
 }
 input:focus, select:focus { border-color: #2563EB; background: #fff; }
 
@@ -144,64 +145,86 @@ border-bottom: 1px solid #F1F5F9;
 flex-shrink: 0;
 }
 
-/* ── Search in sheet ── */
-.sheet-search {
-padding: 10px 16px;
-border-bottom: 1px solid #F1F5F9;
+/* ── Drum picker ── */
+.drum-tabs {
+display: flex;
+overflow-x: auto;
+scrollbar-width: none;
+border-bottom: 1.5px solid #E2E8F0;
 flex-shrink: 0;
 }
-.sheet-search input {
-width: 100%;
-background: #F4F6F8;
-border: 2px solid #E2E8F0;
-border-radius: 8px;
-padding: 9px 14px;
-font-size: 15px;
-color: #1E293B;
-outline: none;
-}
-.sheet-search input:focus { border-color: #2563EB; }
-
-/* ── Picker list ── */
-.picker-list {
-overflow-y: auto;
-flex: 1;
--webkit-overflow-scrolling: touch;
-}
-.picker-grp {
-padding: 8px 16px 4px;
-font-size: 9px;
+.drum-tabs::-webkit-scrollbar { display: none; }
+.drum-tab {
+padding: 10px 14px;
+font-size: 11px;
 font-weight: 700;
-letter-spacing: 1.5px;
 color: #94A3B8;
-text-transform: uppercase;
-background: #F8FAFC;
-position: sticky;
-top: 0;
+cursor: pointer;
+white-space: nowrap;
+border-bottom: 2.5px solid transparent;
+margin-bottom: -1.5px;
+transition: color 0.15s, border-color 0.15s;
+flex-shrink: 0;
 }
+.drum-tab.active { color: #2563EB; border-bottom-color: #2563EB; }
+
+.drum-wrap {
+position: relative;
+height: 210px;
+overflow: hidden;
+flex-shrink: 0;
+}
+.drum-wrap::before,
+.drum-wrap::after {
+content: ‘’;
+position: absolute;
+left: 0; right: 0;
+height: 80px;
+z-index: 2;
+pointer-events: none;
+}
+.drum-wrap::before {
+top: 0;
+background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0));
+}
+.drum-wrap::after {
+bottom: 0;
+background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
+}
+.drum-line {
+position: absolute;
+left: 20px; right: 20px;
+top: 50%;
+height: 44px;
+transform: translateY(-50%);
+border-top: 1.5px solid #CBD5E1;
+border-bottom: 1.5px solid #CBD5E1;
+pointer-events: none;
+z-index: 1;
+}
+.drum-scroll {
+height: 210px;
+overflow-y: scroll;
+scroll-snap-type: y mandatory;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+.drum-scroll::-webkit-scrollbar { display: none; }
+.drum-pad { height: 83px; flex-shrink: 0; }
 .picker-item {
 display: flex;
 align-items: center;
-justify-content: space-between;
-padding: 14px 18px;
-font-size: 16px;
-font-weight: 600;
-color: #1E293B;
+justify-content: center;
+height: 44px;
+font-size: 17px;
+font-weight: 500;
+color: #B0BEC5;
 cursor: pointer;
-border-bottom: 1px solid #F8FAFC;
-transition: background 0.1s;
+scroll-snap-align: center;
+transition: color 0.2s, font-weight 0.2s;
+user-select: none;
 }
-.picker-item:active { background: #F1F5F9; }
-.picker-item.sel {
-color: #2563EB;
-background: #EFF6FF;
-}
-.picker-item.sel::after {
-content: ‘✓’;
-font-size: 16px;
-color: #2563EB;
-font-weight: 700;
-}
+.picker-item.center { color: #1E293B; font-weight: 700; font-size: 19px; }
 .picker-item.hide { display: none; }
 
 /* ── Quick pips ── */
@@ -348,10 +371,14 @@ transition: all 0.15s;
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">通貨ペアを選択</div>
-  <div class="sheet-search">
-    <input type="text" id="sheet-search" placeholder="検索..." oninput="filterSheet()" autocomplete="off">
+  <div class="drum-tabs" id="drum-tabs"></div>
+  <div class="drum-wrap">
+    <div class="drum-line"></div>
+    <div class="drum-scroll" id="drum-scroll">
+      <div class="drum-pad"></div>
+      <div class="drum-pad"></div>
+    </div>
   </div>
-  <div class="picker-list" id="picker-list"></div>
 </div>
     <div class="field">
       <span class="lbl">SL pips 数</span>
@@ -603,6 +630,132 @@ document.getElementById('equity').addEventListener('change', () => {
 document.getElementById('risk').addEventListener('change', () => {
   localStorage.setItem('ps_risk', document.getElementById('risk').value);
 });
+
+// ── ドラムピッカー構築 ──
+let currentGroup = 0;
+const drumScroll = document.getElementById('drum-scroll');
+const drumTabs = document.getElementById('drum-tabs');
+
+// タブ構築
+GROUPS.forEach((g, gi) => {
+  const pairs = PAIRS.filter(p => g.types.includes(p.type));
+  if (!pairs.length) return;
+  const tab = document.createElement('div');
+  tab.className = 'drum-tab' + (gi === 0 ? ' active' : '');
+  tab.textContent = g.lbl;
+  tab.onclick = () => switchGroup(gi);
+  drumTabs.appendChild(tab);
+});
+
+function buildDrum(groupIndex) {
+  // 既存のpicker-itemを削除（drum-padは残す）
+  [...drumScroll.querySelectorAll('.picker-item')].forEach(o => o.remove());
+
+  const g = GROUPS[groupIndex];
+  const pairs = PAIRS.filter(p => g.types.includes(p.type));
+  const pads = drumScroll.querySelectorAll('.drum-pad');
+
+  pairs.forEach(p => {
+    const o = document.createElement('div');
+    o.className = 'picker-item';
+    o.textContent = p.pair;
+    o.dataset.v = p.pair;
+    pads[1].before(o);
+  });
+
+  // 現在選択中のペアにスクロール
+  const current = document.getElementById('pair').value;
+  const items = [...drumScroll.querySelectorAll('.picker-item')];
+  const idx = items.findIndex(o => o.dataset.v === current);
+  if (idx >= 0) {
+    drumScroll.scrollTop = idx * 44;
+  } else {
+    drumScroll.scrollTop = 0;
+  }
+  updateCenter();
+}
+
+function switchGroup(gi) {
+  currentGroup = gi;
+  document.querySelectorAll('.drum-tab').forEach((t, i) => t.classList.toggle('active', i === gi));
+  buildDrum(gi);
+}
+
+let lastCenterIndex = -1;
+
+function playTick() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.012, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = 2500;
+    f.Q.value = 1.2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.35, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.012);
+    src.connect(f); f.connect(g); g.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+function updateCenter() {
+  const scrollTop = drumScroll.scrollTop;
+  const centerIndex = Math.round(scrollTop / 44);
+  const items = [...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
+  items.forEach((o, i) => o.classList.toggle('center', i === centerIndex));
+  if (centerIndex !== lastCenterIndex && lastCenterIndex !== -1) {
+    playTick();
+  }
+  lastCenterIndex = centerIndex;
+}
+
+drumScroll.addEventListener('scroll', updateCenter, { passive: true });
+drumScroll.addEventListener('scrollend', () => {
+  const items = [...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
+  const centerIndex = Math.round(drumScroll.scrollTop / 44);
+  const item = items[centerIndex];
+  if (item) pickPair(item.dataset.v, false);
+}, { passive: true });
+
+function openSheet() {
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('sheet-overlay').classList.add('open');
+  // 現在のペアのグループに切り替え
+  const current = document.getElementById('pair').value;
+  if (current) {
+    const p = PAIRS.find(x => x.pair === current);
+    if (p) {
+      const gi = GROUPS.findIndex(g => g.types.includes(p.type));
+      if (gi >= 0) switchGroup(gi);
+      else buildDrum(currentGroup);
+    }
+  } else {
+    buildDrum(currentGroup);
+  }
+}
+
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+
+function pickPair(v, close = true) {
+  document.getElementById('pair').value = v;
+  const btnText = document.getElementById('pair-btn-text');
+  btnText.textContent = v;
+  btnText.classList.remove('pair-btn-placeholder');
+  document.getElementById('pair-btn').classList.add('selected');
+  localStorage.setItem('ps_pair', v);
+  if (close) closeSheet();
+  calc();
+}
 
 fetchRates();
 calc();
