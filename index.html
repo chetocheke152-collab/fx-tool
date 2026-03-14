@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FX ポジションサイズ計算</title>
+<title>Position Sizer</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -341,8 +341,8 @@ transition: all 0.15s;
 <body>
 
 <div class="header">
-  <div class="header-sub">Exness Zero · Position Size</div>
-  <div class="header-title">FX <span>LOT</span> 計算</div>
+  <div class="header-sub">Exness Zero · Lot Calculator</div>
+  <div class="header-title">Position <span>Sizer</span></div>
 </div>
 
 <!-- 口座設定 -->
@@ -356,7 +356,12 @@ transition: all 0.15s;
     </div>
     <div class="field" style="margin-top:16px;">
       <span class="label">リスク %</span>
-      <input id="risk" type="number" value="0.02" step="0.005" oninput="calc()" style="max-width:60%;">
+      <select id="risk" onchange="calc()" style="max-width:60%;">
+        <option value="0.01">1%</option>
+        <option value="0.02" selected>2%</option>
+        <option value="0.03">3%</option>
+        <option value="0.04">4%</option>
+      </select>
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="label">USD/JPY レート</span>
@@ -466,6 +471,7 @@ const PAIRS = [
   { pair:'GBP/CAD', fee:3.5,   type:'CAD' },
   { pair:'GBP/CHF', fee:3.5,   type:'CHF' },
   { pair:'EUR/GBP', fee:3.5,   type:'GBP' },
+  { pair:'XAU/USD', fee:8.0,   type:'XAU' },
 ];
 
 // クロスレート（Frankfurter APIで取得・JPY建て）
@@ -552,6 +558,7 @@ const GROUPS = [
   { label: '── AUD建て ──', types: ['AUD'] },
   { label: '── CAD建て ──', types: ['CAD'] },
   { label: '── GBP建て ──', types: ['GBP'] },
+  { label: '── 貴金属 ──',  types: ['XAU'] },
 ];
 
 const sel = document.getElementById('pair');
@@ -578,6 +585,7 @@ document.getElementById('rate').addEventListener('input', function() {
 
 function get1PipValue(type, rate) {
   if (type === 'JPY') return 1000;
+  if (type === 'XAU') return (CROSS_RATE['USD'] || rate); // 1pip=$1×rate
   if (type === 'USD') return (CROSS_RATE['USD'] || rate) * 10;
   return (CROSS_RATE[type] || rate) * 10;
 }
