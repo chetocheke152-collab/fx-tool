@@ -140,6 +140,8 @@ opacity: 0;
 width: 0;
 height: 0;
 position: absolute;
+-webkit-appearance: none;
+appearance: none;
 }
 .slider {
 position: absolute;
@@ -180,7 +182,7 @@ border-radius: 10px;
 border: 2px solid #BFDBFE;
 }
 .rate-label { font-size: 13px; font-weight: 700; color: #2563EB; flex: 1; }
-.rate-value-display { font-size: 20px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
+.rate-value-display { font-size: 15px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
 .rate-input-small {
 background: #FFFFFF;
 border: 2px solid #BFDBFE;
@@ -469,6 +471,7 @@ transition: all 0.15s;
       <span class="label">USD/JPY レート</span>
       <div class="rate-display">
         <span class="rate-label">USD/JPY</span>
+        <span class="rate-value-display" id="rate-display">取得中...</span>
         <input type="hidden" id="rate" value="155.0">
       </div>
       <div id="rate-status" style="font-size:10px;color:var(--gray);margin-top:5px;letter-spacing:0.5px;">取得中...</div>
