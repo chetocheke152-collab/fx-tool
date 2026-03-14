@@ -77,9 +77,8 @@ border: 2px solid #BFDBFE;
 .rate-val { font-size: 16px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
 .rate-status { font-size: 10px; color: #94A3B8; margin-top: 4px; letter-spacing: 0.5px; }
 
-/* ── Pair searchable dropdown ── */
-.pair-wrap { position: relative; width: 100%; }
-.pair-input {
+/* ── Pair picker button ── */
+.pair-btn {
 width: 100%;
 background: #F4F6F8;
 border: 2px solid #CBD5E1;
@@ -89,34 +88,121 @@ color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
 font-size: 16px;
 font-weight: 500;
-outline: none;
--webkit-appearance: none;
+text-align: left;
 cursor: pointer;
+-webkit-appearance: none;
 background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
 background-repeat: no-repeat;
 background-position: right 14px center;
 background-color: #F4F6F8;
+transition: border-color 0.15s;
 }
-.pair-input:focus { border-color: #2563EB; background-color: #fff; }
-.pair-drop {
+.pair-btn.selected { color: #1E293B; font-weight: 700; border-color: #2563EB; background-color: #fff; }
+.pair-btn-placeholder { color: #94A3B8; }
+
+/* ── Bottom sheet overlay ── */
+.sheet-overlay {
 display: none;
-position: absolute;
-top: calc(100% + 4px);
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.5);
+z-index: 400;
+-webkit-backdrop-filter: blur(2px);
+backdrop-filter: blur(2px);
+}
+.sheet-overlay.open { display: block; }
+
+/* ── Bottom sheet ── */
+.sheet {
+position: fixed;
+bottom: -100%;
 left: 0; right: 0;
 background: #fff;
-border: 2px solid #CBD5E1;
-border-radius: 10px;
-max-height: 220px;
-overflow-y: auto;
-z-index: 300;
-box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+border-radius: 20px 20px 0 0;
+z-index: 500;
+max-height: 75vh;
+display: flex;
+flex-direction: column;
+transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.pair-drop.open { display: block; }
-.pair-grp { padding: 7px 14px 3px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #94A3B8; text-transform: uppercase; background: #F8FAFC; }
-.pair-opt { padding: 11px 16px; font-size: 14px; font-weight: 600; color: #1E293B; cursor: pointer; border-bottom: 1px solid #F1F5F9; }
-.pair-opt:last-child { border-bottom: none; }
-.pair-opt:active, .pair-opt.sel { background: #DBEAFE; color: #2563EB; }
-.pair-opt.hide { display: none; }
+.sheet.open { bottom: 0; }
+.sheet-handle {
+width: 36px; height: 4px;
+background: #CBD5E1;
+border-radius: 2px;
+margin: 12px auto 0;
+flex-shrink: 0;
+}
+.sheet-title {
+padding: 12px 18px 10px;
+font-size: 13px;
+font-weight: 700;
+color: #64748B;
+letter-spacing: 1px;
+text-transform: uppercase;
+border-bottom: 1px solid #F1F5F9;
+flex-shrink: 0;
+}
+
+/* ── Search in sheet ── */
+.sheet-search {
+padding: 10px 16px;
+border-bottom: 1px solid #F1F5F9;
+flex-shrink: 0;
+}
+.sheet-search input {
+width: 100%;
+background: #F4F6F8;
+border: 2px solid #E2E8F0;
+border-radius: 8px;
+padding: 9px 14px;
+font-size: 15px;
+color: #1E293B;
+outline: none;
+}
+.sheet-search input:focus { border-color: #2563EB; }
+
+/* ── Picker list ── */
+.picker-list {
+overflow-y: auto;
+flex: 1;
+-webkit-overflow-scrolling: touch;
+}
+.picker-grp {
+padding: 8px 16px 4px;
+font-size: 9px;
+font-weight: 700;
+letter-spacing: 1.5px;
+color: #94A3B8;
+text-transform: uppercase;
+background: #F8FAFC;
+position: sticky;
+top: 0;
+}
+.picker-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px 18px;
+font-size: 16px;
+font-weight: 600;
+color: #1E293B;
+cursor: pointer;
+border-bottom: 1px solid #F8FAFC;
+transition: background 0.1s;
+}
+.picker-item:active { background: #F1F5F9; }
+.picker-item.sel {
+color: #2563EB;
+background: #EFF6FF;
+}
+.picker-item.sel::after {
+content: ‘✓’;
+font-size: 16px;
+color: #2563EB;
+font-weight: 700;
+}
+.picker-item.hide { display: none; }
 
 /* ── Quick pips ── */
 .qbtns { display: flex; gap: 6px; margin-top: 8px; }
@@ -250,13 +336,23 @@ transition: all 0.15s;
   <div class="card-body">
     <div class="field">
       <span class="lbl">通貨ペア</span>
-      <div class="pair-wrap">
-        <input class="pair-input" id="pair-input" placeholder="検索または選択..." autocomplete="off"
-          onclick="openDrop()" oninput="filterDrop()">
-        <input type="hidden" id="pair" value="">
-        <div class="pair-drop" id="pair-drop"></div>
-      </div>
+      <button class="pair-btn" id="pair-btn" onclick="openSheet()">
+        <span id="pair-btn-text" class="pair-btn-placeholder">選択してください</span>
+      </button>
+      <input type="hidden" id="pair" value="">
     </div>
+
+<!-- Bottom sheet -->
+
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">通貨ペアを選択</div>
+  <div class="sheet-search">
+    <input type="text" id="sheet-search" placeholder="検索..." oninput="filterSheet()" autocomplete="off">
+  </div>
+  <div class="picker-list" id="picker-list"></div>
+</div>
     <div class="field">
       <span class="lbl">SL pips 数</span>
       <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
@@ -350,67 +446,7 @@ const GROUPS = [
 // レート（APIで上書き）
 const RATE = { USD:155, AUD:101, NZD:91, CAD:112, CHF:171, GBP:196 };
 
-// ── ドロップダウン構築 ──
-const drop = document.getElementById('pair-drop');
-GROUPS.forEach(g => {
-  const pairs = PAIRS.filter(p => g.types.includes(p.type));
-  if (!pairs.length) return;
-  const gl = document.createElement('div');
-  gl.className = 'pair-grp';
-  gl.textContent = g.lbl;
-  drop.appendChild(gl);
-  pairs.forEach(p => {
-    const o = document.createElement('div');
-    o.className = 'pair-opt';
-    o.textContent = p.pair;
-    o.dataset.v = p.pair;
-    o.onclick = () => pickPair(p.pair);
-    drop.appendChild(o);
-  });
-});
 
-function openDrop() {
-  const d = document.getElementById('pair-drop');
-  const inp = document.getElementById('pair-input');
-  if (d.classList.contains('open')) {
-    closeDrop();
-  } else {
-    d.classList.add('open');
-    inp.value = '';
-    inp.focus();
-    filterDrop();
-  }
-}
-
-function closeDrop() {
-  const d = document.getElementById('pair-drop');
-  d.classList.remove('open');
-  const v = document.getElementById('pair').value;
-  document.getElementById('pair-input').value = v || '';
-}
-
-function filterDrop() {
-  const q = document.getElementById('pair-input').value.toUpperCase();
-  document.querySelectorAll('.pair-opt').forEach(o => {
-    o.classList.toggle('hide', !!q && !o.dataset.v.includes(q));
-  });
-}
-
-function pickPair(v) {
-  document.getElementById('pair').value = v;
-  document.getElementById('pair-input').value = v;
-  document.getElementById('pair-drop').classList.remove('open');
-  document.querySelectorAll('.pair-opt').forEach(o => {
-    o.classList.toggle('sel', o.dataset.v === v);
-    o.classList.remove('hide');
-  });
-  localStorage.setItem('ps_pair', v);
-  calc();
-}
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('.pair-wrap')) closeDrop();
-});
 
 // ── レート取得 ──
 async function fetchRates() {
@@ -553,10 +589,10 @@ function setPips(v) { document.getElementById('pips').value = v; calc(); }
   if (rk) document.getElementById('risk').value = rk;
   if (pr) {
     document.getElementById('pair').value = pr;
-    document.getElementById('pair-input').value = pr;
-    document.querySelectorAll('.pair-opt').forEach(o => {
-      o.classList.toggle('sel', o.dataset.v === pr);
-    });
+    const btnText = document.getElementById('pair-btn-text');
+    btnText.textContent = pr;
+    btnText.classList.remove('pair-btn-placeholder');
+    document.getElementById('pair-btn').classList.add('selected');
   }
 })();
 
