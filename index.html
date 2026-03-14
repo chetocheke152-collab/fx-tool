@@ -116,19 +116,11 @@ cursor: pointer;
 
 /* Grid */
 .grid2 {
-display: flex;
-flex-direction: row;
+display: grid;
+grid-template-columns: 3fr 2fr;
 gap: 12px;
 width: 100%;
-align-items: flex-end;
-}
-.grid2 .field:first-child {
-width: 110px;
-flex-shrink: 0;
-}
-.grid2 .field:last-child {
-flex: 1;
-min-width: 0;
+align-items: end;
 }
 .grid2 .field .label {
 display: block;
