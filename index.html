@@ -5,493 +5,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Position Sizer</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:       #F4F6F8;
-  --white:    #FFFFFF;
-  --navy:     #1B2A3B;
-  --navy2:    #243447;
-  --blue:     #2563EB;
-  --blue-l:   #DBEAFE;
-  --green:    #059669;
-  --gray:     #94A3B8;
-  --gray-l:   #E2E8F0;
-  --text:     #1E293B;
-  --text-s:   #64748B;
-  --border:   #CBD5E1;
-}
-
-- { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
-html { font-size: 16px; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body {
 background: #F4F6F8;
 color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
 min-height: 100vh;
-padding: 0 0 80px;
+padding-bottom: 60px;
 }
 
-/* Header */
-.header {
-background: #1B2A3B;
-padding: 24px 20px 20px;
-}
-.header-sub {
-font-size: 11px;
-letter-spacing: 3px;
-color: #94A3B8;
-text-transform: uppercase;
-margin-bottom: 6px;
-}
-.header-title {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 36px;
-letter-spacing: 3px;
-color: #fff;
-line-height: 1;
-}
-.header-title span { color: #60A5FA; }
+/* ── Header ── */
+.hdr { background: #1B2A3B; padding: 20px 20px 18px; }
+.hdr-sub { font-size: 10px; letter-spacing: 3px; color: #94A3B8; text-transform: uppercase; margin-bottom: 4px; }
+.hdr-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 34px; letter-spacing: 3px; color: #fff; line-height: 1; }
+.hdr-title span { color: #60A5FA; }
 
-/* Sections */
-.section {
-margin: 20px 16px 0;
-background: #FFFFFF;
-border-radius: 16px;
-border: 1.5px solid #E2E8F0;
-overflow: hidden;
-}
+/* ── Card ── */
+.card { margin: 16px 16px 0; background: #fff; border-radius: 14px; border: 1.5px solid #E2E8F0; overflow: hidden; }
+.card-hdr { background: #243447; padding: 9px 16px; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #94A3B8; text-transform: uppercase; }
+.card-body { padding: 18px; }
 
-.section-header {
-background: #243447;
-padding: 10px 18px;
-font-size: 11px;
-font-weight: 700;
-letter-spacing: 2px;
-color: #94A3B8;
-text-transform: uppercase;
-}
+/* ── Field ── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field + .field { margin-top: 14px; }
+.lbl { font-size: 11px; font-weight: 700; color: #64748B; letter-spacing: 0.5px; }
 
-.section-body { padding: 20px; box-sizing: border-box; }
-
-/* Field */
-.field { display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
-.field + .field { margin-top: 16px; }
-.label {
-font-size: 12px;
-font-weight: 700;
-color: #64748B;
-letter-spacing: 0.5px;
-}
-
+/* ── Input / Select ── */
 input, select {
+width: 100%;
 background: #F4F6F8;
 border: 2px solid #CBD5E1;
 border-radius: 10px;
-padding: 14px 16px;
+padding: 13px 14px;
 color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-font-size: 17px;
--webkit-text-size-adjust: 100%;
+font-size: 16px;
 font-weight: 500;
-width: 100%;
 outline: none;
 -webkit-appearance: none;
 appearance: none;
 }
-input:focus, select:focus {
-border-color: #2563EB;
-background: #FFFFFF;
-}
+input:focus, select:focus { border-color: #2563EB; background: #fff; }
+
+/* リスク% select */
 select {
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘9’%3E%3Cpath d=‘M1 1l6 6 6-6’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
 background-repeat: no-repeat;
-background-position: right 16px center;
+background-position: right 14px center;
 background-color: #F4F6F8;
-padding-right: 40px;
+padding-right: 36px;
 cursor: pointer;
 }
 
-/* Toggle */
-.toggle-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 16px;
-background: #F4F6F8;
-border-radius: 10px;
-border: 2px solid #CBD5E1;
-gap: 12px;
-}
-.toggle-label { font-size: 15px; font-weight: 600; color: #1E293B; }
-.toggle-sub   { font-size: 12px; color: #64748B; margin-top: 3px; }
+/* 証拠金・リスクの横幅制限 */
+.input-short { max-width: 60%; }
 
-/* オリジナルトグル - ON/OFFテキスト切り替えボタン */
-.toggle-track {
-position: relative;
-width: 72px;
-height: 34px;
-background: #E2E8F0;
-border-radius: 6px;
-cursor: pointer;
-flex-shrink: 0;
-border: 2px solid #CBD5E1;
-display: flex;
-align-items: center;
-justify-content: center;
-transition: all 0.2s ease;
-overflow: hidden;
-}
-.toggle-track.on {
-background: #1E293B;
-border-color: #1E293B;
-}
-.toggle-thumb { display: none; }
-.toggle { display: none; }
-.toggle-text {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 16px;
-letter-spacing: 2px;
-color: #94A3B8;
-pointer-events: none;
-transition: color 0.2s ease;
-}
-.toggle-track.on .toggle-text {
-color: #34D399;
-}
-
-/* Rate row */
-.rate-display {
+/* ── Rate display ── */
+.rate-box {
 display: flex;
 align-items: center;
 gap: 10px;
-padding: 12px 16px;
+padding: 12px 14px;
 background: #DBEAFE;
 border-radius: 10px;
 border: 2px solid #BFDBFE;
 }
-.rate-label { font-size: 13px; font-weight: 700; color: #2563EB; flex: 1; }
-.rate-value-display { font-size: 15px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
-.rate-input-small {
-background: #FFFFFF;
-border: 2px solid #BFDBFE;
-border-radius: 8px;
-padding: 8px 12px;
-font-size: 18px;
-font-weight: 700;
-color: #2563EB;
-width: 120px;
-text-align: right;
-outline: none;
--webkit-appearance: none;
-}
-.rate-input-small:focus { border-color: #2563EB; }
+.rate-lbl { font-size: 12px; font-weight: 700; color: #2563EB; flex: 1; }
+.rate-val { font-size: 16px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
+.rate-status { font-size: 10px; color: #94A3B8; margin-top: 4px; letter-spacing: 0.5px; }
 
-/* Quick pips */
-.quick-btns {
-display: flex;
-flex-wrap: nowrap;
-gap: 6px;
-margin-top: 10px;
-width: 100%;
-}
-.quick-btns .qbtn {
-flex: 1;
-min-width: 0;
-padding: 10px 0;
-}
-.qbtn {
-background: #F4F6F8;
-border: 2px solid #CBD5E1;
-border-radius: 8px;
-padding: 10px 0;
-font-size: 14px;
-font-weight: 700;
-color: #64748B;
-cursor: pointer;
-text-align: center;
--webkit-appearance: none;
-}
-.qbtn.active {
-background: #DBEAFE;
-border-color: #2563EB;
-color: #2563EB;
-}
-
-/* Searchable select */
-.pair-wrapper {
-position: relative;
-width: 100%;
-max-width: 100%;
-box-sizing: border-box;
-overflow: visible;
-}
+/* ── Pair searchable dropdown ── */
+.pair-wrap { position: relative; width: 100%; }
 .pair-input {
 width: 100%;
 background: #F4F6F8;
 border: 2px solid #CBD5E1;
 border-radius: 10px;
-padding: 14px 16px;
+padding: 13px 38px 13px 14px;
 color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-font-size: 17px;
+font-size: 16px;
 font-weight: 500;
 outline: none;
-cursor: pointer;
 -webkit-appearance: none;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘9’%3E%3Cpath d=‘M1 1l6 6 6-6’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+cursor: pointer;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
 background-repeat: no-repeat;
-background-position: right 16px center;
+background-position: right 14px center;
+background-color: #F4F6F8;
 }
-.pair-input:focus {
-border-color: #2563EB;
-background-color: #FFFFFF;
-}
-.pair-dropdown {
+.pair-input:focus { border-color: #2563EB; background-color: #fff; }
+.pair-drop {
 display: none;
 position: absolute;
 top: calc(100% + 4px);
 left: 0; right: 0;
-background: #FFFFFF;
+background: #fff;
 border: 2px solid #CBD5E1;
 border-radius: 10px;
-max-height: 240px;
+max-height: 220px;
 overflow-y: auto;
-z-index: 200;
-box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+z-index: 300;
+box-shadow: 0 6px 20px rgba(0,0,0,0.12);
 }
-.pair-dropdown.open { display: block; }
-.pair-group-label {
-padding: 8px 14px 4px;
-font-size: 10px;
-font-weight: 700;
-letter-spacing: 1.5px;
-color: #94A3B8;
-text-transform: uppercase;
-background: #F8FAFC;
-}
-.pair-option {
-padding: 12px 16px;
-font-size: 15px;
-font-weight: 600;
-color: #1E293B;
-cursor: pointer;
-border-bottom: 1px solid #F1F5F9;
-}
-.pair-option:last-child { border-bottom: none; }
-.pair-option:hover, .pair-option.selected {
-background: #DBEAFE;
-color: #2563EB;
-}
-.pair-option.hidden { display: none; }
+.pair-drop.open { display: block; }
+.pair-grp { padding: 7px 14px 3px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #94A3B8; text-transform: uppercase; background: #F8FAFC; }
+.pair-opt { padding: 11px 16px; font-size: 14px; font-weight: 600; color: #1E293B; cursor: pointer; border-bottom: 1px solid #F1F5F9; }
+.pair-opt:last-child { border-bottom: none; }
+.pair-opt:active, .pair-opt.sel { background: #DBEAFE; color: #2563EB; }
+.pair-opt.hide { display: none; }
 
-/* Copy button */
-.copy-btn {
+/* ── Quick pips ── */
+.qbtns { display: flex; gap: 6px; margin-top: 8px; }
+.qbtn {
+flex: 1;
+background: #F4F6F8;
+border: 2px solid #CBD5E1;
+border-radius: 8px;
+padding: 9px 0;
+font-size: 13px;
+font-weight: 700;
+color: #64748B;
+cursor: pointer;
+text-align: center;
+-webkit-appearance: none;
+}
+.qbtn.on { background: #DBEAFE; border-color: #2563EB; color: #2563EB; }
+
+/* ── Toggle ── */
+.toggle-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px;
+background: #F4F6F8;
+border-radius: 10px;
+border: 2px solid #CBD5E1;
+}
+.toggle-info { flex: 1; }
+.toggle-lbl { font-size: 14px; font-weight: 600; color: #1E293B; }
+.toggle-sub { font-size: 11px; color: #64748B; margin-top: 2px; }
+.toggle-btn {
+width: 68px;
+height: 32px;
+background: #E2E8F0;
+border: 2px solid #CBD5E1;
+border-radius: 6px;
+cursor: pointer;
+flex-shrink: 0;
 display: flex;
 align-items: center;
 justify-content: center;
-gap: 6px;
-margin: 10px auto 0;
-background: rgba(255,255,255,0.1);
-border: 1.5px solid rgba(255,255,255,0.2);
-border-radius: 8px;
-padding: 8px 20px;
-color: var(–gray);
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 12px;
-font-weight: 700;
-letter-spacing: 1px;
-cursor: pointer;
-transition: all 0.15s;
+transition: background 0.2s, border-color 0.2s;
 }
-.copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-.copy-btn.copied { border-color: #34D399; color: #34D399; }
-
-/* Result box */
-.result-section {
-margin: 20px 16px 0;
-border-radius: 16px;
-overflow: hidden;
-border: 1.5px solid #E2E8F0;
-}
-
-.result-main {
-background: #1B2A3B;
-padding: 28px 20px 22px;
-text-align: center;
-}
-.result-main-label {
-font-size: 12px;
-font-weight: 700;
+.toggle-btn.on { background: #1B2A3B; border-color: #1B2A3B; }
+.toggle-txt {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 15px;
 letter-spacing: 2px;
 color: #94A3B8;
-text-transform: uppercase;
-margin-bottom: 10px;
+pointer-events: none;
+transition: color 0.2s;
 }
-.result-main-value {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 80px;
-letter-spacing: 3px;
-color: #fff;
-line-height: 1;
-}
-.result-main-value.valid { color: #34D399; }
-.result-main-unit {
-font-size: 16px;
-font-weight: 700;
-color: #94A3B8;
-margin-top: 6px;
-letter-spacing: 1px;
-}
+.toggle-btn.on .toggle-txt { color: #34D399; }
 
-.result-rows { background: #FFFFFF; }
-.result-row {
-display: flex;
-justify-content: space-between;
+/* ── Result ── */
+.result-card { margin: 16px 16px 0; border-radius: 14px; overflow: hidden; border: 1.5px solid #E2E8F0; }
+.result-top { background: #1B2A3B; padding: 24px 20px 18px; text-align: center; }
+.result-top-lbl { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #94A3B8; text-transform: uppercase; margin-bottom: 8px; }
+.result-lot { font-family: ‘Bebas Neue’, sans-serif; font-size: 76px; letter-spacing: 3px; color: #fff; line-height: 1; }
+.result-lot.ok { color: #34D399; }
+.result-unit { font-size: 14px; font-weight: 700; color: #94A3B8; margin-top: 4px; letter-spacing: 1px; }
+.copy-btn {
+display: inline-flex;
 align-items: center;
-padding: 16px 20px;
-border-bottom: 1px solid #E2E8F0;
-}
-.result-row:last-child { border-bottom: none; }
-.result-row-label { font-size: 13px; font-weight: 500; color: #64748B; }
-.result-row-value { font-size: 16px; font-weight: 700; color: #1E293B; }
-.result-row-value.blue  { color: #2563EB; }
-.result-row-value.green { color: #059669; }
-
-/* Add to history */
-.btn-add {
-display: block;
-margin: 16px 16px 0;
-width: calc(100% - 32px);
-background: var(–blue);
-border: none;
-border-radius: 10px;
-padding: 14px;
-color: #fff;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 13px;
-font-weight: 700;
-letter-spacing: 1px;
-cursor: pointer;
-transition: background 0.15s, transform 0.1s;
-}
-.btn-add:active { transform: scale(0.98); background: #1D4ED8; }
-
-/* History */
-.history-list { display: flex; flex-direction: column; gap: 0; }
-.history-item {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 12px 16px;
-border-bottom: 1px solid var(–gray-l);
-animation: fadeIn 0.2s ease;
-}
-.history-item:last-child { border-bottom: none; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-.h-pair { font-size: 13px; font-weight: 700; color: var(–navy); min-width: 72px; }
-.h-detail { font-size: 11px; color: var(–text-s); flex: 1; padding: 0 8px; }
-.h-lot { font-family: ‘Bebas Neue’, sans-serif; font-size: 20px; color: var(–green); letter-spacing: 1px; }
-.h-del { background: none; border: none; color: var(–gray); cursor: pointer; font-size: 16px; padding: 0 0 0 8px; transition: color 0.15s; }
-.h-del:hover { color: #EF4444; }
-.empty { text-align: center; color: var(–gray); font-size: 12px; padding: 20px; }
-
-.btn-clear {
-display: block;
-margin: 12px 16px 0;
-width: calc(100% - 32px);
-background: transparent;
-border: 1.5px solid var(–border);
+gap: 6px;
+margin-top: 10px;
+background: rgba(255,255,255,0.08);
+border: 1.5px solid rgba(255,255,255,0.18);
 border-radius: 8px;
-padding: 10px;
-color: var(–text-s);
+padding: 7px 18px;
+color: #94A3B8;
 font-family: ‘Noto Sans JP’, sans-serif;
 font-size: 11px;
 font-weight: 700;
-letter-spacing: 1px;
 cursor: pointer;
 transition: all 0.15s;
 }
-.btn-clear:hover { border-color: #EF4444; color: #EF4444; }
-
-.btn-clear-all {
-display: block;
-margin: 16px 16px 0;
-width: calc(100% - 32px);
-background: transparent;
-border: 2px solid #CBD5E1;
-border-radius: 10px;
-padding: 14px;
-color: #94A3B8;
-font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-font-size: 13px;
-font-weight: 700;
-letter-spacing: 1px;
-cursor: pointer;
-transition: all 0.15s;
--webkit-appearance: none;
-}
-.btn-clear-all:hover { border-color: #EF4444; color: #EF4444; }
+.copy-btn.done { border-color: #34D399; color: #34D399; }
+.result-rows { background: #fff; }
+.result-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 18px; border-bottom: 1px solid #E2E8F0; }
+.result-row:last-child { border-bottom: none; }
+.r-lbl { font-size: 12px; font-weight: 500; color: #64748B; }
+.r-val { font-size: 15px; font-weight: 700; color: #1E293B; }
+.r-val.blue { color: #2563EB; }
+.r-val.green { color: #059669; }
 </style>
 
 </head>
 <body>
 
-<div class="header">
-  <div class="header-sub">Exness Zero · Lot Calculator</div>
-  <div class="header-title">Position <span>Sizer</span></div>
+<div class="hdr">
+  <div class="hdr-sub">Exness Zero · Lot Calculator</div>
+  <div class="hdr-title">Position <span>Sizer</span></div>
 </div>
 
 <!-- 口座設定 -->
 
-<div class="section">
-  <div class="section-header">口座設定</div>
-  <div class="section-body">
+<div class="card">
+  <div class="card-hdr">Account</div>
+  <div class="card-body">
     <div class="field">
-      <span class="label">証拠金（円）</span>
-      <input id="equity" type="number" value="200000" step="1000" oninput="calc()" style="max-width:60%;">
+      <span class="lbl">証拠金（円）</span>
+      <input id="equity" class="input-short" type="number" value="200000" step="1000" oninput="calc()">
     </div>
-    <div class="field" style="margin-top:16px;">
-      <span class="label">リスク %</span>
-      <select id="risk" onchange="calc()" style="max-width:60%;">
+    <div class="field">
+      <span class="lbl">リスク %</span>
+      <select id="risk" class="input-short" onchange="calc()">
         <option value="0.01">1%</option>
         <option value="0.02" selected>2%</option>
         <option value="0.03">3%</option>
         <option value="0.04">4%</option>
       </select>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <span class="label">USD/JPY レート</span>
-      <div class="rate-display">
-        <span class="rate-label">USD/JPY</span>
-        <span class="rate-value-display" id="rate-display">取得中...</span>
+    <div class="field">
+      <span class="lbl">USD/JPY レート</span>
+      <div class="rate-box">
+        <span class="rate-lbl">USD/JPY</span>
+        <span class="rate-val" id="rate-display">—</span>
         <input type="hidden" id="rate" value="155.0">
       </div>
-      <div id="rate-status" style="font-size:10px;color:var(--gray);margin-top:5px;letter-spacing:0.5px;">取得中...</div>
+      <div class="rate-status" id="rate-status">取得中...</div>
     </div>
   </div>
 </div>
 
 <!-- 取引設定 -->
 
-<div class="section">
-  <div class="section-header">取引設定</div>
-  <div class="section-body">
+<div class="card">
+  <div class="card-hdr">Trade</div>
+  <div class="card-body">
     <div class="field">
-      <span class="label">通貨ペア</span>
-      <div class="pair-wrapper">
+      <span class="lbl">通貨ペア</span>
+      <div class="pair-wrap">
         <input class="pair-input" id="pair-input" placeholder="検索または選択..." autocomplete="off"
-          onclick="toggleDropdown()" oninput="filterPairs()">
+          onclick="openDrop()" oninput="filterDrop()">
         <input type="hidden" id="pair" value="">
-        <div class="pair-dropdown" id="pair-dropdown"></div>
+        <div class="pair-drop" id="pair-drop"></div>
       </div>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <span class="label">SL pips 数</span>
-      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()" style="width:100%;">
-      <div class="quick-btns" id="quick-btns">
+    <div class="field">
+      <span class="lbl">SL pips 数</span>
+      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
+      <div class="qbtns">
         <button class="qbtn" onclick="setPips(5)">5</button>
         <button class="qbtn" onclick="setPips(10)">10</button>
         <button class="qbtn" onclick="setPips(15)">15</button>
@@ -500,14 +269,14 @@ transition: all 0.15s;
         <button class="qbtn" onclick="setPips(50)">50</button>
       </div>
     </div>
-    <div class="field" style="margin-top:16px;">
+    <div class="field">
       <div class="toggle-row">
-        <div>
-          <div class="toggle-label">手数料を含む</div>
+        <div class="toggle-info">
+          <div class="toggle-lbl">手数料を含む</div>
           <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
         </div>
-        <div class="toggle-track" id="toggle-track" onclick="toggleFee()">
-          <span class="toggle-text" id="toggle-text">OFF</span>
+        <div class="toggle-btn" id="toggle-btn" onclick="toggleFee()">
+          <span class="toggle-txt" id="toggle-txt">OFF</span>
         </div>
         <input type="hidden" id="fee-toggle" value="0">
       </div>
@@ -517,394 +286,260 @@ transition: all 0.15s;
 
 <!-- 結果 -->
 
-<div class="result-section">
-  <div class="result-main">
-    <div class="result-main-label">推奨 Lot 数</div>
-    <div class="result-main-value" id="res-lot">—</div>
-    <div class="result-main-unit" id="res-lot-unit">ペアとpips数を入力</div>
+<div class="result-card">
+  <div class="result-top">
+    <div class="result-top-lbl">推奨 Lot 数</div>
+    <div class="result-lot" id="res-lot">—</div>
+    <div class="result-unit" id="res-unit">ペアとpips数を入力</div>
     <button class="copy-btn" id="copy-btn" onclick="copyLot()">📋 タップしてコピー</button>
   </div>
   <div class="result-rows">
-    <div class="result-row">
-      <span class="result-row-label">許容損失額</span>
-      <span class="result-row-value blue" id="res-maxloss">—</span>
-    </div>
-    <div class="result-row">
-      <span class="result-row-label">1pip 値</span>
-      <span class="result-row-value" id="res-pip">—</span>
-    </div>
-    <div class="result-row">
-      <span class="result-row-label">取引手数料</span>
-      <span class="result-row-value" id="res-fee">—</span>
-    </div>
-    <div class="result-row">
-      <span class="result-row-label">実質 SL 損失額</span>
-      <span class="result-row-value green" id="res-sl">—</span>
-    </div>
+    <div class="result-row"><span class="r-lbl">許容損失額</span><span class="r-val blue" id="res-loss">—</span></div>
+    <div class="result-row"><span class="r-lbl">1pip 値</span><span class="r-val" id="res-pip">—</span></div>
+    <div class="result-row"><span class="r-lbl">取引手数料</span><span class="r-val" id="res-fee">—</span></div>
+    <div class="result-row"><span class="r-lbl">実質 SL 損失額</span><span class="r-val green" id="res-sl">—</span></div>
   </div>
 </div>
 
 <script>
 const PAIRS = [
-  { pair:'NZD/CHF', fee:3.125, type:'CHF' },
-  { pair:'AUD/USD', fee:3.5,   type:'USD' },
-  { pair:'EUR/USD', fee:3.5,   type:'USD' },
   { pair:'USD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'USD/CAD', fee:3.5,   type:'CAD' },
-  { pair:'AUD/NZD', fee:3.5,   type:'NZD' },
-  { pair:'GBP/USD', fee:3.5,   type:'USD' },
-  { pair:'USD/CHF', fee:3.5,   type:'CHF' },
-  { pair:'AUD/CAD', fee:3.5,   type:'CAD' },
-  { pair:'AUD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'EUR/JPY', fee:3.5,   type:'JPY' },
+  { pair:'GBP/JPY', fee:3.5,   type:'JPY' },
   { pair:'AUD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'CAD/CHF', fee:3.5,   type:'CHF' },
-  { pair:'NZD/CAD', fee:3.5,   type:'CAD' },
   { pair:'CAD/JPY', fee:3.5,   type:'JPY' },
   { pair:'CHF/JPY', fee:3.5,   type:'JPY' },
-  { pair:'EUR/JPY', fee:3.5,   type:'JPY' },
-  { pair:'EUR/NZD', fee:3.5,   type:'NZD' },
-  { pair:'EUR/AUD', fee:3.5,   type:'AUD' },
-  { pair:'EUR/CAD', fee:3.5,   type:'CAD' },
-  { pair:'EUR/CHF', fee:3.5,   type:'CHF' },
-  { pair:'NZD/USD', fee:3.5,   type:'USD' },
-  { pair:'GBP/AUD', fee:3.5,   type:'AUD' },
-  { pair:'GBP/JPY', fee:3.5,   type:'JPY' },
-  { pair:'GBP/NZD', fee:3.5,   type:'NZD' },
   { pair:'NZD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'GBP/CAD', fee:3.5,   type:'CAD' },
+  { pair:'EUR/USD', fee:3.5,   type:'USD' },
+  { pair:'GBP/USD', fee:3.5,   type:'USD' },
+  { pair:'AUD/USD', fee:3.5,   type:'USD' },
+  { pair:'NZD/USD', fee:3.5,   type:'USD' },
+  { pair:'USD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'EUR/CHF', fee:3.5,   type:'CHF' },
   { pair:'GBP/CHF', fee:3.5,   type:'CHF' },
+  { pair:'AUD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'CAD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'NZD/CHF', fee:3.125, type:'CHF' },
+  { pair:'AUD/NZD', fee:3.5,   type:'NZD' },
+  { pair:'EUR/NZD', fee:3.5,   type:'NZD' },
+  { pair:'GBP/NZD', fee:3.5,   type:'NZD' },
+  { pair:'EUR/AUD', fee:3.5,   type:'AUD' },
+  { pair:'GBP/AUD', fee:3.5,   type:'AUD' },
+  { pair:'USD/CAD', fee:3.5,   type:'CAD' },
+  { pair:'EUR/CAD', fee:3.5,   type:'CAD' },
+  { pair:'GBP/CAD', fee:3.5,   type:'CAD' },
+  { pair:'AUD/CAD', fee:3.5,   type:'CAD' },
+  { pair:'NZD/CAD', fee:3.5,   type:'CAD' },
   { pair:'EUR/GBP', fee:3.5,   type:'GBP' },
   { pair:'XAU/USD', fee:8.0,   type:'XAU' },
 ];
 
-// クロスレート（Frankfurter APIで取得・JPY建て）
-// 起動時に自動取得。取得できない場合は概算値にフォールバック
-const CROSS_RATE = {
-  AUD: 101, NZD: 91, CAD: 112, CHF: 171, GBP: 196
-};
-
-// レート取得状態
-let ratesLoaded = false;
-
-// Frankfurter APIでJPY建て全通貨レートを取得
-async function fetchRates() {
-  const statusEl = document.getElementById('rate-status');
-  try {
-    statusEl.textContent = '取得中...';
-    // 複数APIを順番に試す
-    const APIS = [
-      {
-        url: 'https://corsproxy.io/?https://open.er-api.com/v6/latest/JPY',
-        parse: (data) => {
-          Object.entries(data.rates).forEach(([ccy, val]) => {
-            if (['USD','AUD','NZD','CAD','CHF','GBP'].includes(ccy)) {
-              CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
-            }
-          });
-        }
-      },
-      {
-        url: 'https://corsproxy.io/?https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
-        parse: (data) => {
-          Object.entries(data.rates).forEach(([ccy, val]) => {
-            CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
-          });
-        }
-      },
-      {
-        url: 'https://open.er-api.com/v6/latest/JPY',
-        parse: (data) => {
-          Object.entries(data.rates).forEach(([ccy, val]) => {
-            if (['USD','AUD','NZD','CAD','CHF','GBP'].includes(ccy)) {
-              CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
-            }
-          });
-        }
-      }
-    ];
-
-    let success = false;
-    for (const api of APIS) {
-      try {
-        const res = await fetch(api.url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        api.parse(data);
-        success = true;
-        break;
-      } catch(e) { continue; }
-    }
-    if (!success) throw new Error('all APIs failed');
-    ratesLoaded = true;
-    // USD/JPYレート欄も自動セット
-    if (CROSS_RATE['USD']) {
-      document.getElementById('rate').value = CROSS_RATE['USD'].toFixed(3);
-      document.getElementById('rate-display').textContent = CROSS_RATE['USD'].toFixed(3);
-    }
-    statusEl.textContent = '✅ レート取得済（Frankfurter）';
-    statusEl.style.color = 'var(--green)';
-    calc();
-  } catch(e) {
-    statusEl.textContent = '⚠ 取得失敗 — 概算値を使用';
-    statusEl.style.color = '#F59E0B';
-    document.getElementById('rate-display').textContent = CROSS_RATE['USD'].toFixed(3);
-  }
-}
-
-// プルダウン構築（決済通貨でグループ化）
 const GROUPS = [
-  { label: '── JPY建て ──', types: ['JPY'] },
-  { label: '── USD建て ──', types: ['USD'] },
-  { label: '── CHF建て ──', types: ['CHF'] },
-  { label: '── NZD建て ──', types: ['NZD'] },
-  { label: '── AUD建て ──', types: ['AUD'] },
-  { label: '── CAD建て ──', types: ['CAD'] },
-  { label: '── GBP建て ──', types: ['GBP'] },
-  { label: '── 貴金属 ──',  types: ['XAU'] },
+  { lbl:'JPY建て', types:['JPY'] },
+  { lbl:'USD建て', types:['USD'] },
+  { lbl:'CHF建て', types:['CHF'] },
+  { lbl:'NZD建て', types:['NZD'] },
+  { lbl:'AUD建て', types:['AUD'] },
+  { lbl:'CAD建て', types:['CAD'] },
+  { lbl:'GBP建て', types:['GBP'] },
+  { lbl:'貴金属',  types:['XAU'] },
 ];
 
-// Searchable select構築
-const dropdown = document.getElementById('pair-dropdown');
+// レート（APIで上書き）
+const RATE = { USD:155, AUD:101, NZD:91, CAD:112, CHF:171, GBP:196 };
+
+// ── ドロップダウン構築 ──
+const drop = document.getElementById('pair-drop');
 GROUPS.forEach(g => {
   const pairs = PAIRS.filter(p => g.types.includes(p.type));
   if (!pairs.length) return;
-  const groupEl = document.createElement('div');
-  groupEl.className = 'pair-group-label';
-  groupEl.textContent = g.label.replace(/─/g, '').trim();
-  dropdown.appendChild(groupEl);
+  const gl = document.createElement('div');
+  gl.className = 'pair-grp';
+  gl.textContent = g.lbl;
+  drop.appendChild(gl);
   pairs.forEach(p => {
-    const opt = document.createElement('div');
-    opt.className = 'pair-option';
-    opt.textContent = p.pair;
-    opt.dataset.value = p.pair;
-    opt.onclick = () => selectPair(p.pair);
-    dropdown.appendChild(opt);
+    const o = document.createElement('div');
+    o.className = 'pair-opt';
+    o.textContent = p.pair;
+    o.dataset.v = p.pair;
+    o.onclick = () => pickPair(p.pair);
+    drop.appendChild(o);
   });
 });
 
-function toggleDropdown() {
-  const dd = document.getElementById('pair-dropdown');
-  const input = document.getElementById('pair-input');
-  const isOpen = dd.classList.contains('open');
-  if (isOpen) {
-    dd.classList.remove('open');
-    if (document.getElementById('pair').value) {
-      input.value = document.getElementById('pair').value;
-    }
+function openDrop() {
+  const d = document.getElementById('pair-drop');
+  const inp = document.getElementById('pair-input');
+  if (d.classList.contains('open')) {
+    closeDrop();
   } else {
-    dd.classList.add('open');
-    input.value = '';
-    input.focus();
-    filterPairs();
+    d.classList.add('open');
+    inp.value = '';
+    inp.focus();
+    filterDrop();
   }
 }
 
-function filterPairs() {
+function closeDrop() {
+  const d = document.getElementById('pair-drop');
+  d.classList.remove('open');
+  const v = document.getElementById('pair').value;
+  document.getElementById('pair-input').value = v || '';
+}
+
+function filterDrop() {
   const q = document.getElementById('pair-input').value.toUpperCase();
-  document.querySelectorAll('.pair-option').forEach(opt => {
-    opt.classList.toggle('hidden', q && !opt.dataset.value.includes(q));
+  document.querySelectorAll('.pair-opt').forEach(o => {
+    o.classList.toggle('hide', !!q && !o.dataset.v.includes(q));
   });
 }
 
-function selectPair(val) {
-  document.getElementById('pair').value = val;
-  document.getElementById('pair-input').value = val;
-  document.getElementById('pair-dropdown').classList.remove('open');
-  document.querySelectorAll('.pair-option').forEach(o => {
-    o.classList.toggle('selected', o.dataset.value === val);
-    o.classList.remove('hidden');
+function pickPair(v) {
+  document.getElementById('pair').value = v;
+  document.getElementById('pair-input').value = v;
+  document.getElementById('pair-drop').classList.remove('open');
+  document.querySelectorAll('.pair-opt').forEach(o => {
+    o.classList.toggle('sel', o.dataset.v === v);
+    o.classList.remove('hide');
   });
   calc();
 }
 
-// ドロップダウン外クリックで閉じる
 document.addEventListener('click', e => {
-  if (!e.target.closest('.pair-wrapper')) {
-    document.getElementById('pair-dropdown').classList.remove('open');
-    const input = document.getElementById('pair-input');
-    if (!document.getElementById('pair').value) input.value = '';
-    else input.value = document.getElementById('pair').value;
-  }
+  if (!e.target.closest('.pair-wrap')) closeDrop();
 });
 
-function get1PipValue(type, rate) {
-  const usdJpy = CROSS_RATE['USD'] || rate;
-  if (type === 'JPY') return 1000;
-  if (type === 'XAU') return usdJpy;        // 1pip = $1 × レート
-  if (type === 'USD') return usdJpy * 10;   // 1pip = $0.0001 × 100,000 × レート
-  // クロスペア: APIから取得したXXX/JPYレートを使用
-  const crossJpy = CROSS_RATE[type];
-  if (crossJpy) return crossJpy * 10;
-  // フォールバック: USD/JPYから概算
-  return usdJpy * 10;
+// ── レート取得 ──
+async function fetchRates() {
+  const st = document.getElementById('rate-status');
+  const APIS = [
+    { url:'https://open.er-api.com/v6/latest/JPY',
+      parse(d) { ['USD','AUD','NZD','CAD','CHF','GBP'].forEach(k => { if(d.rates[k]) RATE[k] = +(1/d.rates[k]).toFixed(4); }); }
+    },
+    { url:'https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
+      parse(d) { Object.entries(d.rates).forEach(([k,v]) => { RATE[k] = +(1/v).toFixed(4); }); }
+    }
+  ];
+  for (const api of APIS) {
+    try {
+      const r = await fetch(api.url);
+      if (!r.ok) continue;
+      api.parse(await r.json());
+      document.getElementById('rate').value = RATE.USD.toFixed(3);
+      document.getElementById('rate-display').textContent = RATE.USD.toFixed(3);
+      st.textContent = '✅ レート取得済';
+      st.style.color = '#059669';
+      calc();
+      return;
+    } catch(e) { continue; }
+  }
+  // フォールバック
+  document.getElementById('rate-display').textContent = RATE.USD.toFixed(3);
+  st.textContent = '⚠ 取得失敗 — 概算値を使用';
+  st.style.color = '#F59E0B';
 }
 
+// ── 1pip値 ──
+function pip1(type) {
+  if (type === 'JPY') return 1000;
+  if (type === 'XAU') return RATE.USD;
+  return (RATE[type] || RATE.USD) * 10;
+}
+
+// ── 計算 ──
 function calc() {
-  const equity   = parseFloat(document.getElementById('equity').value) || 0;
-  const risk     = parseFloat(document.getElementById('risk').value)   || 0;
-  const rate     = parseFloat(document.getElementById('rate').value)   || 0;
-  const pips     = parseFloat(document.getElementById('pips').value)   || 0;
-  const pairName = document.getElementById('pair').value;
-  const inclFee  = document.getElementById('fee-toggle').value === '1';
+  const equity = +document.getElementById('equity').value || 0;
+  const risk   = +document.getElementById('risk').value   || 0;
+  const rate   = +document.getElementById('rate').value   || 0;
+  const pips   = +document.getElementById('pips').value   || 0;
+  const pName  = document.getElementById('pair').value;
+  const fee    = document.getElementById('fee-toggle').value === '1';
 
-  // 許容損失額
   const maxLoss = equity * risk;
-  document.getElementById('res-maxloss').textContent =
-    maxLoss > 0 ? `¥${Math.round(maxLoss).toLocaleString()}` : '—';
+  document.getElementById('res-loss').textContent = maxLoss > 0 ? `¥${Math.round(maxLoss).toLocaleString()}` : '—';
 
-  const p = PAIRS.find(x => x.pair === pairName);
-
+  const p = PAIRS.find(x => x.pair === pName);
   if (!p || !pips || !rate) {
-    document.getElementById('res-lot').textContent = '—';
-    document.getElementById('res-lot').className = 'result-main-value';
-    document.getElementById('res-lot-unit').textContent = 'ペアとpips数を入力';
-    document.getElementById('res-pip').textContent  = '—';
-    document.getElementById('res-fee').textContent  = '—';
-    document.getElementById('res-sl').textContent   = '—';
+    ['res-lot','res-pip','res-fee','res-sl'].forEach(id => { document.getElementById(id).textContent = '—'; });
+    document.getElementById('res-lot').className = 'result-lot';
+    document.getElementById('res-unit').textContent = 'ペアとpips数を入力';
     return;
   }
 
-  const pip1   = get1PipValue(p.type, rate);
-  const feeJPY = p.fee * rate; // 手数料/lot（円）
+  const pv = pip1(p.type);
+  const feeJpy = p.fee * rate;
+  const denom = pips * pv + (fee ? feeJpy : 0);
+  const lot = Math.floor((maxLoss / denom) * 100) / 100;
+  const feeTotal = lot * feeJpy;
 
-  // 推奨lot = 許容損失 ÷ (pips×1pip値 + 手数料/lot×inclFee)
-  const denom = pips * pip1 + (inclFee ? feeJPY : 0);
-  const lot   = Math.floor((maxLoss / denom) * 100) / 100;
-
-  // 手数料・実質SL
-  const feeTotal = lot * feeJPY;
-  const slActual = maxLoss - feeTotal;
-
-  // 表示
   const lotEl = document.getElementById('res-lot');
-  if (lot > 0) {
-    lotEl.textContent = lot.toFixed(2);
-    lotEl.className = 'result-main-value valid';
-    document.getElementById('res-lot-unit').textContent = 'lot';
-  } else {
-    lotEl.textContent = '0.00';
-    lotEl.className = 'result-main-value';
-    document.getElementById('res-lot-unit').textContent = 'lot — 証拠金を増やすかpipsを減らしてください';
-  }
+  lotEl.textContent = lot.toFixed(2);
+  lotEl.className = 'result-lot' + (lot > 0 ? ' ok' : '');
+  document.getElementById('res-unit').textContent = 'lot';
+  document.getElementById('res-pip').textContent = `¥${Math.round(pv).toLocaleString()} / pip`;
+  document.getElementById('res-fee').textContent = fee ? `¥${Math.round(feeTotal).toLocaleString()}` : 'OFF';
+  document.getElementById('res-sl').textContent = `¥${Math.round(maxLoss - feeTotal).toLocaleString()}`;
 
-  document.getElementById('res-pip').textContent  = `¥${Math.round(pip1).toLocaleString()} / pip`;
-  document.getElementById('res-fee').textContent  = inclFee
-    ? `¥${Math.round(feeTotal).toLocaleString()}（$${p.fee}/lot × ${lot.toFixed(2)}lot）`
-    : 'OFF';
-  document.getElementById('res-sl').textContent   = `¥${Math.round(slActual).toLocaleString()}`;
-
-  // Quick pips active
-  document.querySelectorAll('.qbtn').forEach(btn => {
-    btn.classList.toggle('active', parseFloat(btn.textContent) === pips);
-  });
+  document.querySelectorAll('.qbtn').forEach(b => b.classList.toggle('on', +b.textContent === pips));
 }
 
-function copyLot() {
-  const lotEl = document.getElementById('res-lot');
-  const val = lotEl.textContent;
-  if (val === '—') return;
-  const btn = document.getElementById('copy-btn');
-  navigator.clipboard.writeText(val).then(() => {
-    btn.textContent = '✅ コピーしました！';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 タップしてコピー';
-      btn.classList.remove('copied');
-    }, 2000);
-  }).catch(() => {
-    // fallback for older browsers
-    const ta = document.createElement('textarea');
-    ta.value = val;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.textContent = '✅ コピーしました！';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 タップしてコピー';
-      btn.classList.remove('copied');
-    }, 2000);
-  });
-}
-
+// ── トグル ──
 function toggleFee() {
-  const hidden = document.getElementById('fee-toggle');
-  const track = document.getElementById('toggle-track');
-  const textEl = document.getElementById('toggle-text');
-  const isOn = hidden.value === '1';
-  hidden.value = isOn ? '0' : '1';
-  track.classList.toggle('on', !isOn);
-  textEl.textContent = isOn ? 'OFF' : 'ON';
-  playToggle();
+  const h = document.getElementById('fee-toggle');
+  const btn = document.getElementById('toggle-btn');
+  const txt = document.getElementById('toggle-txt');
+  const on = h.value === '1';
+  h.value = on ? '0' : '1';
+  btn.classList.toggle('on', !on);
+  txt.textContent = on ? 'OFF' : 'ON';
+  playClick(!on);
   calc();
 }
 
-function playToggle() {
+function playClick(on) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const on = document.getElementById('fee-toggle').value === '1';
-
-    // ノイズバースト（カチャの打撃音）
-    const bufSize = ctx.sampleRate * 0.015;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 3);
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buf;
-
-    // バンドパスフィルター（カチャらしい周波数帯）
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = on ? 3000 : 2000;
-    filter.Q.value = 0.8;
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(on ? 0.6 : 0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    noise.start(ctx.currentTime);
-
-    // 小さなクリック音を重ねる
-    const osc = ctx.createOscillator();
-    const g2 = ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = on ? 1800 : 1200;
-    g2.gain.setValueAtTime(0.15, ctx.currentTime);
-    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
-    osc.connect(g2);
-    g2.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.02);
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/d.length, 3);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = on ? 3000 : 2000;
+    f.Q.value = 0.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(on ? 0.5 : 0.35, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    src.connect(f); f.connect(g); g.connect(ctx.destination);
+    src.start();
   } catch(e) {}
 }
 
-function clearAll() {
-  // 通貨ペアをリセット
-  document.getElementById('pair').value = '';
-  document.getElementById('pair-input').value = '';
-  document.querySelectorAll('.pair-option').forEach(o => {
-    o.classList.remove('selected', 'hidden');
-  });
-  // pipsをリセット
-  document.getElementById('pips').value = '';
-  document.querySelectorAll('.qbtn').forEach(b => b.classList.remove('active'));
-  // 手数料トグルをOFFに
-  document.getElementById('fee-toggle').value = '0';
-  document.getElementById('toggle-track').classList.remove('on');
-  // 結果をリセット
-  calc();
+// ── コピー ──
+function copyLot() {
+  const v = document.getElementById('res-lot').textContent;
+  if (v === '—') return;
+  const btn = document.getElementById('copy-btn');
+  const done = () => {
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '📋 タップしてコピー'; btn.classList.remove('done'); }, 2000);
+  };
+  navigator.clipboard ? navigator.clipboard.writeText(v).then(done).catch(() => fallbackCopy(v, done)) : fallbackCopy(v, done);
 }
 
-function setPips(val) {
-  document.getElementById('pips').value = val;
-  calc();
+function fallbackCopy(v, cb) {
+  const t = document.createElement('textarea');
+  t.value = v;
+  document.body.appendChild(t);
+  t.select();
+  document.execCommand('copy');
+  document.body.removeChild(t);
+  cb();
 }
+
+function setPips(v) { document.getElementById('pips').value = v; calc(); }
 
 fetchRates();
 calc();
