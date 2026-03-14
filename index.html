@@ -128,27 +128,46 @@ gap: 12px;
 .toggle-label { font-size: 15px; font-weight: 600; color: #1E293B; }
 .toggle-sub   { font-size: 12px; color: #64748B; margin-top: 3px; }
 
-.toggle { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
-.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle {
+position: relative;
+display: inline-block;
+width: 52px;
+height: 30px;
+flex-shrink: 0;
+}
+.toggle input {
+opacity: 0;
+width: 0;
+height: 0;
+position: absolute;
+}
 .slider {
-position: absolute; inset: 0;
-background: #CBD5E1;
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background-color: #CBD5E1;
 border-radius: 30px;
 cursor: pointer;
-transition: background 0.2s;
+-webkit-transition: background-color 0.2s;
+transition: background-color 0.2s;
 }
 .slider::before {
-content: ‘’;
+content: “”;
 position: absolute;
-width: 22px; height: 22px;
-left: 4px; top: 4px;
-background: #fff;
+width: 22px;
+height: 22px;
+left: 4px;
+top: 4px;
+background-color: #ffffff;
 border-radius: 50%;
+-webkit-transition: transform 0.2s;
 transition: transform 0.2s;
 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-.toggle input:checked + .slider { background: #2563EB; }
-.toggle input:checked + .slider::before { transform: translateX(22px); }
+.toggle input:checked + .slider { background-color: #2563EB; }
+.toggle input:checked + .slider::before {
+-webkit-transform: translateX(22px);
+transform: translateX(22px);
+}
 
 /* Rate row */
 .rate-display {
@@ -161,6 +180,7 @@ border-radius: 10px;
 border: 2px solid #BFDBFE;
 }
 .rate-label { font-size: 13px; font-weight: 700; color: #2563EB; flex: 1; }
+.rate-value-display { font-size: 20px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
 .rate-input-small {
 background: #FFFFFF;
 border: 2px solid #BFDBFE;
@@ -206,6 +226,69 @@ background: #DBEAFE;
 border-color: #2563EB;
 color: #2563EB;
 }
+
+/* Searchable select */
+.pair-wrapper {
+position: relative;
+}
+.pair-input {
+width: 100%;
+background: #F4F6F8;
+border: 2px solid #CBD5E1;
+border-radius: 10px;
+padding: 14px 16px;
+color: #1E293B;
+font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
+font-size: 17px;
+font-weight: 500;
+outline: none;
+cursor: pointer;
+-webkit-appearance: none;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘9’%3E%3Cpath d=‘M1 1l6 6 6-6’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 16px center;
+}
+.pair-input:focus {
+border-color: #2563EB;
+background-color: #FFFFFF;
+}
+.pair-dropdown {
+display: none;
+position: absolute;
+top: calc(100% + 4px);
+left: 0; right: 0;
+background: #FFFFFF;
+border: 2px solid #CBD5E1;
+border-radius: 10px;
+max-height: 240px;
+overflow-y: auto;
+z-index: 200;
+box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.pair-dropdown.open { display: block; }
+.pair-group-label {
+padding: 8px 14px 4px;
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 1.5px;
+color: #94A3B8;
+text-transform: uppercase;
+background: #F8FAFC;
+}
+.pair-option {
+padding: 12px 16px;
+font-size: 15px;
+font-weight: 600;
+color: #1E293B;
+cursor: pointer;
+border-bottom: 1px solid #F1F5F9;
+}
+.pair-option:last-child { border-bottom: none; }
+.pair-option:hover, .pair-option.selected {
+background: #DBEAFE;
+color: #2563EB;
+}
+.pair-option.hidden { display: none; }
 
 /* Copy button */
 .copy-btn {
@@ -335,6 +418,25 @@ cursor: pointer;
 transition: all 0.15s;
 }
 .btn-clear:hover { border-color: #EF4444; color: #EF4444; }
+
+.btn-clear-all {
+display: block;
+margin: 16px 16px 0;
+width: calc(100% - 32px);
+background: transparent;
+border: 2px solid #CBD5E1;
+border-radius: 10px;
+padding: 14px;
+color: #94A3B8;
+font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.15s;
+-webkit-appearance: none;
+}
+.btn-clear-all:hover { border-color: #EF4444; color: #EF4444; }
 </style>
 
 </head>
@@ -367,7 +469,7 @@ transition: all 0.15s;
       <span class="label">USD/JPY レート</span>
       <div class="rate-display">
         <span class="rate-label">USD/JPY</span>
-        <input class="rate-input-small" id="rate" type="number" value="155.0" step="0.1" oninput="calc()">
+        <input type="hidden" id="rate" value="155.0">
       </div>
       <div id="rate-status" style="font-size:10px;color:var(--gray);margin-top:5px;letter-spacing:0.5px;">取得中...</div>
     </div>
@@ -378,7 +480,7 @@ transition: all 0.15s;
           <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
         </div>
         <label class="toggle">
-          <input type="checkbox" id="fee-toggle" onchange="calc()">
+          <input type="checkbox" id="fee-toggle" onchange="playToggle(); calc()">
           <span class="slider"></span>
         </label>
       </div>
@@ -393,9 +495,12 @@ transition: all 0.15s;
   <div class="section-body">
     <div class="field">
       <span class="label">通貨ペア</span>
-      <select id="pair" onchange="calc()">
-        <option value="">-- 選択してください --</option>
-      </select>
+      <div class="pair-wrapper">
+        <input class="pair-input" id="pair-input" placeholder="検索または選択..." autocomplete="off"
+          onclick="toggleDropdown()" oninput="filterPairs()">
+        <input type="hidden" id="pair" value="">
+        <div class="pair-dropdown" id="pair-dropdown"></div>
+      </div>
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="label">SL pips 数</span>
@@ -535,17 +640,16 @@ async function fetchRates() {
     ratesLoaded = true;
     // USD/JPYレート欄も自動セット
     if (CROSS_RATE['USD']) {
-      const rateInput = document.getElementById('rate');
-      if (!rateInput.dataset.manual) {
-        rateInput.value = CROSS_RATE['USD'].toFixed(3);
-      }
+      document.getElementById('rate').value = CROSS_RATE['USD'].toFixed(3);
+      document.getElementById('rate-display').textContent = CROSS_RATE['USD'].toFixed(3);
     }
     statusEl.textContent = '✅ レート取得済（Frankfurter）';
     statusEl.style.color = 'var(--green)';
     calc();
   } catch(e) {
-    statusEl.textContent = '⚠ 取得失敗 — 手動入力値を使用';
+    statusEl.textContent = '⚠ 取得失敗 — 概算値を使用';
     statusEl.style.color = '#F59E0B';
+    document.getElementById('rate-display').textContent = CROSS_RATE['USD'].toFixed(3);
   }
 }
 
@@ -561,26 +665,68 @@ const GROUPS = [
   { label: '── 貴金属 ──',  types: ['XAU'] },
 ];
 
-const sel = document.getElementById('pair');
+// Searchable select構築
+const dropdown = document.getElementById('pair-dropdown');
 GROUPS.forEach(g => {
   const pairs = PAIRS.filter(p => g.types.includes(p.type));
   if (!pairs.length) return;
-  const grp = document.createElement('optgroup');
-  grp.label = g.label;
+  const groupEl = document.createElement('div');
+  groupEl.className = 'pair-group-label';
+  groupEl.textContent = g.label.replace(/─/g, '').trim();
+  dropdown.appendChild(groupEl);
   pairs.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.pair;
-    o.textContent = p.pair;
-    grp.appendChild(o);
+    const opt = document.createElement('div');
+    opt.className = 'pair-option';
+    opt.textContent = p.pair;
+    opt.dataset.value = p.pair;
+    opt.onclick = () => selectPair(p.pair);
+    dropdown.appendChild(opt);
   });
-  sel.appendChild(grp);
 });
 
-// レート手動変更フラグ
-document.getElementById('rate').addEventListener('input', function() {
-  this.dataset.manual = '1';
-  // USD/JPYを手動入力した場合はCROSS_RATEも更新
-  CROSS_RATE['USD'] = parseFloat(this.value) || CROSS_RATE['USD'];
+function toggleDropdown() {
+  const dd = document.getElementById('pair-dropdown');
+  const input = document.getElementById('pair-input');
+  const isOpen = dd.classList.contains('open');
+  if (isOpen) {
+    dd.classList.remove('open');
+    if (document.getElementById('pair').value) {
+      input.value = document.getElementById('pair').value;
+    }
+  } else {
+    dd.classList.add('open');
+    input.value = '';
+    input.focus();
+    filterPairs();
+  }
+}
+
+function filterPairs() {
+  const q = document.getElementById('pair-input').value.toUpperCase();
+  document.querySelectorAll('.pair-option').forEach(opt => {
+    opt.classList.toggle('hidden', q && !opt.dataset.value.includes(q));
+  });
+}
+
+function selectPair(val) {
+  document.getElementById('pair').value = val;
+  document.getElementById('pair-input').value = val;
+  document.getElementById('pair-dropdown').classList.remove('open');
+  document.querySelectorAll('.pair-option').forEach(o => {
+    o.classList.toggle('selected', o.dataset.value === val);
+    o.classList.remove('hidden');
+  });
+  calc();
+}
+
+// ドロップダウン外クリックで閉じる
+document.addEventListener('click', e => {
+  if (!e.target.closest('.pair-wrapper')) {
+    document.getElementById('pair-dropdown').classList.remove('open');
+    const input = document.getElementById('pair-input');
+    if (!document.getElementById('pair').value) input.value = '';
+    else input.value = document.getElementById('pair').value;
+  }
 });
 
 function get1PipValue(type, rate) {
@@ -677,6 +823,66 @@ function copyLot() {
       btn.classList.remove('copied');
     }, 2000);
   });
+}
+
+function playToggle() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const on = document.getElementById('fee-toggle').checked;
+
+    // ノイズバースト（カチャの打撃音）
+    const bufSize = ctx.sampleRate * 0.015;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 3);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+
+    // バンドパスフィルター（カチャらしい周波数帯）
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = on ? 3000 : 2000;
+    filter.Q.value = 0.8;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(on ? 0.6 : 0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(ctx.currentTime);
+
+    // 小さなクリック音を重ねる
+    const osc = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = on ? 1800 : 1200;
+    g2.gain.setValueAtTime(0.15, ctx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+    osc.connect(g2);
+    g2.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.02);
+  } catch(e) {}
+}
+
+function clearAll() {
+  // 通貨ペアをリセット
+  document.getElementById('pair').value = '';
+  document.getElementById('pair-input').value = '';
+  document.querySelectorAll('.pair-option').forEach(o => {
+    o.classList.remove('selected', 'hidden');
+  });
+  // pipsをリセット
+  document.getElementById('pips').value = '';
+  document.querySelectorAll('.qbtn').forEach(b => b.classList.remove('active'));
+  // 手数料トグルをOFFに
+  document.getElementById('fee-toggle').checked = false;
+  // 結果をリセット
+  calc();
 }
 
 function setPips(val) {
