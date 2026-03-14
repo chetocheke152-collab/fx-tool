@@ -144,24 +144,23 @@ justify-content: center;
 transition: all 0.2s ease;
 overflow: hidden;
 }
-.toggle-track::before {
-content: ‘OFF’;
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 16px;
-letter-spacing: 2px;
-color: #94A3B8;
-transition: all 0.2s ease;
-}
 .toggle-track.on {
 background: #1E293B;
 border-color: #1E293B;
 }
-.toggle-track.on::before {
-content: ‘ON’;
-color: #34D399;
-}
 .toggle-thumb { display: none; }
 .toggle { display: none; }
+.toggle-text {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16px;
+letter-spacing: 2px;
+color: #94A3B8;
+pointer-events: none;
+transition: color 0.2s ease;
+}
+.toggle-track.on .toggle-text {
+color: #34D399;
+}
 
 /* Rate row */
 .rate-display {
@@ -224,6 +223,8 @@ color: #2563EB;
 /* Searchable select */
 .pair-wrapper {
 position: relative;
+width: 100%;
+box-sizing: border-box;
 }
 .pair-input {
 width: 100%;
@@ -504,7 +505,7 @@ transition: all 0.15s;
           <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
         </div>
         <div class="toggle-track" id="toggle-track" onclick="toggleFee()">
-          <div class="toggle-thumb" id="toggle-thumb"></div>
+          <span class="toggle-text" id="toggle-text">OFF</span>
         </div>
         <input type="hidden" id="fee-toggle" value="0">
       </div>
@@ -725,10 +726,15 @@ document.addEventListener('click', e => {
 });
 
 function get1PipValue(type, rate) {
+  const usdJpy = CROSS_RATE['USD'] || rate;
   if (type === 'JPY') return 1000;
-  if (type === 'XAU') return (CROSS_RATE['USD'] || rate); // 1pip=$1×rate
-  if (type === 'USD') return (CROSS_RATE['USD'] || rate) * 10;
-  return (CROSS_RATE[type] || rate) * 10;
+  if (type === 'XAU') return usdJpy;        // 1pip = $1 × レート
+  if (type === 'USD') return usdJpy * 10;   // 1pip = $0.0001 × 100,000 × レート
+  // クロスペア: APIから取得したXXX/JPYレートを使用
+  const crossJpy = CROSS_RATE[type];
+  if (crossJpy) return crossJpy * 10;
+  // フォールバック: USD/JPYから概算
+  return usdJpy * 10;
 }
 
 function calc() {
@@ -823,9 +829,11 @@ function copyLot() {
 function toggleFee() {
   const hidden = document.getElementById('fee-toggle');
   const track = document.getElementById('toggle-track');
+  const textEl = document.getElementById('toggle-text');
   const isOn = hidden.value === '1';
   hidden.value = isOn ? '0' : '1';
   track.classList.toggle('on', !isOn);
+  textEl.textContent = isOn ? 'OFF' : 'ON';
   playToggle();
   calc();
 }
