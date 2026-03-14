@@ -5,6 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Position Sizer</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Position Sizer">
+<meta name="theme-color" content="#1B2A3B">
+<link rel="apple-touch-icon" href="icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -404,6 +409,7 @@ function pickPair(v) {
     o.classList.toggle('sel', o.dataset.v === v);
     o.classList.remove('hide');
   });
+  localStorage.setItem('ps_pair', v);
   calc();
 }
 
@@ -542,6 +548,30 @@ function fallbackCopy(v, cb) {
 }
 
 function setPips(v) { document.getElementById('pips').value = v; calc(); }
+
+// localStorage読み込み
+(function() {
+  const eq = localStorage.getItem('ps_equity');
+  const rk = localStorage.getItem('ps_risk');
+  const pr = localStorage.getItem('ps_pair');
+  if (eq) document.getElementById('equity').value = eq;
+  if (rk) document.getElementById('risk').value = rk;
+  if (pr) {
+    document.getElementById('pair').value = pr;
+    document.getElementById('pair-input').value = pr;
+    document.querySelectorAll('.pair-opt').forEach(o => {
+      o.classList.toggle('sel', o.dataset.v === pr);
+    });
+  }
+})();
+
+// 変更時に保存
+document.getElementById('equity').addEventListener('change', () => {
+  localStorage.setItem('ps_equity', document.getElementById('equity').value);
+});
+document.getElementById('risk').addEventListener('change', () => {
+  localStorage.setItem('ps_risk', document.getElementById('risk').value);
+});
 
 fetchRates();
 calc();
