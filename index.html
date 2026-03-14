@@ -122,16 +122,20 @@ gap: 12px;
 width: 100%;
 align-items: flex-end;
 }
-.grid2 .field {
-width: 130px;
+.grid2 .field:first-child {
+width: 110px;
 flex-shrink: 0;
+}
+.grid2 .field:last-child {
+flex: 1;
+min-width: 0;
 }
 .grid2 .field .label {
 display: block;
 height: 18px;
 }
 .grid2 .field input {
-width: 130px;
+width: 100%;
 font-size: 20px;
 font-weight: 700;
 }
