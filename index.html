@@ -3,7 +3,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FX ポジションサイズ計算</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -94,6 +94,7 @@ padding: 14px 16px;
 color: #1E293B;
 font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
 font-size: 17px;
+-webkit-text-size-adjust: 100%;
 font-weight: 500;
 width: 100%;
 outline: none;
@@ -119,13 +120,20 @@ display: flex;
 flex-direction: row;
 gap: 12px;
 width: 100%;
+align-items: flex-end;
 }
 .grid2 .field {
 flex: 1;
 min-width: 0;
 }
+.grid2 .field .label {
+display: block;
+height: 18px;
+}
 .grid2 .field input {
 width: 100%;
+font-size: 20px;
+font-weight: 700;
 }
 
 /* Toggle */
