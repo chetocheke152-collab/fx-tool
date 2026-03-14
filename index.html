@@ -123,15 +123,15 @@ width: 100%;
 align-items: flex-end;
 }
 .grid2 .field {
-flex: 1;
-min-width: 0;
+width: 130px;
+flex-shrink: 0;
 }
 .grid2 .field .label {
 display: block;
 height: 18px;
 }
 .grid2 .field input {
-width: 100%;
+width: 130px;
 font-size: 20px;
 font-weight: 700;
 }
@@ -418,7 +418,7 @@ transition: all 0.15s;
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="label">SL pips 数</span>
-      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
+      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()" style="width:130px;">
       <div class="quick-btns" id="quick-btns">
         <button class="qbtn" onclick="setPips(5)">5</button>
         <button class="qbtn" onclick="setPips(10)">10</button>
