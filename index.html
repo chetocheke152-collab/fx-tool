@@ -228,6 +228,7 @@ box-sizing: border-box;
 }
 .pair-input {
 width: 100%;
+max-width: 280px;
 background: #F4F6F8;
 border: 2px solid #CBD5E1;
 border-radius: 10px;
@@ -488,7 +489,7 @@ transition: all 0.15s;
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="label">SL pips 数</span>
-      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()" style="width:130px;">
+      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()" style="max-width:280px;">
       <div class="quick-btns" id="quick-btns">
         <button class="qbtn" onclick="setPips(5)">5</button>
         <button class="qbtn" onclick="setPips(10)">10</button>
