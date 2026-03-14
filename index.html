@@ -128,48 +128,40 @@ gap: 12px;
 .toggle-label { font-size: 15px; font-weight: 600; color: #1E293B; }
 .toggle-sub   { font-size: 12px; color: #64748B; margin-top: 3px; }
 
-.toggle {
+/* オリジナルトグル - ON/OFFテキスト切り替えボタン */
+.toggle-track {
 position: relative;
-display: inline-block;
-width: 52px;
-height: 30px;
-flex-shrink: 0;
-}
-.toggle input {
-opacity: 0;
-width: 0;
-height: 0;
-position: absolute;
--webkit-appearance: none;
-appearance: none;
-}
-.slider {
-position: absolute;
-top: 0; left: 0; right: 0; bottom: 0;
-background-color: #CBD5E1;
-border-radius: 30px;
+width: 72px;
+height: 34px;
+background: #E2E8F0;
+border-radius: 6px;
 cursor: pointer;
--webkit-transition: background-color 0.2s;
-transition: background-color 0.2s;
+flex-shrink: 0;
+border: 2px solid #CBD5E1;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s ease;
+overflow: hidden;
 }
-.slider::before {
-content: “”;
-position: absolute;
-width: 22px;
-height: 22px;
-left: 4px;
-top: 4px;
-background-color: #ffffff;
-border-radius: 50%;
--webkit-transition: transform 0.2s;
-transition: transform 0.2s;
-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.toggle-track::before {
+content: ‘OFF’;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16px;
+letter-spacing: 2px;
+color: #94A3B8;
+transition: all 0.2s ease;
 }
-.toggle input:checked + .slider { background-color: #2563EB; }
-.toggle input:checked + .slider::before {
--webkit-transform: translateX(22px);
-transform: translateX(22px);
+.toggle-track.on {
+background: #1E293B;
+border-color: #1E293B;
 }
+.toggle-track.on::before {
+content: ‘ON’;
+color: #34D399;
+}
+.toggle-thumb { display: none; }
+.toggle { display: none; }
 
 /* Rate row */
 .rate-display {
@@ -476,18 +468,6 @@ transition: all 0.15s;
       </div>
       <div id="rate-status" style="font-size:10px;color:var(--gray);margin-top:5px;letter-spacing:0.5px;">取得中...</div>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">手数料を含む</div>
-          <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="fee-toggle" onchange="playToggle(); calc()">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -515,6 +495,18 @@ transition: all 0.15s;
         <button class="qbtn" onclick="setPips(20)">20</button>
         <button class="qbtn" onclick="setPips(30)">30</button>
         <button class="qbtn" onclick="setPips(50)">50</button>
+      </div>
+    </div>
+    <div class="field" style="margin-top:16px;">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">手数料を含む</div>
+          <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
+        </div>
+        <div class="toggle-track" id="toggle-track" onclick="toggleFee()">
+          <div class="toggle-thumb" id="toggle-thumb"></div>
+        </div>
+        <input type="hidden" id="fee-toggle" value="0">
       </div>
     </div>
   </div>
@@ -745,7 +737,7 @@ function calc() {
   const rate     = parseFloat(document.getElementById('rate').value)   || 0;
   const pips     = parseFloat(document.getElementById('pips').value)   || 0;
   const pairName = document.getElementById('pair').value;
-  const inclFee  = document.getElementById('fee-toggle').checked;
+  const inclFee  = document.getElementById('fee-toggle').value === '1';
 
   // 許容損失額
   const maxLoss = equity * risk;
@@ -828,10 +820,20 @@ function copyLot() {
   });
 }
 
+function toggleFee() {
+  const hidden = document.getElementById('fee-toggle');
+  const track = document.getElementById('toggle-track');
+  const isOn = hidden.value === '1';
+  hidden.value = isOn ? '0' : '1';
+  track.classList.toggle('on', !isOn);
+  playToggle();
+  calc();
+}
+
 function playToggle() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const on = document.getElementById('fee-toggle').checked;
+    const on = document.getElementById('fee-toggle').value === '1';
 
     // ノイズバースト（カチャの打撃音）
     const bufSize = ctx.sampleRate * 0.015;
@@ -883,7 +885,8 @@ function clearAll() {
   document.getElementById('pips').value = '';
   document.querySelectorAll('.qbtn').forEach(b => b.classList.remove('active'));
   // 手数料トグルをOFFに
-  document.getElementById('fee-toggle').checked = false;
+  document.getElementById('fee-toggle').value = '0';
+  document.getElementById('toggle-track').classList.remove('on');
   // 結果をリセット
   calc();
 }
