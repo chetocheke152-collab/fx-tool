@@ -74,10 +74,10 @@ color: #94A3B8;
 text-transform: uppercase;
 }
 
-.section-body { padding: 20px; }
+.section-body { padding: 20px; box-sizing: border-box; }
 
 /* Field */
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
 .field + .field { margin-top: 16px; }
 .label {
 font-size: 12px;
@@ -224,11 +224,12 @@ color: #2563EB;
 .pair-wrapper {
 position: relative;
 width: 100%;
+max-width: 100%;
 box-sizing: border-box;
+overflow: visible;
 }
 .pair-input {
 width: 100%;
-max-width: 100%;
 background: #F4F6F8;
 border: 2px solid #CBD5E1;
 border-radius: 10px;
