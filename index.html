@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FX ポジションサイズ計算</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #F4F6F8;
+  --white:    #FFFFFF;
+  --navy:     #1B2A3B;
+  --navy2:    #243447;
+  --blue:     #2563EB;
+  --blue-l:   #DBEAFE;
+  --green:    #059669;
+  --green-l:  #D1FAE5;
+  --gray:     #94A3B8;
+  --gray-l:   #E2E8F0;
+  --text:     #1E293B;
+  --text-s:   #64748B;
+  --border:   #CBD5E1;
+  --shadow:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-m: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+- { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Noto Sans JP’, sans-serif;
+min-height: 100vh;
+padding: 0 0 60px;
+}
+
+/* Header */
+.header {
+background: var(–navy);
+padding: 20px 20px 18px;
+position: sticky;
+top: 0;
+z-index: 100;
+}
+.header-sub {
+font-size: 10px;
+letter-spacing: 3px;
+color: var(–gray);
+text-transform: uppercase;
+margin-bottom: 4px;
+}
+.header-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 28px;
+letter-spacing: 2px;
+color: #fff;
+line-height: 1;
+}
+.header-title span { color: #60A5FA; }
+
+/* Sections */
+.section {
+margin: 16px 16px 0;
+background: var(–white);
+border-radius: 12px;
+box-shadow: var(–shadow);
+overflow: hidden;
+}
+
+.section-header {
+background: var(–navy2);
+padding: 8px 16px;
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 2px;
+color: var(–gray);
+text-transform: uppercase;
+}
+
+.section-body { padding: 16px; }
+
+/* Field */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field + .field { margin-top: 12px; }
+.label {
+font-size: 11px;
+font-weight: 700;
+color: var(–text-s);
+letter-spacing: 0.5px;
+}
+
+input, select {
+background: var(–bg);
+border: 1.5px solid var(–border);
+border-radius: 8px;
+padding: 11px 14px;
+color: var(–text);
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 16px;
+font-weight: 500;
+width: 100%;
+outline: none;
+transition: border-color 0.15s, box-shadow 0.15s;
+-webkit-appearance: none;
+}
+input:focus, select:focus {
+border-color: var(–blue);
+box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+background: var(–white);
+}
+select {
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 14px center;
+background-color: var(–bg);
+padding-right: 36px;
+cursor: pointer;
+}
+
+/* Grid */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+
+/* Toggle */
+.toggle-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 12px 14px;
+background: var(–bg);
+border-radius: 8px;
+border: 1.5px solid var(–border);
+}
+.toggle-label { font-size: 13px; font-weight: 500; color: var(–text); }
+.toggle-sub   { font-size: 11px; color: var(–text-s); margin-top: 2px; }
+
+.toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider {
+position: absolute; inset: 0;
+background: var(–gray-l);
+border-radius: 26px;
+cursor: pointer;
+transition: background 0.2s;
+}
+.slider::before {
+content: ‘’;
+position: absolute;
+width: 20px; height: 20px;
+left: 3px; top: 3px;
+background: #fff;
+border-radius: 50%;
+transition: transform 0.2s;
+box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle input:checked + .slider { background: var(–blue); }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+
+/* Rate row */
+.rate-display {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 14px;
+background: var(–blue-l);
+border-radius: 8px;
+border: 1.5px solid #BFDBFE;
+}
+.rate-label { font-size: 11px; font-weight: 700; color: var(–blue); flex: 1; }
+.rate-value { font-size: 18px; font-weight: 700; color: var(–blue); font-family: ‘Bebas Neue’, cursive; letter-spacing: 1px; }
+.rate-input-small {
+background: var(–white);
+border: 1.5px solid #BFDBFE;
+border-radius: 6px;
+padding: 6px 10px;
+font-size: 16px;
+font-weight: 700;
+color: var(–blue);
+width: 110px;
+text-align: right;
+outline: none;
+}
+.rate-input-small:focus { border-color: var(–blue); }
+
+/* Quick pips */
+.quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.qbtn {
+background: var(–bg);
+border: 1.5px solid var(–border);
+border-radius: 6px;
+padding: 6px 12px;
+font-size: 12px;
+font-weight: 700;
+color: var(–text-s);
+cursor: pointer;
+transition: all 0.15s;
+flex: 1;
+text-align: center;
+min-width: 44px;
+}
+.qbtn:hover, .qbtn.active {
+background: var(–blue-l);
+border-color: var(–blue);
+color: var(–blue);
+}
+
+/* Copy button */
+.copy-btn {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+margin: 10px auto 0;
+background: rgba(255,255,255,0.1);
+border: 1.5px solid rgba(255,255,255,0.2);
+border-radius: 8px;
+padding: 8px 20px;
+color: var(–gray);
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.15s;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.copy-btn.copied { border-color: #34D399; color: #34D399; }
+
+/* Result box */
+.result-section {
+margin: 16px 16px 0;
+border-radius: 12px;
+overflow: hidden;
+box-shadow: var(–shadow-m);
+}
+
+.result-main {
+background: var(–navy);
+padding: 24px 20px 20px;
+text-align: center;
+}
+.result-main-label {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 2px;
+color: var(–gray);
+text-transform: uppercase;
+margin-bottom: 8px;
+}
+.result-main-value {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 72px;
+letter-spacing: 2px;
+color: #fff;
+line-height: 1;
+}
+.result-main-value.valid { color: #34D399; }
+.result-main-value.error { color: var(–gray); font-size: 18px; padding: 20px 0; font-family: ‘Noto Sans JP’; font-weight: 500; }
+.result-main-unit {
+font-size: 14px;
+font-weight: 700;
+color: var(–gray);
+margin-top: 4px;
+letter-spacing: 1px;
+}
+
+.result-rows {
+background: var(–white);
+}
+.result-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 13px 18px;
+border-bottom: 1px solid var(–gray-l);
+}
+.result-row:last-child { border-bottom: none; }
+.result-row-label { font-size: 12px; font-weight: 500; color: var(–text-s); }
+.result-row-value { font-size: 15px; font-weight: 700; color: var(–text); }
+.result-row-value.blue  { color: var(–blue); }
+.result-row-value.green { color: var(–green); }
+.result-row-value.muted { color: var(–gray); font-weight: 500; font-size: 13px; }
+
+/* Add to history */
+.btn-add {
+display: block;
+margin: 16px 16px 0;
+width: calc(100% - 32px);
+background: var(–blue);
+border: none;
+border-radius: 10px;
+padding: 14px;
+color: #fff;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 1px;
+cursor: pointer;
+transition: background 0.15s, transform 0.1s;
+}
+.btn-add:active { transform: scale(0.98); background: #1D4ED8; }
+
+/* History */
+.history-list { display: flex; flex-direction: column; gap: 0; }
+.history-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 16px;
+border-bottom: 1px solid var(–gray-l);
+animation: fadeIn 0.2s ease;
+}
+.history-item:last-child { border-bottom: none; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.h-pair { font-size: 13px; font-weight: 700; color: var(–navy); min-width: 72px; }
+.h-detail { font-size: 11px; color: var(–text-s); flex: 1; padding: 0 8px; }
+.h-lot { font-family: ‘Bebas Neue’, sans-serif; font-size: 20px; color: var(–green); letter-spacing: 1px; }
+.h-del { background: none; border: none; color: var(–gray); cursor: pointer; font-size: 16px; padding: 0 0 0 8px; transition: color 0.15s; }
+.h-del:hover { color: #EF4444; }
+.empty { text-align: center; color: var(–gray); font-size: 12px; padding: 20px; }
+
+.btn-clear {
+display: block;
+margin: 12px 16px 0;
+width: calc(100% - 32px);
+background: transparent;
+border: 1.5px solid var(–border);
+border-radius: 8px;
+padding: 10px;
+color: var(–text-s);
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.15s;
+}
+.btn-clear:hover { border-color: #EF4444; color: #EF4444; }
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">Exness Zero · Position Size</div>
+  <div class="header-title">FX <span>LOT</span> 計算</div>
+</div>
+
+<!-- 口座設定 -->
+
+<div class="section">
+  <div class="section-header">口座設定</div>
+  <div class="section-body">
+    <div class="grid2">
+      <div class="field">
+        <span class="label">証拠金（円）</span>
+        <input id="equity" type="number" value="200000" step="1000" oninput="calc()">
+      </div>
+      <div class="field">
+        <span class="label">リスク %</span>
+        <input id="risk" type="number" value="0.02" step="0.005" oninput="calc()">
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <span class="label">USD/JPY レート</span>
+      <div class="rate-display">
+        <span class="rate-label">USD/JPY</span>
+        <input class="rate-input-small" id="rate" type="number" value="155.0" step="0.1" oninput="calc()">
+      </div>
+      <div id="rate-status" style="font-size:10px;color:var(--gray);margin-top:5px;letter-spacing:0.5px;">取得中...</div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">手数料を含む</div>
+          <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="fee-toggle" onchange="calc()">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 取引設定 -->
+
+<div class="section">
+  <div class="section-header">取引設定</div>
+  <div class="section-body">
+    <div class="field">
+      <span class="label">通貨ペア</span>
+      <select id="pair" onchange="calc()">
+        <option value="">-- 選択してください --</option>
+      </select>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <span class="label">SL pips 数</span>
+      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
+      <div class="quick-btns" id="quick-btns">
+        <button class="qbtn" onclick="setPips(5)">5</button>
+        <button class="qbtn" onclick="setPips(10)">10</button>
+        <button class="qbtn" onclick="setPips(15)">15</button>
+        <button class="qbtn" onclick="setPips(20)">20</button>
+        <button class="qbtn" onclick="setPips(30)">30</button>
+        <button class="qbtn" onclick="setPips(50)">50</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 結果 -->
+
+<div class="result-section">
+  <div class="result-main">
+    <div class="result-main-label">推奨 Lot 数</div>
+    <div class="result-main-value" id="res-lot">—</div>
+    <div class="result-main-unit" id="res-lot-unit">ペアとpips数を入力</div>
+    <button class="copy-btn" id="copy-btn" onclick="copyLot()">📋 タップしてコピー</button>
+  </div>
+  <div class="result-rows">
+    <div class="result-row">
+      <span class="result-row-label">許容損失額</span>
+      <span class="result-row-value blue" id="res-maxloss">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-row-label">1pip 値</span>
+      <span class="result-row-value" id="res-pip">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-row-label">取引手数料</span>
+      <span class="result-row-value" id="res-fee">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-row-label">実質 SL 損失額</span>
+      <span class="result-row-value green" id="res-sl">—</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAIRS = [
+  { pair:'NZD/CHF', fee:3.125, type:'CHF' },
+  { pair:'AUD/USD', fee:3.5,   type:'USD' },
+  { pair:'EUR/USD', fee:3.5,   type:'USD' },
+  { pair:'USD/JPY', fee:3.5,   type:'JPY' },
+  { pair:'USD/CAD', fee:3.5,   type:'CAD' },
+  { pair:'AUD/NZD', fee:3.5,   type:'NZD' },
+  { pair:'GBP/USD', fee:3.5,   type:'USD' },
+  { pair:'USD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'AUD/CAD', fee:3.5,   type:'CAD' },
+  { pair:'AUD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'AUD/JPY', fee:3.5,   type:'JPY' },
+  { pair:'CAD/CHF', fee:3.5,   type:'CHF' },
+  { pair:'NZD/CAD', fee:3.5,   type:'CAD' },
+  { pair:'CAD/JPY', fee:3.5,   type:'JPY' },
+  { pair:'CHF/JPY', fee:3.5,   type:'JPY' },
+  { pair:'EUR/JPY', fee:3.5,   type:'JPY' },
+  { pair:'EUR/NZD', fee:3.5,   type:'NZD' },
+  { pair:'EUR/AUD', fee:3.5,   type:'AUD' },
+  { pair:'EUR/CAD', fee:3.5,   type:'CAD' },
+  { pair:'EUR/CHF', fee:3.5,   type:'CHF' },
+  { pair:'NZD/USD', fee:3.5,   type:'USD' },
+  { pair:'GBP/AUD', fee:3.5,   type:'AUD' },
+  { pair:'GBP/JPY', fee:3.5,   type:'JPY' },
+  { pair:'GBP/NZD', fee:3.5,   type:'NZD' },
+  { pair:'NZD/JPY', fee:3.5,   type:'JPY' },
+  { pair:'GBP/CAD', fee:3.5,   type:'CAD' },
+  { pair:'GBP/CHF', fee:3.5,   type:'CHF' },
+  { pair:'EUR/GBP', fee:3.5,   type:'GBP' },
+];
+
+// クロスレート（Frankfurter APIで取得・JPY建て）
+// 起動時に自動取得。取得できない場合は概算値にフォールバック
+const CROSS_RATE = {
+  AUD: 101, NZD: 91, CAD: 112, CHF: 171, GBP: 196
+};
+
+// レート取得状態
+let ratesLoaded = false;
+
+// Frankfurter APIでJPY建て全通貨レートを取得
+async function fetchRates() {
+  const statusEl = document.getElementById('rate-status');
+  try {
+    statusEl.textContent = '取得中...';
+    // 複数APIを順番に試す
+    const APIS = [
+      {
+        url: 'https://corsproxy.io/?https://open.er-api.com/v6/latest/JPY',
+        parse: (data) => {
+          Object.entries(data.rates).forEach(([ccy, val]) => {
+            if (['USD','AUD','NZD','CAD','CHF','GBP'].includes(ccy)) {
+              CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
+            }
+          });
+        }
+      },
+      {
+        url: 'https://corsproxy.io/?https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
+        parse: (data) => {
+          Object.entries(data.rates).forEach(([ccy, val]) => {
+            CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
+          });
+        }
+      },
+      {
+        url: 'https://open.er-api.com/v6/latest/JPY',
+        parse: (data) => {
+          Object.entries(data.rates).forEach(([ccy, val]) => {
+            if (['USD','AUD','NZD','CAD','CHF','GBP'].includes(ccy)) {
+              CROSS_RATE[ccy] = Math.round((1 / val) * 1000) / 1000;
+            }
+          });
+        }
+      }
+    ];
+
+    let success = false;
+    for (const api of APIS) {
+      try {
+        const res = await fetch(api.url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        api.parse(data);
+        success = true;
+        break;
+      } catch(e) { continue; }
+    }
+    if (!success) throw new Error('all APIs failed');
+    ratesLoaded = true;
+    // USD/JPYレート欄も自動セット
+    if (CROSS_RATE['USD']) {
+      const rateInput = document.getElementById('rate');
+      if (!rateInput.dataset.manual) {
+        rateInput.value = CROSS_RATE['USD'].toFixed(3);
+      }
+    }
+    statusEl.textContent = '✅ レート取得済（Frankfurter）';
+    statusEl.style.color = 'var(--green)';
+    calc();
+  } catch(e) {
+    statusEl.textContent = '⚠ 取得失敗 — 手動入力値を使用';
+    statusEl.style.color = '#F59E0B';
+  }
+}
+
+// プルダウン構築（決済通貨でグループ化）
+const GROUPS = [
+  { label: '── JPY建て ──', types: ['JPY'] },
+  { label: '── USD建て ──', types: ['USD'] },
+  { label: '── CHF建て ──', types: ['CHF'] },
+  { label: '── NZD建て ──', types: ['NZD'] },
+  { label: '── AUD建て ──', types: ['AUD'] },
+  { label: '── CAD建て ──', types: ['CAD'] },
+  { label: '── GBP建て ──', types: ['GBP'] },
+];
+
+const sel = document.getElementById('pair');
+GROUPS.forEach(g => {
+  const pairs = PAIRS.filter(p => g.types.includes(p.type));
+  if (!pairs.length) return;
+  const grp = document.createElement('optgroup');
+  grp.label = g.label;
+  pairs.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.pair;
+    o.textContent = p.pair;
+    grp.appendChild(o);
+  });
+  sel.appendChild(grp);
+});
+
+// レート手動変更フラグ
+document.getElementById('rate').addEventListener('input', function() {
+  this.dataset.manual = '1';
+  // USD/JPYを手動入力した場合はCROSS_RATEも更新
+  CROSS_RATE['USD'] = parseFloat(this.value) || CROSS_RATE['USD'];
+});
+
+function get1PipValue(type, rate) {
+  if (type === 'JPY') return 1000;
+  if (type === 'USD') return (CROSS_RATE['USD'] || rate) * 10;
+  return (CROSS_RATE[type] || rate) * 10;
+}
+
+function calc() {
+  const equity   = parseFloat(document.getElementById('equity').value) || 0;
+  const risk     = parseFloat(document.getElementById('risk').value)   || 0;
+  const rate     = parseFloat(document.getElementById('rate').value)   || 0;
+  const pips     = parseFloat(document.getElementById('pips').value)   || 0;
+  const pairName = document.getElementById('pair').value;
+  const inclFee  = document.getElementById('fee-toggle').checked;
+
+  // 許容損失額
+  const maxLoss = equity * risk;
+  document.getElementById('res-maxloss').textContent =
+    maxLoss > 0 ? `¥${Math.round(maxLoss).toLocaleString()}` : '—';
+
+  const p = PAIRS.find(x => x.pair === pairName);
+
+  if (!p || !pips || !rate) {
+    document.getElementById('res-lot').textContent = '—';
+    document.getElementById('res-lot').className = 'result-main-value';
+    document.getElementById('res-lot-unit').textContent = 'ペアとpips数を入力';
+    document.getElementById('res-pip').textContent  = '—';
+    document.getElementById('res-fee').textContent  = '—';
+    document.getElementById('res-sl').textContent   = '—';
+    return;
+  }
+
+  const pip1   = get1PipValue(p.type, rate);
+  const feeJPY = p.fee * rate; // 手数料/lot（円）
+
+  // 推奨lot = 許容損失 ÷ (pips×1pip値 + 手数料/lot×inclFee)
+  const denom = pips * pip1 + (inclFee ? feeJPY : 0);
+  const lot   = Math.floor((maxLoss / denom) * 100) / 100;
+
+  // 手数料・実質SL
+  const feeTotal = lot * feeJPY;
+  const slActual = maxLoss - feeTotal;
+
+  // 表示
+  const lotEl = document.getElementById('res-lot');
+  if (lot > 0) {
+    lotEl.textContent = lot.toFixed(2);
+    lotEl.className = 'result-main-value valid';
+    document.getElementById('res-lot-unit').textContent = 'lot';
+  } else {
+    lotEl.textContent = '0.00';
+    lotEl.className = 'result-main-value';
+    document.getElementById('res-lot-unit').textContent = 'lot — 証拠金を増やすかpipsを減らしてください';
+  }
+
+  document.getElementById('res-pip').textContent  = `¥${Math.round(pip1).toLocaleString()} / pip`;
+  document.getElementById('res-fee').textContent  = inclFee
+    ? `¥${Math.round(feeTotal).toLocaleString()}（$${p.fee}/lot × ${lot.toFixed(2)}lot）`
+    : 'OFF';
+  document.getElementById('res-sl').textContent   = `¥${Math.round(slActual).toLocaleString()}`;
+
+  // Quick pips active
+  document.querySelectorAll('.qbtn').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.textContent) === pips);
+  });
+}
+
+function copyLot() {
+  const lotEl = document.getElementById('res-lot');
+  const val = lotEl.textContent;
+  if (val === '—') return;
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(val).then(() => {
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 タップしてコピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    // fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 タップしてコピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function setPips(val) {
+  document.getElementById('pips').value = val;
+  calc();
+}
+
+fetchRates();
+calc();
+</script>
+
+</body>
+</html>
