@@ -529,6 +529,7 @@ function toggleTheme(){
     btn.textContent = 'LIGHT';
     localStorage.setItem('ps_theme','light');
   }
+  playClick(document.body.classList.contains('light'));
 }
 
 fetchRates();
