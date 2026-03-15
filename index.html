@@ -4,314 +4,110 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Position Sizer</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Position Sizer v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#F4F6F8;color:#1E293B;font-family:'Noto Sans JP',-apple-system,sans-serif;min-height:100vh;padding-bottom:60px;-webkit-font-smoothing:antialiased}
 
-body {
-background: #F4F6F8;
-color: #1E293B;
-font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-min-height: 100vh;
-padding-bottom: 60px;
-}
+/* Header */
+.hdr{background:#1B2A3B;padding:20px 20px 18px}
+.hdr-sub{font-size:10px;letter-spacing:3px;color:#94A3B8;text-transform:uppercase;margin-bottom:4px}
+.hdr-title{font-family:‘Bebas Neue’,sans-serif;font-size:34px;letter-spacing:3px;color:#fff;line-height:1}
+.hdr-title span{color:#60A5FA}
 
-/* ── Header ── */
-.hdr { background: #1B2A3B; padding: 20px 20px 18px; }
-.hdr-sub { font-size: 10px; letter-spacing: 3px; color: #94A3B8; text-transform: uppercase; margin-bottom: 4px; }
-.hdr-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 34px; letter-spacing: 3px; color: #fff; line-height: 1; }
-.hdr-title span { color: #60A5FA; }
+/* Card */
+.card{margin:16px 16px 0;background:#fff;border-radius:14px;border:1.5px solid #E2E8F0;overflow:hidden}
+.card-hdr{background:#243447;padding:9px 16px;font-size:10px;font-weight:700;letter-spacing:2px;color:#94A3B8;text-transform:uppercase}
+.card-body{padding:18px}
 
-/* ── Card ── */
-.card { margin: 16px 16px 0; background: #fff; border-radius: 14px; border: 1.5px solid #E2E8F0; overflow: hidden; }
-.card-hdr { background: #243447; padding: 9px 16px; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #94A3B8; text-transform: uppercase; }
-.card-body { padding: 18px; }
+/* Field */
+.field{display:flex;flex-direction:column;gap:5px}
+.field+.field{margin-top:14px}
+.lbl{font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.5px}
 
-/* ── Field ── */
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field + .field { margin-top: 14px; }
-.lbl { font-size: 11px; font-weight: 700; color: #64748B; letter-spacing: 0.5px; }
+/* Input / Select */
+input,select{width:100%;background:#F4F6F8;border:2px solid #CBD5E1;border-radius:10px;padding:13px 14px;color:#1E293B;font-family:‘Noto Sans JP’,-apple-system,sans-serif;font-size:16px;font-weight:600;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:#2563EB;background:#fff}
+select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 14px center;background-color:#F4F6F8;padding-right:36px;cursor:pointer}
+.input-short{max-width:60%}
 
-/* ── Input / Select ── */
-input, select {
-width: 100%;
-background: #F4F6F8;
-border: 2px solid #CBD5E1;
-border-radius: 10px;
-padding: 13px 14px;
-color: #1E293B;
-font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-font-size: 16px;
-font-weight: 600;
-outline: none;
--webkit-appearance: none;
-appearance: none;
--webkit-font-smoothing: antialiased;
-}
-input:focus, select:focus { border-color: #2563EB; background: #fff; }
+/* Rate */
+.rate-box{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#DBEAFE;border-radius:10px;border:2px solid #BFDBFE}
+.rate-lbl{font-size:12px;font-weight:700;color:#2563EB;flex:1}
+.rate-val{font-size:16px;font-weight:700;color:#2563EB;letter-spacing:1px}
+.rate-status{font-size:10px;color:#94A3B8;margin-top:4px;letter-spacing:0.5px}
 
-/* リスク% select */
-select {
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
-background-repeat: no-repeat;
-background-position: right 14px center;
-background-color: #F4F6F8;
-padding-right: 36px;
-cursor: pointer;
-}
+/* Pair button */
+.pair-btn{width:100%;background:#F4F6F8;border:2px solid #CBD5E1;border-radius:10px;padding:13px 38px 13px 14px;color:#94A3B8;font-family:‘Noto Sans JP’,-apple-system,sans-serif;font-size:16px;font-weight:600;text-align:left;cursor:pointer;-webkit-appearance:none;background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 14px center;background-color:#F4F6F8;transition:border-color 0.15s}
+.pair-btn.sel{color:#1E293B;border-color:#2563EB;background-color:#fff}
 
-/* 証拠金・リスクの横幅制限 */
-.input-short { max-width: 60%; }
+/* Overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.overlay.open{display:block}
 
-/* ── Rate display ── */
-.rate-box {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 12px 14px;
-background: #DBEAFE;
-border-radius: 10px;
-border: 2px solid #BFDBFE;
-}
-.rate-lbl { font-size: 12px; font-weight: 700; color: #2563EB; flex: 1; }
-.rate-val { font-size: 16px; font-weight: 700; color: #2563EB; letter-spacing: 1px; }
-.rate-status { font-size: 10px; color: #94A3B8; margin-top: 4px; letter-spacing: 0.5px; }
+/* Sheet */
+.sheet{position:fixed;bottom:-100%;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:500;max-height:75vh;display:flex;flex-direction:column;transition:bottom 0.3s cubic-bezier(0.34,1.56,0.64,1);visibility:hidden}
+.sheet.open{bottom:0;visibility:visible}
+.sheet-handle{width:36px;height:4px;background:#CBD5E1;border-radius:2px;margin:12px auto 0;flex-shrink:0}
+.sheet-title{padding:12px 18px 10px;font-size:13px;font-weight:700;color:#64748B;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #F1F5F9;flex-shrink:0}
 
-/* ── Pair picker button ── */
-.pair-btn {
-width: 100%;
-background: #F4F6F8;
-border: 2px solid #CBD5E1;
-border-radius: 10px;
-padding: 13px 38px 13px 14px;
-color: #1E293B;
-font-family: ‘Noto Sans JP’, -apple-system, sans-serif;
-font-size: 16px;
-font-weight: 500;
-text-align: left;
-cursor: pointer;
--webkit-appearance: none;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%2394A3B8’ stroke-width=‘2’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
-background-repeat: no-repeat;
-background-position: right 14px center;
-background-color: #F4F6F8;
-transition: border-color 0.15s;
-}
-.pair-btn.selected { color: #1E293B; font-weight: 700; border-color: #2563EB; background-color: #fff; }
-.pair-btn-placeholder { color: #94A3B8; }
+/* Drum tabs */
+.drum-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1.5px solid #E2E8F0;flex-shrink:0}
+.drum-tabs::-webkit-scrollbar{display:none}
+.drum-tab{padding:10px 14px;font-size:11px;font-weight:700;color:#94A3B8;cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:color 0.15s,border-color 0.15s;flex-shrink:0}
+.drum-tab.active{color:#2563EB;border-bottom-color:#2563EB}
 
-/* ── Bottom sheet overlay ── */
-.sheet-overlay {
-display: none;
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.5);
-z-index: 400;
--webkit-backdrop-filter: blur(2px);
-backdrop-filter: blur(2px);
-}
-.sheet-overlay.open { display: block; }
+/* Drum scroll */
+.drum-wrap{position:relative;height:210px;overflow:hidden;flex-shrink:0}
+.drum-wrap::before,.drum-wrap::after{content:’’;position:absolute;left:0;right:0;height:80px;z-index:2;pointer-events:none}
+.drum-wrap::before{top:0;background:linear-gradient(to bottom,rgba(255,255,255,0.95),rgba(255,255,255,0))}
+.drum-wrap::after{bottom:0;background:linear-gradient(to top,rgba(255,255,255,0.95),rgba(255,255,255,0))}
+.drum-line{position:absolute;left:20px;right:20px;top:50%;height:44px;transform:translateY(-50%);border-top:1.5px solid #CBD5E1;border-bottom:1.5px solid #CBD5E1;pointer-events:none;z-index:1}
+.drum-scroll{height:210px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.drum-scroll::-webkit-scrollbar{display:none}
+.drum-pad{height:83px;flex-shrink:0}
+.picker-item{display:flex;align-items:center;justify-content:center;height:44px;font-size:17px;font-weight:500;color:#B0BEC5;cursor:pointer;scroll-snap-align:center;transition:color 0.2s,font-size 0.2s;user-select:none}
+.picker-item.center{color:#1E293B;font-weight:700;font-size:19px}
+.picker-item.hide{display:none}
 
-/* ── Bottom sheet ── */
-.sheet {
-position: fixed;
-bottom: -100%;
-left: 0; right: 0;
-background: #fff;
-border-radius: 20px 20px 0 0;
-z-index: 500;
-max-height: 75vh;
-display: flex;
-flex-direction: column;
-transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.sheet.open { bottom: 0; }
-.sheet-handle {
-width: 36px; height: 4px;
-background: #CBD5E1;
-border-radius: 2px;
-margin: 12px auto 0;
-flex-shrink: 0;
-}
-.sheet-title {
-padding: 12px 18px 10px;
-font-size: 13px;
-font-weight: 700;
-color: #64748B;
-letter-spacing: 1px;
-text-transform: uppercase;
-border-bottom: 1px solid #F1F5F9;
-flex-shrink: 0;
-}
+/* Quick pips */
+.qbtns{display:flex;gap:6px;margin-top:8px}
+.qbtn{flex:1;background:#F4F6F8;border:2px solid #CBD5E1;border-radius:8px;padding:9px 0;font-size:13px;font-weight:700;color:#64748B;cursor:pointer;text-align:center;-webkit-appearance:none}
+.qbtn.on{background:#DBEAFE;border-color:#2563EB;color:#2563EB}
 
-/* ── Drum picker ── */
-.drum-tabs {
-display: flex;
-overflow-x: auto;
-scrollbar-width: none;
-border-bottom: 1.5px solid #E2E8F0;
-flex-shrink: 0;
-}
-.drum-tabs::-webkit-scrollbar { display: none; }
-.drum-tab {
-padding: 10px 14px;
-font-size: 11px;
-font-weight: 700;
-color: #94A3B8;
-cursor: pointer;
-white-space: nowrap;
-border-bottom: 2.5px solid transparent;
-margin-bottom: -1.5px;
-transition: color 0.15s, border-color 0.15s;
-flex-shrink: 0;
-}
-.drum-tab.active { color: #2563EB; border-bottom-color: #2563EB; }
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#F4F6F8;border-radius:10px;border:2px solid #CBD5E1}
+.toggle-info{flex:1}
+.toggle-lbl{font-size:14px;font-weight:600;color:#1E293B}
+.toggle-sub{font-size:11px;color:#64748B;margin-top:2px}
+.toggle-btn{width:68px;height:32px;background:#E2E8F0;border:2px solid #CBD5E1;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s}
+.toggle-btn.on{background:#1B2A3B;border-color:#1B2A3B}
+.toggle-txt{font-family:‘Bebas Neue’,sans-serif;font-size:15px;letter-spacing:2px;color:#94A3B8;pointer-events:none;transition:color 0.2s}
+.toggle-btn.on .toggle-txt{color:#34D399}
 
-.drum-wrap {
-position: relative;
-height: 210px;
-overflow: hidden;
-flex-shrink: 0;
-}
-.drum-wrap::before,
-.drum-wrap::after {
-content: ‘’;
-position: absolute;
-left: 0; right: 0;
-height: 80px;
-z-index: 2;
-pointer-events: none;
-}
-.drum-wrap::before {
-top: 0;
-background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0));
-}
-.drum-wrap::after {
-bottom: 0;
-background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
-}
-.drum-line {
-position: absolute;
-left: 20px; right: 20px;
-top: 50%;
-height: 44px;
-transform: translateY(-50%);
-border-top: 1.5px solid #CBD5E1;
-border-bottom: 1.5px solid #CBD5E1;
-pointer-events: none;
-z-index: 1;
-}
-.drum-scroll {
-height: 210px;
-overflow-y: scroll;
-scroll-snap-type: y mandatory;
--webkit-overflow-scrolling: touch;
-scrollbar-width: none;
-}
-.drum-scroll::-webkit-scrollbar { display: none; }
-.drum-pad { height: 83px; flex-shrink: 0; }
-.picker-item {
-display: flex;
-align-items: center;
-justify-content: center;
-height: 44px;
-font-size: 17px;
-font-weight: 500;
-color: #B0BEC5;
-cursor: pointer;
-scroll-snap-align: center;
-transition: color 0.2s, font-weight 0.2s;
-user-select: none;
-}
-.picker-item.center { color: #1E293B; font-weight: 700; font-size: 19px; }
-.picker-item.hide { display: none; }
+/* Result */
+.result-card{margin:16px 16px 0;border-radius:14px;overflow:hidden;border:1.5px solid #E2E8F0}
+.result-top{background:#1B2A3B;padding:24px 20px 18px;text-align:center}
+.result-top-lbl{font-size:10px;font-weight:700;letter-spacing:2px;color:#94A3B8;text-transform:uppercase;margin-bottom:8px}
+.result-lot{font-family:‘Bebas Neue’,sans-serif;font-size:76px;letter-spacing:3px;color:#fff;line-height:1}
+.result-lot.ok{color:#34D399}
+.result-unit{font-size:14px;font-weight:700;color:#94A3B8;margin-top:4px;letter-spacing:1px}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.18);border-radius:8px;padding:7px 18px;color:#94A3B8;font-family:‘Noto Sans JP’,sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s}
+.copy-btn.done{border-color:#34D399;color:#34D399}
+.result-rows{background:#fff}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid #E2E8F0}
+.result-row:last-child{border-bottom:none}
+.r-lbl{font-size:12px;font-weight:500;color:#64748B}
+.r-val{font-size:15px;font-weight:700;color:#1E293B}
+.r-val.blue{color:#2563EB}
+.r-val.green{color:#059669}
 
-/* ── Quick pips ── */
-.qbtns { display: flex; gap: 6px; margin-top: 8px; }
-.qbtn {
-flex: 1;
-background: #F4F6F8;
-border: 2px solid #CBD5E1;
-border-radius: 8px;
-padding: 9px 0;
-font-size: 13px;
-font-weight: 700;
-color: #64748B;
-cursor: pointer;
-text-align: center;
--webkit-appearance: none;
-}
-.qbtn.on { background: #DBEAFE; border-color: #2563EB; color: #2563EB; }
-
-/* ── Toggle ── */
-.toggle-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 14px;
-background: #F4F6F8;
-border-radius: 10px;
-border: 2px solid #CBD5E1;
-}
-.toggle-info { flex: 1; }
-.toggle-lbl { font-size: 14px; font-weight: 600; color: #1E293B; }
-.toggle-sub { font-size: 11px; color: #64748B; margin-top: 2px; }
-.toggle-btn {
-width: 68px;
-height: 32px;
-background: #E2E8F0;
-border: 2px solid #CBD5E1;
-border-radius: 6px;
-cursor: pointer;
-flex-shrink: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-transition: background 0.2s, border-color 0.2s;
-}
-.toggle-btn.on { background: #1B2A3B; border-color: #1B2A3B; }
-.toggle-txt {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 15px;
-letter-spacing: 2px;
-color: #94A3B8;
-pointer-events: none;
-transition: color 0.2s;
-}
-.toggle-btn.on .toggle-txt { color: #34D399; }
-
-/* ── Result ── */
-.result-card { margin: 16px 16px 0; border-radius: 14px; overflow: hidden; border: 1.5px solid #E2E8F0; }
-.result-top { background: #1B2A3B; padding: 24px 20px 18px; text-align: center; }
-.result-top-lbl { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #94A3B8; text-transform: uppercase; margin-bottom: 8px; }
-.result-lot { font-family: ‘Bebas Neue’, sans-serif; font-size: 76px; letter-spacing: 3px; color: #fff; line-height: 1; }
-.result-lot.ok { color: #34D399; }
-.result-unit { font-size: 14px; font-weight: 700; color: #94A3B8; margin-top: 4px; letter-spacing: 1px; }
-.copy-btn {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-margin-top: 10px;
-background: rgba(255,255,255,0.08);
-border: 1.5px solid rgba(255,255,255,0.18);
-border-radius: 8px;
-padding: 7px 18px;
-color: #94A3B8;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 11px;
-font-weight: 700;
-cursor: pointer;
-transition: all 0.15s;
-}
-.copy-btn.done { border-color: #34D399; color: #34D399; }
-.result-rows { background: #fff; }
-.result-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 18px; border-bottom: 1px solid #E2E8F0; }
-.result-row:last-child { border-bottom: none; }
-.r-lbl { font-size: 12px; font-weight: 500; color: #64748B; }
-.r-val { font-size: 15px; font-weight: 700; color: #1E293B; }
-.r-val.blue { color: #2563EB; }
-.r-val.green { color: #059669; }
+/* Disclaimer */
+.disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#94A3B8;letter-spacing:0.5px}
 </style>
 
 </head>
@@ -322,7 +118,7 @@ transition: all 0.15s;
   <div class="hdr-title">Position <span>Sizer</span></div>
 </div>
 
-<!-- 口座設定 -->
+<!-- Account -->
 
 <div class="card">
   <div class="card-hdr">Account</div>
@@ -352,34 +148,16 @@ transition: all 0.15s;
   </div>
 </div>
 
-<!-- 取引設定 -->
+<!-- Trade -->
 
 <div class="card">
   <div class="card-hdr">Trade</div>
   <div class="card-body">
     <div class="field">
       <span class="lbl">通貨ペア</span>
-      <button class="pair-btn" id="pair-btn" onclick="openSheet()">
-        <span id="pair-btn-text" class="pair-btn-placeholder">選択してください</span>
-      </button>
+      <button class="pair-btn" id="pair-btn" onclick="openSheet()">選択してください</button>
       <input type="hidden" id="pair" value="">
     </div>
-
-<!-- Bottom sheet -->
-
-<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">通貨ペアを選択</div>
-  <div class="drum-tabs" id="drum-tabs"></div>
-  <div class="drum-wrap">
-    <div class="drum-line"></div>
-    <div class="drum-scroll" id="drum-scroll">
-      <div class="drum-pad"></div>
-      <div class="drum-pad"></div>
-    </div>
-  </div>
-</div>
     <div class="field">
       <span class="lbl">SL pips 数</span>
       <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
@@ -407,7 +185,7 @@ transition: all 0.15s;
   </div>
 </div>
 
-<!-- 結果 -->
+<!-- Result -->
 
 <div class="result-card">
   <div class="result-top">
@@ -424,338 +202,263 @@ transition: all 0.15s;
   </div>
 </div>
 
-<div style="text-align:center;padding:20px 16px 0;font-size:10px;color:#94A3B8;letter-spacing:0.5px;">This tool is unofficial and not affiliated with or endorsed by Exness.</div>
+<div class="disclaimer">This tool is unofficial and not affiliated with or endorsed by Exness.</div>
+
+<!-- Bottom Sheet -->
+
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">通貨ペアを選択</div>
+  <div class="drum-tabs" id="drum-tabs"></div>
+  <div class="drum-wrap">
+    <div class="drum-line"></div>
+    <div class="drum-scroll" id="drum-scroll">
+      <div class="drum-pad"></div>
+      <div class="drum-pad"></div>
+    </div>
+  </div>
+</div>
 
 <script>
-const PAIRS = [
-  { pair:'USD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'EUR/JPY', fee:3.5,   type:'JPY' },
-  { pair:'GBP/JPY', fee:3.5,   type:'JPY' },
-  { pair:'AUD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'CAD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'CHF/JPY', fee:3.5,   type:'JPY' },
-  { pair:'NZD/JPY', fee:3.5,   type:'JPY' },
-  { pair:'EUR/USD', fee:3.5,   type:'USD' },
-  { pair:'GBP/USD', fee:3.5,   type:'USD' },
-  { pair:'AUD/USD', fee:3.5,   type:'USD' },
-  { pair:'NZD/USD', fee:3.5,   type:'USD' },
-  { pair:'USD/CHF', fee:3.5,   type:'CHF' },
-  { pair:'EUR/CHF', fee:3.5,   type:'CHF' },
-  { pair:'GBP/CHF', fee:3.5,   type:'CHF' },
-  { pair:'AUD/CHF', fee:3.5,   type:'CHF' },
-  { pair:'CAD/CHF', fee:3.5,   type:'CHF' },
-  { pair:'NZD/CHF', fee:3.125, type:'CHF' },
-  { pair:'AUD/NZD', fee:3.5,   type:'NZD' },
-  { pair:'EUR/NZD', fee:3.5,   type:'NZD' },
-  { pair:'GBP/NZD', fee:3.5,   type:'NZD' },
-  { pair:'EUR/AUD', fee:3.5,   type:'AUD' },
-  { pair:'GBP/AUD', fee:3.5,   type:'AUD' },
-  { pair:'USD/CAD', fee:3.5,   type:'CAD' },
-  { pair:'EUR/CAD', fee:3.5,   type:'CAD' },
-  { pair:'GBP/CAD', fee:3.5,   type:'CAD' },
-  { pair:'AUD/CAD', fee:3.5,   type:'CAD' },
-  { pair:'NZD/CAD', fee:3.5,   type:'CAD' },
-  { pair:'EUR/GBP', fee:3.5,   type:'GBP' },
-  { pair:'XAU/USD', fee:8.0,   type:'XAU' },
+const PAIRS=[
+  {pair:'USD/JPY',fee:3.5,type:'JPY'},{pair:'EUR/JPY',fee:3.5,type:'JPY'},
+  {pair:'GBP/JPY',fee:3.5,type:'JPY'},{pair:'AUD/JPY',fee:3.5,type:'JPY'},
+  {pair:'CAD/JPY',fee:3.5,type:'JPY'},{pair:'CHF/JPY',fee:3.5,type:'JPY'},
+  {pair:'NZD/JPY',fee:3.5,type:'JPY'},{pair:'EUR/USD',fee:3.5,type:'USD'},
+  {pair:'GBP/USD',fee:3.5,type:'USD'},{pair:'AUD/USD',fee:3.5,type:'USD'},
+  {pair:'NZD/USD',fee:3.5,type:'USD'},{pair:'USD/CHF',fee:3.5,type:'CHF'},
+  {pair:'EUR/CHF',fee:3.5,type:'CHF'},{pair:'GBP/CHF',fee:3.5,type:'CHF'},
+  {pair:'AUD/CHF',fee:3.5,type:'CHF'},{pair:'CAD/CHF',fee:3.5,type:'CHF'},
+  {pair:'NZD/CHF',fee:3.125,type:'CHF'},{pair:'AUD/NZD',fee:3.5,type:'NZD'},
+  {pair:'EUR/NZD',fee:3.5,type:'NZD'},{pair:'GBP/NZD',fee:3.5,type:'NZD'},
+  {pair:'EUR/AUD',fee:3.5,type:'AUD'},{pair:'GBP/AUD',fee:3.5,type:'AUD'},
+  {pair:'USD/CAD',fee:3.5,type:'CAD'},{pair:'EUR/CAD',fee:3.5,type:'CAD'},
+  {pair:'GBP/CAD',fee:3.5,type:'CAD'},{pair:'AUD/CAD',fee:3.5,type:'CAD'},
+  {pair:'NZD/CAD',fee:3.5,type:'CAD'},{pair:'EUR/GBP',fee:3.5,type:'GBP'},
+  {pair:'XAU/USD',fee:8.0,type:'XAU'}
 ];
 
-const GROUPS = [
-  { lbl:'JPY建て', types:['JPY'] },
-  { lbl:'USD建て', types:['USD'] },
-  { lbl:'CHF建て', types:['CHF'] },
-  { lbl:'NZD建て', types:['NZD'] },
-  { lbl:'AUD建て', types:['AUD'] },
-  { lbl:'CAD建て', types:['CAD'] },
-  { lbl:'GBP建て', types:['GBP'] },
-  { lbl:'貴金属',  types:['XAU'] },
+const GROUPS=[
+  {lbl:'JPY建て',types:['JPY']},{lbl:'USD建て',types:['USD']},
+  {lbl:'CHF建て',types:['CHF']},{lbl:'NZD建て',types:['NZD']},
+  {lbl:'AUD建て',types:['AUD']},{lbl:'CAD建て',types:['CAD']},
+  {lbl:'GBP建て',types:['GBP']},{lbl:'貴金属',types:['XAU']}
 ];
 
-// レート（APIで上書き）
-const RATE = { USD:155, AUD:101, NZD:91, CAD:112, CHF:171, GBP:196 };
+const RATE={USD:155,AUD:101,NZD:91,CAD:112,CHF:171,GBP:196};
 
-
-
-// ── レート取得 ──
-async function fetchRates() {
-  const st = document.getElementById('rate-status');
-  const APIS = [
-    { url:'https://open.er-api.com/v6/latest/JPY',
-      parse(d) { ['USD','AUD','NZD','CAD','CHF','GBP'].forEach(k => { if(d.rates[k]) RATE[k] = +(1/d.rates[k]).toFixed(4); }); }
-    },
-    { url:'https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
-      parse(d) { Object.entries(d.rates).forEach(([k,v]) => { RATE[k] = +(1/v).toFixed(4); }); }
-    }
+// Rate fetch
+async function fetchRates(){
+  const st=document.getElementById('rate-status');
+  const APIS=[
+    {url:'https://open.er-api.com/v6/latest/JPY',
+     parse(d){['USD','AUD','NZD','CAD','CHF','GBP'].forEach(k=>{if(d.rates[k])RATE[k]=+(1/d.rates[k]).toFixed(4);})}},
+    {url:'https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
+     parse(d){Object.entries(d.rates).forEach(([k,v])=>{RATE[k]=+(1/v).toFixed(4);})}}
   ];
-  for (const api of APIS) {
-    try {
-      const r = await fetch(api.url);
-      if (!r.ok) continue;
+  for(const api of APIS){
+    try{
+      const r=await fetch(api.url);
+      if(!r.ok)continue;
       api.parse(await r.json());
-      document.getElementById('rate').value = RATE.USD.toFixed(3);
-      document.getElementById('rate-display').textContent = RATE.USD.toFixed(3);
-      st.textContent = '✅ レート取得済';
-      st.style.color = '#059669';
-      calc();
-      return;
-    } catch(e) { continue; }
+      document.getElementById('rate').value=RATE.USD.toFixed(3);
+      document.getElementById('rate-display').textContent=RATE.USD.toFixed(3);
+      st.textContent='✅ レート取得済';st.style.color='#059669';
+      calc();return;
+    }catch(e){continue;}
   }
-  // フォールバック
-  document.getElementById('rate-display').textContent = RATE.USD.toFixed(3);
-  st.textContent = '⚠ 取得失敗 — 概算値を使用';
-  st.style.color = '#F59E0B';
+  document.getElementById('rate-display').textContent=RATE.USD.toFixed(3);
+  st.textContent='⚠ 取得失敗 — 概算値を使用';st.style.color='#F59E0B';
 }
 
-// ── 1pip値 ──
-function pip1(type) {
-  if (type === 'JPY') return 1000;
-  if (type === 'XAU') return RATE.USD;
-  return (RATE[type] || RATE.USD) * 10;
+function pip1(type){
+  if(type==='JPY')return 1000;
+  if(type==='XAU')return RATE.USD;
+  return(RATE[type]||RATE.USD)*10;
 }
 
-// ── 計算 ──
-function calc() {
-  const equity = +document.getElementById('equity').value || 0;
-  const risk   = +document.getElementById('risk').value   || 0;
-  const rate   = +document.getElementById('rate').value   || 0;
-  const pips   = +document.getElementById('pips').value   || 0;
-  const pName  = document.getElementById('pair').value;
-  const fee    = document.getElementById('fee-toggle').value === '1';
-
-  const maxLoss = equity * risk;
-  document.getElementById('res-loss').textContent = maxLoss > 0 ? `¥${Math.round(maxLoss).toLocaleString()}` : '—';
-
-  const p = PAIRS.find(x => x.pair === pName);
-  if (!p || !pips || !rate) {
-    ['res-lot','res-pip','res-fee','res-sl'].forEach(id => { document.getElementById(id).textContent = '—'; });
-    document.getElementById('res-lot').className = 'result-lot';
-    document.getElementById('res-unit').textContent = 'ペアとpips数を入力';
+function calc(){
+  const equity=+document.getElementById('equity').value||0;
+  const risk=+document.getElementById('risk').value||0;
+  const rate=+document.getElementById('rate').value||0;
+  const pips=+document.getElementById('pips').value||0;
+  const pName=document.getElementById('pair').value;
+  const fee=document.getElementById('fee-toggle').value==='1';
+  const maxLoss=equity*risk;
+  document.getElementById('res-loss').textContent=maxLoss>0?`¥${Math.round(maxLoss).toLocaleString()}`:'—';
+  const p=PAIRS.find(x=>x.pair===pName);
+  if(!p||!pips||!rate){
+    ['res-lot','res-pip','res-fee','res-sl'].forEach(id=>{document.getElementById(id).textContent='—';});
+    document.getElementById('res-lot').className='result-lot';
+    document.getElementById('res-unit').textContent='ペアとpips数を入力';
     return;
   }
-
-  const pv = pip1(p.type);
-  const feeJpy = p.fee * rate;
-  const denom = pips * pv + (fee ? feeJpy : 0);
-  const lot = Math.floor((maxLoss / denom) * 100) / 100;
-  const feeTotal = lot * feeJpy;
-
-  const lotEl = document.getElementById('res-lot');
-  lotEl.textContent = lot.toFixed(2);
-  lotEl.className = 'result-lot' + (lot > 0 ? ' ok' : '');
-  document.getElementById('res-unit').textContent = 'lot';
-  document.getElementById('res-pip').textContent = `¥${Math.round(pv).toLocaleString()} / pip`;
-  document.getElementById('res-fee').textContent = fee ? `¥${Math.round(feeTotal).toLocaleString()}` : 'OFF';
-  document.getElementById('res-sl').textContent = `¥${Math.round(maxLoss - feeTotal).toLocaleString()}`;
-
-  document.querySelectorAll('.qbtn').forEach(b => b.classList.toggle('on', +b.textContent === pips));
+  const pv=pip1(p.type);
+  const feeJpy=p.fee*rate;
+  const denom=pips*pv+(fee?feeJpy:0);
+  const lot=Math.floor((maxLoss/denom)*100)/100;
+  const feeTotal=lot*feeJpy;
+  const lotEl=document.getElementById('res-lot');
+  lotEl.textContent=lot.toFixed(2);
+  lotEl.className='result-lot'+(lot>0?' ok':'');
+  document.getElementById('res-unit').textContent='lot';
+  document.getElementById('res-pip').textContent=`¥${Math.round(pv).toLocaleString()} / pip`;
+  document.getElementById('res-fee').textContent=fee?`¥${Math.round(feeTotal).toLocaleString()}`:'OFF';
+  document.getElementById('res-sl').textContent=`¥${Math.round(maxLoss-feeTotal).toLocaleString()}`;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('on',+b.textContent===pips));
 }
 
-// ── トグル ──
-function toggleFee() {
-  const h = document.getElementById('fee-toggle');
-  const btn = document.getElementById('toggle-btn');
-  const txt = document.getElementById('toggle-txt');
-  const on = h.value === '1';
-  h.value = on ? '0' : '1';
-  btn.classList.toggle('on', !on);
-  txt.textContent = on ? 'OFF' : 'ON';
-  playClick(!on);
-  calc();
+function toggleFee(){
+  const h=document.getElementById('fee-toggle');
+  const btn=document.getElementById('toggle-btn');
+  const txt=document.getElementById('toggle-txt');
+  const on=h.value==='1';
+  h.value=on?'0':'1';
+  btn.classList.toggle('on',!on);
+  txt.textContent=on?'OFF':'ON';
+  playClick(!on);calc();
 }
 
-function playClick(on) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/d.length, 3);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const f = ctx.createBiquadFilter();
-    f.type = 'bandpass';
-    f.frequency.value = on ? 3000 : 2000;
-    f.Q.value = 0.8;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(on ? 0.5 : 0.35, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-    src.connect(f); f.connect(g); g.connect(ctx.destination);
-    src.start();
-  } catch(e) {}
+function playClick(on){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const buf=ctx.createBuffer(1,ctx.sampleRate*0.015,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const src=ctx.createBufferSource();src.buffer=buf;
+    const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=on?3000:2000;f.Q.value=0.8;
+    const g=ctx.createGain();g.gain.setValueAtTime(on?0.5:0.35,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.04);
+    src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+  }catch(e){}
 }
 
-// ── コピー ──
-function copyLot() {
-  const v = document.getElementById('res-lot').textContent;
-  if (v === '—') return;
-  const btn = document.getElementById('copy-btn');
-  const done = () => {
-    btn.textContent = '✅ コピーしました！';
-    btn.classList.add('done');
-    setTimeout(() => { btn.textContent = '📋 タップしてコピー'; btn.classList.remove('done'); }, 2000);
-  };
-  navigator.clipboard ? navigator.clipboard.writeText(v).then(done).catch(() => fallbackCopy(v, done)) : fallbackCopy(v, done);
+function copyLot(){
+  const v=document.getElementById('res-lot').textContent;
+  if(v==='—')return;
+  const btn=document.getElementById('copy-btn');
+  const done=()=>{btn.textContent='✅ コピーしました！';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 タップしてコピー';btn.classList.remove('done');},2000);};
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
+function fbCopy(v,cb){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb();}
+function setPips(v){document.getElementById('pips').value=v;calc();}
 
-function fallbackCopy(v, cb) {
-  const t = document.createElement('textarea');
-  t.value = v;
-  document.body.appendChild(t);
-  t.select();
-  document.execCommand('copy');
-  document.body.removeChild(t);
-  cb();
-}
+// Drum picker
+let curGroup=0;
+const drumScroll=document.getElementById('drum-scroll');
+const drumTabs=document.getElementById('drum-tabs');
 
-function setPips(v) { document.getElementById('pips').value = v; calc(); }
-
-// localStorage読み込み
-(function() {
-  const eq = localStorage.getItem('ps_equity');
-  const rk = localStorage.getItem('ps_risk');
-  const pr = localStorage.getItem('ps_pair');
-  if (eq) document.getElementById('equity').value = eq;
-  if (rk) document.getElementById('risk').value = rk;
-  if (pr) {
-    document.getElementById('pair').value = pr;
-    const btnText = document.getElementById('pair-btn-text');
-    btnText.textContent = pr;
-    btnText.classList.remove('pair-btn-placeholder');
-    document.getElementById('pair-btn').classList.add('selected');
-  }
-})();
-
-// 変更時に保存
-document.getElementById('equity').addEventListener('change', () => {
-  localStorage.setItem('ps_equity', document.getElementById('equity').value);
-});
-document.getElementById('risk').addEventListener('change', () => {
-  localStorage.setItem('ps_risk', document.getElementById('risk').value);
-});
-
-// ── ドラムピッカー構築 ──
-let currentGroup = 0;
-const drumScroll = document.getElementById('drum-scroll');
-const drumTabs = document.getElementById('drum-tabs');
-
-// タブ構築
-GROUPS.forEach((g, gi) => {
-  const pairs = PAIRS.filter(p => g.types.includes(p.type));
-  if (!pairs.length) return;
-  const tab = document.createElement('div');
-  tab.className = 'drum-tab' + (gi === 0 ? ' active' : '');
-  tab.textContent = g.lbl;
-  tab.onclick = () => switchGroup(gi);
+GROUPS.forEach((g,gi)=>{
+  const pairs=PAIRS.filter(p=>g.types.includes(p.type));
+  if(!pairs.length)return;
+  const tab=document.createElement('div');
+  tab.className='drum-tab'+(gi===0?' active':'');
+  tab.textContent=g.lbl;
+  tab.onclick=()=>switchGroup(gi,true);
   drumTabs.appendChild(tab);
 });
 
-function buildDrum(groupIndex) {
-  // 既存のpicker-itemを削除（drum-padは残す）
-  [...drumScroll.querySelectorAll('.picker-item')].forEach(o => o.remove());
-
-  const g = GROUPS[groupIndex];
-  const pairs = PAIRS.filter(p => g.types.includes(p.type));
-  const pads = drumScroll.querySelectorAll('.drum-pad');
-
-  pairs.forEach(p => {
-    const o = document.createElement('div');
-    o.className = 'picker-item';
-    o.textContent = p.pair;
-    o.dataset.v = p.pair;
-    pads[1].before(o);
+function buildDrum(gi){
+  [...drumScroll.querySelectorAll('.picker-item')].forEach(o=>o.remove());
+  const pairs=PAIRS.filter(p=>GROUPS[gi].types.includes(p.type));
+  const pad2=drumScroll.querySelectorAll('.drum-pad')[1];
+  pairs.forEach(p=>{
+    const o=document.createElement('div');
+    o.className='picker-item';o.textContent=p.pair;o.dataset.v=p.pair;
+    pad2.before(o);
   });
-
-  // 現在選択中のペアにスクロール
-  const current = document.getElementById('pair').value;
-  const items = [...drumScroll.querySelectorAll('.picker-item')];
-  const idx = items.findIndex(o => o.dataset.v === current);
-  if (idx >= 0) {
-    drumScroll.scrollTop = idx * 44;
-  } else {
-    drumScroll.scrollTop = 0;
-  }
-  updateCenter();
+  const current=document.getElementById('pair').value;
+  const items=[...drumScroll.querySelectorAll('.picker-item')];
+  const idx=items.findIndex(o=>o.dataset.v===current);
+  drumScroll.scrollTop=idx>=0?idx*44:0;
+  lastIdx=-1;updateCenter();
 }
 
-function switchGroup(gi) {
-  currentGroup = gi;
-  document.querySelectorAll('.drum-tab').forEach((t, i) => t.classList.toggle('active', i === gi));
+function switchGroup(gi, fromTab=false){
+  curGroup=gi;
+  document.querySelectorAll('.drum-tab').forEach((t,i)=>t.classList.toggle('active',i===gi));
+  const pairs=PAIRS.filter(p=>GROUPS[gi].types.includes(p.type));
+  // タブを直接タップした時だけ1アイテムを自動選択
+  if(fromTab && pairs.length===1){
+    pickPair(pairs[0].pair,true);
+    return;
+  }
   buildDrum(gi);
 }
 
-let lastCenterIndex = -1;
+let lastIdx=-1;
 
-function playTick() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.012, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) {
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const f = ctx.createBiquadFilter();
-    f.type = 'bandpass';
-    f.frequency.value = 2500;
-    f.Q.value = 1.2;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.35, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.012);
-    src.connect(f); f.connect(g); g.connect(ctx.destination);
-    src.start();
-  } catch(e) {}
+function playTick(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const buf=ctx.createBuffer(1,ctx.sampleRate*0.012,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,4);
+    const src=ctx.createBufferSource();src.buffer=buf;
+    const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2500;f.Q.value=1.2;
+    const g=ctx.createGain();g.gain.setValueAtTime(0.35,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.012);
+    src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+  }catch(e){}
 }
 
-function updateCenter() {
-  const scrollTop = drumScroll.scrollTop;
-  const centerIndex = Math.round(scrollTop / 44);
-  const items = [...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
-  items.forEach((o, i) => o.classList.toggle('center', i === centerIndex));
-  if (centerIndex !== lastCenterIndex && lastCenterIndex !== -1) {
-    playTick();
-  }
-  lastCenterIndex = centerIndex;
+function updateCenter(){
+  const ci=Math.round(drumScroll.scrollTop/44);
+  const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
+  items.forEach((o,i)=>o.classList.toggle('center',i===ci));
+  if(ci!==lastIdx&&lastIdx!==-1)playTick();
+  lastIdx=ci;
 }
 
-drumScroll.addEventListener('scroll', updateCenter, { passive: true });
-drumScroll.addEventListener('scrollend', () => {
-  const items = [...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
-  const centerIndex = Math.round(drumScroll.scrollTop / 44);
-  const item = items[centerIndex];
-  if (item) pickPair(item.dataset.v, false);
-}, { passive: true });
+drumScroll.addEventListener('scroll',updateCenter,{passive:true});
+drumScroll.addEventListener('scrollend',()=>{
+  const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
+  const item=items[Math.round(drumScroll.scrollTop/44)];
+  if(item)pickPair(item.dataset.v,false);
+},{passive:true});
 
-function openSheet() {
+function openSheet(){
   document.getElementById('sheet').classList.add('open');
-  document.getElementById('sheet-overlay').classList.add('open');
-  // 現在のペアのグループに切り替え
-  const current = document.getElementById('pair').value;
-  if (current) {
-    const p = PAIRS.find(x => x.pair === current);
-    if (p) {
-      const gi = GROUPS.findIndex(g => g.types.includes(p.type));
-      if (gi >= 0) switchGroup(gi);
-      else buildDrum(currentGroup);
-    }
-  } else {
-    buildDrum(currentGroup);
-  }
+  document.getElementById('overlay').classList.add('open');
+  const current=document.getElementById('pair').value;
+  if(current){
+    const p=PAIRS.find(x=>x.pair===current);
+    if(p){const gi=GROUPS.findIndex(g=>g.types.includes(p.type));switchGroup(gi>=0?gi:0);}
+    else buildDrum(curGroup);
+  }else buildDrum(curGroup);
 }
 
-function closeSheet() {
+function closeSheet(){
   document.getElementById('sheet').classList.remove('open');
-  document.getElementById('sheet-overlay').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
 }
 
-function pickPair(v, close = true) {
-  document.getElementById('pair').value = v;
-  const btnText = document.getElementById('pair-btn-text');
-  btnText.textContent = v;
-  btnText.classList.remove('pair-btn-placeholder');
-  document.getElementById('pair-btn').classList.add('selected');
-  localStorage.setItem('ps_pair', v);
-  if (close) closeSheet();
+function pickPair(v,close=true){
+  document.getElementById('pair').value=v;
+  const btn=document.getElementById('pair-btn');
+  btn.textContent=v;btn.classList.add('sel');
+  localStorage.setItem('ps_pair',v);
+  if(close)closeSheet();
   calc();
 }
+
+// localStorage
+(function(){
+  const eq=localStorage.getItem('ps_equity');
+  const rk=localStorage.getItem('ps_risk');
+  const pr=localStorage.getItem('ps_pair');
+  if(eq)document.getElementById('equity').value=eq;
+  if(rk)document.getElementById('risk').value=rk;
+  if(pr){
+    document.getElementById('pair').value=pr;
+    const btn=document.getElementById('pair-btn');
+    btn.textContent=pr;btn.classList.add('sel');
+  }
+})();
+
+document.getElementById('equity').addEventListener('change',()=>localStorage.setItem('ps_equity',document.getElementById('equity').value));
+document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
 
 fetchRates();
 calc();
