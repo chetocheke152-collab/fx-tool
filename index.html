@@ -125,7 +125,7 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
   <div class="card-body">
     <div class="field">
       <span class="lbl">証拠金（円）</span>
-      <input id="equity" class="input-short" type="number" value="200000" step="1000" oninput="calc()">
+      <input id="equity" class="input-short" type="number" inputmode="numeric" pattern="[0-9]*" value="200000" step="1000" oninput="calc()">
     </div>
     <div class="field">
       <span class="lbl">リスク %</span>
@@ -160,7 +160,10 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
     </div>
     <div class="field">
       <span class="lbl">SL pips 数</span>
-      <input id="pips" type="number" min="1" step="1" placeholder="例：20" oninput="calc()">
+      <div style="position:relative;display:flex;align-items:center;max-width:42%;">
+        <input id="pips" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="9999" step="1" placeholder="20" oninput="if(this.value.length>4)this.value=this.value.slice(0,4);calc()" style="padding-right:52px;text-align:right;min-width:0;">
+        <span style="position:absolute;right:14px;font-size:13px;font-weight:700;color:#94A3B8;pointer-events:none;">pips</span>
+      </div>
       <div class="qbtns">
         <button class="qbtn" onclick="setPips(5)">5</button>
         <button class="qbtn" onclick="setPips(10)">10</button>
@@ -366,6 +369,7 @@ function buildDrum(gi){
   pairs.forEach(p=>{
     const o=document.createElement('div');
     o.className='picker-item';o.textContent=p.pair;o.dataset.v=p.pair;
+    o.onclick=()=>pickPair(p.pair,true);
     pad2.before(o);
   });
   const current=document.getElementById('pair').value;
@@ -411,16 +415,7 @@ function updateCenter(){
   lastIdx=ci;
 }
 
-let scrollTimer=null;
-drumScroll.addEventListener('scroll',()=>{
-  updateCenter();
-  clearTimeout(scrollTimer);
-  scrollTimer=setTimeout(()=>{
-    const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
-    const item=items[Math.round(drumScroll.scrollTop/44)];
-    if(item)pickPair(item.dataset.v,false);
-  },150);
-},{passive:true});
+drumScroll.addEventListener('scroll',updateCenter,{passive:true});
 
 function openSheet(){
   document.getElementById('sheet').classList.add('open');
