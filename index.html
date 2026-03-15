@@ -411,11 +411,15 @@ function updateCenter(){
   lastIdx=ci;
 }
 
-drumScroll.addEventListener('scroll',updateCenter,{passive:true});
-drumScroll.addEventListener('scrollend',()=>{
-  const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
-  const item=items[Math.round(drumScroll.scrollTop/44)];
-  if(item)pickPair(item.dataset.v,false);
+let scrollTimer=null;
+drumScroll.addEventListener('scroll',()=>{
+  updateCenter();
+  clearTimeout(scrollTimer);
+  scrollTimer=setTimeout(()=>{
+    const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
+    const item=items[Math.round(drumScroll.scrollTop/44)];
+    if(item)pickPair(item.dataset.v,false);
+  },150);
 },{passive:true});
 
 function openSheet(){
