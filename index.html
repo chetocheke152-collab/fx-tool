@@ -99,10 +99,10 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
 .copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:transparent;border:1px solid #D4AF5A;border-radius:6px;padding:7px 18px;color:#D4AF5A;font-family:‘Noto Sans JP’,sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
 .copy-btn:active,.copy-btn.done{border-color:#D4AF5A;color:#D4AF5A}
 .result-rows{background:#141414}
-.result-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid #D4AF5A11}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #D4AF5A11}
 .result-row:last-child{border-bottom:none}
-.r-lbl{font-size:12px;font-weight:500;color:#666}
-.r-val{font-size:15px;font-weight:700;color:#E8E0D0}
+.r-lbl{font-size:13px;font-weight:500;color:#888;letter-spacing:0.5px}
+.r-val{font-size:17px;font-weight:700;color:#E8E0D0}
 .r-val.blue{color:#D4AF5A}
 .r-val.green{color:#D4AF5A}
 
@@ -136,14 +136,10 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
         <option value="0.04">4%</option>
       </select>
     </div>
-    <div class="field">
-      <span class="lbl">USD/JPY レート</span>
-      <div class="rate-box">
-        <span class="rate-lbl">USD/JPY</span>
-        <span class="rate-val" id="rate-display">—</span>
-        <input type="hidden" id="rate" value="155.0">
-      </div>
-      <div class="rate-status" id="rate-status">取得中...</div>
+<input type="hidden" id="rate" value="155.0">
+    <div style="text-align:right;margin-top:10px;">
+      <span id="rate-status" style="font-size:9px;color:#D4AF5A66;letter-spacing:0.5px;">取得中...</span>
+      <span id="rate-display" style="font-size:11px;font-weight:700;color:#D4AF5A88;letter-spacing:1px;margin-left:6px;">—</span>
     </div>
   </div>
 </div>
