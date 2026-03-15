@@ -108,14 +108,51 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
 
 /* Disclaimer */
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
+
+/* Light theme */
+body.light{background:#F4F4F0;color:#1A1A1A}
+body.light .hdr{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%)}
+body.light .card{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .card-hdr{background:#F0EDE6;color:#D4AF5A}
+body.light input,body.light select{background:#F9F7F2;border-color:#D4AF5A44;color:#1A1A1A}
+body.light input:focus,body.light select:focus{background:#FFFFFF;border-color:#D4AF5A}
+body.light .pair-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#888}
+body.light .pair-btn.sel{color:#1A1A1A;border-color:#D4AF5A}
+body.light .sheet{background:#FFFFFF}
+body.light .sheet-title{color:#D4AF5A;border-bottom-color:#D4AF5A22}
+body.light .drum-tabs{border-bottom-color:#D4AF5A22}
+body.light .drum-tab{color:#AAA}
+body.light .drum-wrap::before{background:linear-gradient(to bottom,rgba(255,255,255,0.98),rgba(255,255,255,0))}
+body.light .drum-wrap::after{background:linear-gradient(to top,rgba(255,255,255,0.98),rgba(255,255,255,0))}
+body.light .picker-item{color:#CCC}
+body.light .picker-item.center{color:#1A1A1A}
+body.light .qbtn{background:#F9F7F2;border-color:#D4AF5A33;color:#AAA}
+body.light .toggle-row{background:#F9F7F2;border-color:#D4AF5A33}
+body.light .toggle-lbl{color:#1A1A1A}
+body.light .toggle-sub{color:#888}
+body.light .toggle-btn{background:#E8E4DC;border-color:#D4AF5A44}
+body.light .result-card{border-color:#D4AF5A33}
+body.light .result-top{background:#FFFFFF;border-bottom:1px solid #D4AF5A22}
+body.light .result-rows{background:#FFFFFF}
+body.light .result-lot{color:#CCC}
+body.light .result-lot.ok{color:#D4AF5A;text-shadow:0 0 20px #D4AF5A44}
+body.light .result-top-lbl{color:#D4AF5A99}
+body.light .result-unit{color:#D4AF5A99}
+body.light .copy-btn{border-color:#D4AF5A44;color:#D4AF5A88}
+body.light .result-row{border-bottom-color:#D4AF5A11}
+body.light .r-lbl{color:#888}
+body.light .r-val{color:#1A1A1A}
+body.light .lbl{color:#D4AF5A}
+body.light .disclaimer{color:#AAA}
 </style>
 
 </head>
 <body>
 
-<div class="hdr">
+<div class="hdr" style="position:relative;">
   <div class="hdr-sub">Exness Zero · Lot Calculator</div>
   <div class="hdr-title">Position <span>Sizer</span></div>
+  <button id="theme-btn" onclick="toggleTheme()" style="position:absolute;top:20px;right:16px;background:transparent;border:1px solid #D4AF5A66;border-radius:6px;padding:5px 10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;">DARK</button>
 </div>
 
 <!-- Account -->
@@ -473,6 +510,26 @@ function pickPair(v,close=true){
 
 document.getElementById('equity').addEventListener('change',()=>localStorage.setItem('ps_equity',document.getElementById('equity').value));
 document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
+
+// テーマ復元
+const savedTheme = localStorage.getItem('ps_theme');
+if(savedTheme === 'light'){
+  document.body.classList.add('light');
+  document.getElementById('theme-btn').textContent = 'LIGHT';
+}
+
+function toggleTheme(){
+  const btn = document.getElementById('theme-btn');
+  if(document.body.classList.contains('light')){
+    document.body.classList.remove('light');
+    btn.textContent = 'DARK';
+    localStorage.setItem('ps_theme','dark');
+  } else {
+    document.body.classList.add('light');
+    btn.textContent = 'LIGHT';
+    localStorage.setItem('ps_theme','light');
+  }
+}
 
 fetchRates();
 calc();
