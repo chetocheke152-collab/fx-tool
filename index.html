@@ -376,6 +376,30 @@ function toggleFee(){
   playClick(!on);calc();
 }
 
+function playTheme(isLight){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    if(isLight){
+      // ライト：低音→高音へ上昇
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.2);
+    } else {
+      // ダーク：高音→低音へ下降
+      osc.frequency.setValueAtTime(900, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.2);
+    }
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.25);
+  } catch(e) {}
+}
+
 function playClick(on){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -529,7 +553,7 @@ function toggleTheme(){
     btn.textContent = 'LIGHT';
     localStorage.setItem('ps_theme','light');
   }
-  playClick(document.body.classList.contains('light'));
+  playTheme(document.body.classList.contains('light'));
 }
 
 fetchRates();
