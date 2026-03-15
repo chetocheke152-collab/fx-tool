@@ -161,7 +161,7 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
     <div class="field">
       <span class="lbl">SL pips 数</span>
       <div style="position:relative;display:flex;align-items:center;max-width:34%;">
-        <input id="pips" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="9999" step="1" placeholder="20" oninput="if(this.value.length>4)this.value=this.value.slice(0,4);calc()" style="padding-right:52px;text-align:right;min-width:0;">
+        <input id="pips" type="number" min="0.1" max="9999" step="0.1" placeholder="20" oninput="if(this.value.length>4)this.value=this.value.slice(0,4);calc()" style="padding-right:52px;text-align:right;min-width:0;">
         <span style="position:absolute;right:14px;font-size:13px;font-weight:700;color:#94A3B8;pointer-events:none;">pips</span>
       </div>
       <div class="qbtns">
@@ -345,7 +345,12 @@ function copyLot(){
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 function fbCopy(v,cb){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb();}
-function setPips(v){document.getElementById('pips').value=v;calc();}
+function setPips(v){
+  const el=document.getElementById('pips');
+  if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
+  else{el.value=v;}
+  calc();
+}
 
 // Drum picker
 let curGroup=0;
