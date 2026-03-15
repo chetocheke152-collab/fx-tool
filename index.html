@@ -161,7 +161,7 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
     <div class="field">
       <span class="lbl">SL pips 数</span>
       <div style="position:relative;display:flex;align-items:center;max-width:34%;">
-        <input id="pips" type="number" min="0.1" max="9999" step="0.1" placeholder="20" oninput="if(this.value.length>4)this.value=this.value.slice(0,4);calc()" style="padding-right:52px;text-align:right;min-width:0;">
+        <input id="pips" type="number" min="0.1" max="9999" step="0.1" placeholder="20" oninput="if(this.value.length>4)this.value=this.value.slice(0,4);calc(true)" style="padding-right:52px;text-align:right;min-width:0;">
         <span style="position:absolute;right:14px;font-size:13px;font-weight:700;color:#94A3B8;pointer-events:none;">pips</span>
       </div>
       <div class="qbtns">
@@ -195,7 +195,7 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
     <div class="result-top-lbl">推奨 Lot 数</div>
     <div class="result-lot" id="res-lot">—</div>
     <div class="result-unit" id="res-unit">ペアとpips数を入力</div>
-    <button class="copy-btn" id="copy-btn" onclick="copyLot()">📋 タップしてコピー</button>
+    <button class="copy-btn" id="copy-btn" onclick="copyLot()">📋 タップしてlotをコピー</button>
   </div>
   <div class="result-rows">
     <div class="result-row"><span class="r-lbl">許容損失額</span><span class="r-val blue" id="res-loss">—</span></div>
@@ -281,7 +281,7 @@ function pip1(type){
   return(RATE[type]||RATE.USD)*10;
 }
 
-function calc(){
+function calc(animate=false){
   const equity=+document.getElementById('equity').value||0;
   const risk=+document.getElementById('risk').value||0;
   const rate=+document.getElementById('rate').value||0;
@@ -303,13 +303,33 @@ function calc(){
   const lot=Math.floor((maxLoss/denom)*100)/100;
   const feeTotal=lot*feeJpy;
   const lotEl=document.getElementById('res-lot');
-  lotEl.textContent=lot.toFixed(2);
   lotEl.className='result-lot'+(lot>0?' ok':'');
   document.getElementById('res-unit').textContent='lot';
+  if(lot>0 && animate){
+    countUp(lotEl, lot);
+  } else {
+    lotEl.textContent=lot.toFixed(2);
+  }
   document.getElementById('res-pip').textContent=`¥${Math.round(pv).toLocaleString()} / pip`;
   document.getElementById('res-fee').textContent=fee?`¥${Math.round(feeTotal).toLocaleString()}`:'OFF';
   document.getElementById('res-sl').textContent=`¥${Math.round(maxLoss-feeTotal).toLocaleString()}`;
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('on',+b.textContent===pips));
+}
+
+function countUp(el, target){
+  const duration = 400;
+  const start = performance.now();
+  const startVal = 0;
+  function ease(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function update(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const current = startVal + (target - startVal) * ease(progress);
+    el.textContent = current.toFixed(2);
+    if(progress < 1) requestAnimationFrame(update);
+    else el.textContent = target.toFixed(2);
+  }
+  requestAnimationFrame(update);
 }
 
 function toggleFee(){
@@ -341,7 +361,7 @@ function copyLot(){
   const v=document.getElementById('res-lot').textContent;
   if(v==='—')return;
   const btn=document.getElementById('copy-btn');
-  const done=()=>{btn.textContent='✅ コピーしました！';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 タップしてコピー';btn.classList.remove('done');},2000);};
+  const done=()=>{btn.textContent='✅ コピーしました！';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 タップしてlotをコピー';btn.classList.remove('done');},2000);};
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 function fbCopy(v,cb){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb();}
@@ -349,7 +369,7 @@ function setPips(v){
   const el=document.getElementById('pips');
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
   else{el.value=v;}
-  calc();
+  calc(true);
 }
 
 // Drum picker
@@ -363,7 +383,7 @@ GROUPS.forEach((g,gi)=>{
   const tab=document.createElement('div');
   tab.className='drum-tab'+(gi===0?' active':'');
   tab.textContent=g.lbl;
-  tab.onclick=()=>switchGroup(gi,true);
+  tab.onclick=()=>switchGroup(gi);
   drumTabs.appendChild(tab);
 });
 
@@ -387,12 +407,6 @@ function buildDrum(gi){
 function switchGroup(gi, fromTab=false){
   curGroup=gi;
   document.querySelectorAll('.drum-tab').forEach((t,i)=>t.classList.toggle('active',i===gi));
-  const pairs=PAIRS.filter(p=>GROUPS[gi].types.includes(p.type));
-  // タブを直接タップした時だけ1アイテムを自動選択
-  if(fromTab && pairs.length===1){
-    pickPair(pairs[0].pair,true);
-    return;
-  }
   buildDrum(gi);
 }
 
@@ -444,7 +458,7 @@ function pickPair(v,close=true){
   btn.textContent=v;btn.classList.add('sel');
   localStorage.setItem('ps_pair',v);
   if(close)closeSheet();
-  calc();
+  calc(true);
 }
 
 // localStorage
