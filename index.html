@@ -258,21 +258,21 @@ body.light .disclaimer{color:#AAA}
 
 <script>
 const PAIRS=[
-  {pair:'USD/JPY',fee:3.5,type:'JPY'},{pair:'EUR/JPY',fee:3.5,type:'JPY'},
-  {pair:'GBP/JPY',fee:3.5,type:'JPY'},{pair:'AUD/JPY',fee:3.5,type:'JPY'},
-  {pair:'CAD/JPY',fee:3.5,type:'JPY'},{pair:'CHF/JPY',fee:3.5,type:'JPY'},
-  {pair:'NZD/JPY',fee:3.5,type:'JPY'},{pair:'EUR/USD',fee:3.5,type:'USD'},
-  {pair:'GBP/USD',fee:3.5,type:'USD'},{pair:'AUD/USD',fee:3.5,type:'USD'},
-  {pair:'NZD/USD',fee:3.5,type:'USD'},{pair:'USD/CHF',fee:3.5,type:'CHF'},
-  {pair:'EUR/CHF',fee:3.5,type:'CHF'},{pair:'GBP/CHF',fee:3.5,type:'CHF'},
-  {pair:'AUD/CHF',fee:3.5,type:'CHF'},{pair:'CAD/CHF',fee:3.5,type:'CHF'},
-  {pair:'NZD/CHF',fee:3.125,type:'CHF'},{pair:'AUD/NZD',fee:3.5,type:'NZD'},
-  {pair:'EUR/NZD',fee:3.5,type:'NZD'},{pair:'GBP/NZD',fee:3.5,type:'NZD'},
-  {pair:'EUR/AUD',fee:3.5,type:'AUD'},{pair:'GBP/AUD',fee:3.5,type:'AUD'},
-  {pair:'USD/CAD',fee:3.5,type:'CAD'},{pair:'EUR/CAD',fee:3.5,type:'CAD'},
-  {pair:'GBP/CAD',fee:3.5,type:'CAD'},{pair:'AUD/CAD',fee:3.5,type:'CAD'},
-  {pair:'NZD/CAD',fee:3.5,type:'CAD'},{pair:'EUR/GBP',fee:3.5,type:'GBP'},
-  {pair:'XAU/USD',fee:8.0,type:'XAU'}
+  {pair:'USD/JPY',fee:3.5, type:'JPY'},{pair:'EUR/JPY',fee:5.0, type:'JPY'},
+  {pair:'GBP/JPY',fee:7.5, type:'JPY'},{pair:'AUD/JPY',fee:4.5, type:'JPY'},
+  {pair:'CAD/JPY',fee:5.0, type:'JPY'},{pair:'CHF/JPY',fee:5.0, type:'JPY'},
+  {pair:'NZD/JPY',fee:5.0, type:'JPY'},{pair:'EUR/USD',fee:3.5, type:'USD'},
+  {pair:'GBP/USD',fee:4.5, type:'USD'},{pair:'AUD/USD',fee:3.5, type:'USD'},
+  {pair:'NZD/USD',fee:6.5, type:'USD'},{pair:'USD/CHF',fee:4.5, type:'CHF'},
+  {pair:'EUR/CHF',fee:6.0, type:'CHF'},{pair:'GBP/CHF',fee:8.5, type:'CHF'},
+  {pair:'AUD/CHF',fee:4.5, type:'CHF'},{pair:'CAD/CHF',fee:4.5, type:'CHF'},
+  {pair:'NZD/CHF',fee:5.0, type:'CHF'},{pair:'AUD/NZD',fee:4.0, type:'NZD'},
+  {pair:'EUR/NZD',fee:5.0, type:'NZD'},{pair:'GBP/NZD',fee:7.0, type:'NZD'},
+  {pair:'EUR/AUD',fee:5.5, type:'AUD'},{pair:'GBP/AUD',fee:6.5, type:'AUD'},
+  {pair:'USD/CAD',fee:5.0, type:'CAD'},{pair:'EUR/CAD',fee:5.5, type:'CAD'},
+  {pair:'GBP/CAD',fee:8.0, type:'CAD'},{pair:'AUD/CAD',fee:4.5, type:'CAD'},
+  {pair:'NZD/CAD',fee:5.0, type:'CAD'},{pair:'EUR/GBP',fee:9.0, type:'GBP'},
+  {pair:'XAU/USD',fee:8.0, type:'XAU'}
 ];
 
 const GROUPS=[
@@ -331,7 +331,7 @@ function calc(animate=false){
     return;
   }
   const pv=pip1(p.type);
-  const feeJpy=p.fee*rate;
+  const feeJpy=p.fee*rate*2; // 往復手数料
   const denom=pips*pv+(fee?feeJpy:0);
   const lot=Math.floor((maxLoss/denom)*100)/100;
   const feeTotal=lot*feeJpy;
