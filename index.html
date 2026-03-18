@@ -106,6 +106,20 @@ select{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.
 .r-val.blue{color:#D4AF5A}
 .r-val.green{color:#D4AF5A}
 
+/* Tab navigation */
+.tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
+.tab-btn{flex:1;padding:12px;font-family:‘Bebas Neue’,sans-serif;font-size:15px;letter-spacing:2px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none}
+.tab-btn.active{color:#D4AF5A;background:#D4AF5A18;border-bottom:2px solid #D4AF5A}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Fee calculator */
+.fee-result-box{background:#1A1A1A;border-radius:10px;border:1px solid #D4AF5A33;padding:16px;margin-top:14px}
+.fee-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #D4AF5A11}
+.fee-result-row:last-child{border-bottom:none}
+.fee-result-lbl{font-size:12px;color:#888}
+.fee-result-val{font-size:17px;font-weight:700;color:#D4AF5A}
+
 /* Disclaimer */
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
@@ -155,8 +169,15 @@ body.light .disclaimer{color:#AAA}
   <button id="theme-btn" onclick="toggleTheme()" style="position:absolute;top:20px;right:16px;background:transparent;border:1px solid #D4AF5A66;border-radius:6px;padding:5px 10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;">DARK</button>
 </div>
 
-<!-- Account -->
+<!-- Tab navigation -->
 
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-sizer" onclick="switchTab('sizer')">POSITION SIZER</button>
+  <button class="tab-btn" id="tab-fee" onclick="switchTab('fee')">FEE CALC</button>
+</div>
+
+<div class="tab-content active" id="content-sizer">
+<!-- Account -->
 <div class="card">
   <div class="card-hdr">Account</div>
   <div class="card-body">
@@ -235,6 +256,44 @@ body.light .disclaimer{color:#AAA}
     <div class="result-row"><span class="r-lbl">1pip 値</span><span class="r-val" id="res-pip">—</span></div>
     <div class="result-row"><span class="r-lbl">取引手数料</span><span class="r-val" id="res-fee">—</span></div>
     <div class="result-row"><span class="r-lbl">実質 SL 損失額</span><span class="r-val green" id="res-sl">—</span></div>
+  </div>
+</div>
+</div><!-- /content-sizer -->
+
+<!-- Fee Calculator Tab -->
+
+<div class="tab-content" id="content-fee">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">Fee Calculator</div>
+    <div class="card-body">
+      <div class="field">
+        <span class="lbl">通貨ペア</span>
+        <button class="pair-btn" id="fee-pair-btn" onclick="openFeeSheet()">選択してください</button>
+        <input type="hidden" id="fee-pair" value="">
+      </div>
+      <div class="field">
+        <span class="lbl">Lot 数</span>
+        <div style="position:relative;display:flex;align-items:center;max-width:40%;">
+          <input id="fee-lot" type="number" min="0.01" step="0.01" placeholder="0.10" inputmode="decimal"
+            oninput="calcFee()" style="padding-right:42px;text-align:right;min-width:0;">
+          <span style="position:absolute;right:14px;font-size:13px;font-weight:700;color:#D4AF5A;pointer-events:none;">lot</span>
+        </div>
+      </div>
+      <div class="fee-result-box" id="fee-result-box">
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">片道手数料</span>
+          <span class="fee-result-val" id="fee-one-way">—</span>
+        </div>
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">往復手数料</span>
+          <span class="fee-result-val" id="fee-round-trip">—</span>
+        </div>
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">手数料単価</span>
+          <span class="fee-result-val" id="fee-per-lot">—</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -510,12 +569,21 @@ function closeSheet(){
 }
 
 function pickPair(v,close=true){
-  document.getElementById('pair').value=v;
-  const btn=document.getElementById('pair-btn');
-  btn.textContent=v;btn.classList.add('sel');
-  localStorage.setItem('ps_pair',v);
-  if(close)closeSheet();
-  calc(true);
+  if(window._feeMode){
+    document.getElementById('fee-pair').value=v;
+    const btn=document.getElementById('fee-pair-btn');
+    btn.textContent=v;btn.classList.add('sel');
+    window._feeMode=false;
+    if(close)closeSheet();
+    calcFee();
+  } else {
+    document.getElementById('pair').value=v;
+    const btn=document.getElementById('pair-btn');
+    btn.textContent=v;btn.classList.add('sel');
+    localStorage.setItem('ps_pair',v);
+    if(close)closeSheet();
+    calc(true);
+  }
 }
 
 // localStorage
@@ -554,6 +622,44 @@ function toggleTheme(){
     localStorage.setItem('ps_theme','light');
   }
   playTheme(document.body.classList.contains('light'));
+}
+
+// タブ切り替え
+function switchTab(tab){
+  playClick(tab==='fee');
+  document.getElementById('content-sizer').classList.toggle('active', tab==='sizer');
+  document.getElementById('content-fee').classList.toggle('active', tab==='fee');
+  document.getElementById('tab-sizer').classList.toggle('active', tab==='sizer');
+  document.getElementById('tab-fee').classList.toggle('active', tab==='fee');
+}
+
+// Fee計算
+function calcFee(){
+  const pairName = document.getElementById('fee-pair').value;
+  const lot = parseFloat(document.getElementById('fee-lot').value) || 0;
+  const rate = parseFloat(document.getElementById('rate').value) || 0;
+  const p = PAIRS.find(x => x.pair === pairName);
+  if(!p || !lot || !rate){
+    document.getElementById('fee-one-way').textContent = '—';
+    document.getElementById('fee-round-trip').textContent = '—';
+    document.getElementById('fee-per-lot').textContent = '—';
+    return;
+  }
+  const oneWay = Math.round(p.fee * rate * lot);
+  const roundTrip = Math.round(p.fee * rate * 2 * lot);
+  const perLot = Math.round(p.fee * rate * 2);
+  document.getElementById('fee-one-way').textContent = `¥${oneWay.toLocaleString()}`;
+  document.getElementById('fee-round-trip').textContent = `¥${roundTrip.toLocaleString()}`;
+  document.getElementById('fee-per-lot').textContent = `¥${perLot.toLocaleString()} / lot`;
+}
+
+// Fee用シート
+function openFeeSheet(){
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  // fee用フラグ
+  window._feeMode = true;
+  buildDrum(curGroup);
 }
 
 fetchRates();
