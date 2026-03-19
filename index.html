@@ -194,10 +194,14 @@ body.light .fee-result-lbl{color:#888}
     <div class="field">
       <span class="lbl">リスク %</span>
       <select id="risk" class="input-short" onchange="calc()">
+        <option value="0.001">0.1%</option>
+        <option value="0.0015">0.15%</option>
+        <option value="0.002">0.2%</option>
+        <option value="0.0025">0.25%</option>
+        <option value="0.003">0.3%</option>
+        <option value="0.005">0.5%</option>
         <option value="0.01">1%</option>
         <option value="0.02" selected>2%</option>
-        <option value="0.03">3%</option>
-        <option value="0.04">4%</option>
       </select>
     </div>
 <input type="hidden" id="rate" value="155.0">
