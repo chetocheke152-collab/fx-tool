@@ -164,6 +164,7 @@ body.light .tab-btn.active{color:#D4AF5A;background:#D4AF5A18}
 body.light .fee-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
+body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 </style>
 
 </head>
@@ -301,6 +302,27 @@ body.light .fee-result-lbl{color:#888}
         <div class="fee-result-row">
           <span class="fee-result-lbl">手数料単価</span>
           <span class="fee-result-val" id="fee-per-lot">—</span>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <span class="lbl">pips 損失計算</span>
+        <div style="position:relative;display:flex;align-items:center;max-width:40%;">
+          <input id="fee-pips" type="number" min="0.1" step="0.1" placeholder="55.5" oninput="calcFee()" style="padding-right:52px;text-align:right;min-width:0;">
+          <span style="position:absolute;right:14px;font-size:13px;font-weight:700;color:#D4AF5A;pointer-events:none;">pips</span>
+        </div>
+      </div>
+      <div class="fee-result-box" id="pips-result-box" style="margin-top:10px;">
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">pips損失額</span>
+          <span class="fee-result-val" id="fee-pips-loss">—</span>
+        </div>
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">手数料込み損失</span>
+          <span class="fee-result-val" id="fee-pips-total">—</span>
+        </div>
+        <div class="fee-result-row">
+          <span class="fee-result-lbl">1pip 値</span>
+          <span class="fee-result-val" id="fee-pip-val">—</span>
         </div>
       </div>
     </div>
@@ -661,6 +683,21 @@ function calcFee(){
   document.getElementById('fee-one-way').textContent = `¥${oneWay.toLocaleString()}`;
   document.getElementById('fee-round-trip').textContent = `¥${roundTrip.toLocaleString()}`;
   document.getElementById('fee-per-lot').textContent = `¥${perLot.toLocaleString()} / lot`;
+
+  // pips損失計算
+  const feePips = parseFloat(document.getElementById('fee-pips').value) || 0;
+  if(feePips > 0){
+    const pv = pip1(p.type);
+    const pipsLoss = Math.round(feePips * pv * lot);
+    const totalLoss = pipsLoss + roundTrip;
+    document.getElementById('fee-pips-loss').textContent = `¥${pipsLoss.toLocaleString()}`;
+    document.getElementById('fee-pips-total').textContent = `¥${totalLoss.toLocaleString()}`;
+    document.getElementById('fee-pip-val').textContent = `¥${Math.round(pv).toLocaleString()} / pip`;
+  } else {
+    document.getElementById('fee-pips-loss').textContent = '—';
+    document.getElementById('fee-pips-total').textContent = '—';
+    document.getElementById('fee-pip-val').textContent = '—';
+  }
 }
 
 // Fee用シート
