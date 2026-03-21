@@ -363,14 +363,15 @@ const PAIRS=[
   {pair:'USD/CAD',fee:4.0, type:'CAD'},{pair:'EUR/CAD',fee:5.5, type:'CAD'},
   {pair:'GBP/CAD',fee:8.0, type:'CAD'},{pair:'AUD/CAD',fee:4.5, type:'CAD'},
   {pair:'NZD/CAD',fee:4.5, type:'CAD'},{pair:'EUR/GBP',fee:9.0, type:'GBP'},
-  {pair:'XAU/USD',fee:5.5, type:'XAU'}
+  {pair:'XAU/USD',fee:5.5, type:'XAU'},
+  {pair:'JP225',   fee:0.2, type:'JP225'}
 ];
 
 const GROUPS=[
   {lbl:'JPY建て',types:['JPY']},{lbl:'USD建て',types:['USD']},
   {lbl:'CHF建て',types:['CHF']},{lbl:'NZD建て',types:['NZD']},
   {lbl:'AUD建て',types:['AUD']},{lbl:'CAD建て',types:['CAD']},
-  {lbl:'GBP建て',types:['GBP']},{lbl:'貴金属',types:['XAU']}
+  {lbl:'GBP建て',types:['GBP']},{lbl:'貴金属',types:['XAU']},{lbl:'指数',types:['JP225']}
 ];
 
 const RATE={USD:155,AUD:101,NZD:91,CAD:112,CHF:171,GBP:196};
@@ -402,6 +403,7 @@ async function fetchRates(){
 function pip1(type){
   if(type==='JPY')return 1000;
   if(type==='XAU')return RATE.USD;
+  if(type==='JP225')return 1; // 1ポイント=1円
   return(RATE[type]||RATE.USD)*10;
 }
 
