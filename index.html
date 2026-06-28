@@ -133,6 +133,51 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cond-g-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}
 .cond-item{font-size:12px;color:#555;padding:3px 0;letter-spacing:0.3px}
 
+/* ===== CALENDAR TAB ===== */
+.cal-status{margin:14px 14px 0;padding:10px 14px;background:#141414;border-radius:10px;border:1px solid #D4AF5A22;display:flex;align-items:center;justify-content:space-between}
+.cal-status-txt{font-size:10px;color:#555;letter-spacing:0.5px}
+.cal-reload-btn{background:transparent;border:1px solid #D4AF5A44;border-radius:6px;padding:5px 10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none}
+.cal-week-label{margin:14px 14px 0;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase}
+.cal-day{margin:8px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
+.cal-day-hdr{background:#1A1A1A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #D4AF5A22}
+.cal-day-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#E8E0D0}
+.cal-day-date{font-size:11px;color:#555;letter-spacing:0.5px}
+.cal-day-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.5px}
+.cal-day-badge.free{background:#22C55E18;color:#22C55E}
+.cal-day-badge.warn{background:#F59E0B18;color:#F59E0B}
+.cal-day-badge.danger{background:#EF444418;color:#EF4444}
+.cal-events{padding:6px 0}
+.cal-event{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #D4AF5A08}
+.cal-event:last-child{border-bottom:none}
+.cal-event-dot{font-size:13px;flex-shrink:0;width:20px;text-align:center}
+.cal-event-time{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;color:#888;flex-shrink:0;min-width:44px;letter-spacing:0.5px}
+.cal-event-cur{font-size:11px;font-weight:700;color:#E8E0D0;flex-shrink:0;min-width:36px}
+.cal-event-title{font-size:11px;color:#555;flex:1;letter-spacing:0.3px;line-height:1.3}
+.cal-event-src{font-size:9px;color:#333;flex-shrink:0;letter-spacing:0.5px}
+.cal-empty{padding:14px 16px;font-size:12px;color:#333;letter-spacing:0.5px}
+.cal-today .cal-day-name{color:#D4AF5A}
+.cal-today{border-color:#D4AF5A33}
+
+/* Cult input */
+.cult-section{margin:12px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
+.cult-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase;border-bottom:1px solid #D4AF5A22;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cult-body{display:none;padding:14px 16px}
+.cult-body.open{display:block}
+.cult-arr{font-size:11px;color:#D4AF5A;transition:transform 0.2s}
+.cult-arr.open{transform:rotate(180deg)}
+.cult-form-row{display:flex;gap:8px;margin-bottom:10px;align-items:flex-end}
+.cult-input{background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:10px 12px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:600;outline:none;-webkit-appearance:none;appearance:none}
+.cult-input:focus{border-color:#D4AF5A}
+.cult-add-btn{background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:8px;padding:10px 14px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;white-space:nowrap;flex-shrink:0}
+.cult-list{margin-top:10px}
+.cult-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #D4AF5A08;font-size:12px}
+.cult-item:last-child{border-bottom:none}
+.cult-item-del{background:transparent;border:none;color:#333;font-size:14px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0}
+.cult-item-del:active{color:#EF4444}
+.cult-item-text{color:#888;flex:1}
+.cult-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#22C55E18;color:#22C55E}
+.cult-reset-btn{width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+
 /* Light theme */
 body.light{background:#F4F4F0;color:#1A1A1A}
 body.light .hdr{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%)}
@@ -175,7 +220,6 @@ body.light .fee-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
 body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
-/* Light: entry flow */
 body.light .fs-node{background:#F0EDE6;border-color:#E0DDD6;color:#AAA}
 body.light .fs-lbl{color:#AAA}
 body.light .fs-line{background:#E0DDD6}
@@ -190,6 +234,16 @@ body.light .fr-path-q{color:#888}
 body.light .fr-path-row{border-bottom-color:#D4AF5A11}
 body.light .fr-reset-btn{background:#F0EDE6;border-color:#D4AF5A44}
 body.light .cond-item{color:#888}
+body.light .cal-status{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .cal-day{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .cal-day-hdr{background:#F0EDE6}
+body.light .cal-day-name{color:#1A1A1A}
+body.light .cal-event-cur{color:#1A1A1A}
+body.light .cal-event-title{color:#888}
+body.light .cult-section{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .cult-hdr{background:#F0EDE6}
+body.light .cult-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
+body.light .cal-today{border-color:#D4AF5A55}
 </style>
 </head>
 <body>
@@ -204,6 +258,7 @@ body.light .cond-item{color:#888}
   <button class="tab-btn active" id="tab-sizer" onclick="switchTab('sizer')">SIZER</button>
   <button class="tab-btn" id="tab-fee" onclick="switchTab('fee')">FEE</button>
   <button class="tab-btn" id="tab-entry" onclick="switchTab('entry')">ENTRY</button>
+  <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
 </div>
 
 <!-- SIZER TAB -->
@@ -286,7 +341,7 @@ body.light .cond-item{color:#888}
     <div class="result-row"><span class="r-lbl">実質 SL 損失額</span><span class="r-val green" id="res-sl">—</span></div>
   </div>
 </div>
-</div><!-- /sizer -->
+</div>
 
 <!-- FEE TAB -->
 <div class="tab-content" id="content-fee">
@@ -324,38 +379,22 @@ body.light .cond-item{color:#888}
       </div>
     </div>
   </div>
-</div><!-- /fee -->
+</div>
 
 <!-- ENTRY TAB -->
 <div class="tab-content" id="content-entry">
-
-  <!-- Stepper -->
   <div class="card" style="margin-top:14px;">
     <div class="card-hdr">Entry Check</div>
     <div class="flow-stepper">
-      <div class="flow-step active" id="fs-0">
-        <div class="fs-node">1</div>
-        <div class="fs-lbl">指標</div>
-      </div>
+      <div class="flow-step active" id="fs-0"><div class="fs-node">1</div><div class="fs-lbl">指標</div></div>
       <div class="fs-line" id="fl-0"></div>
-      <div class="flow-step" id="fs-1">
-        <div class="fs-node">2</div>
-        <div class="fs-lbl">関連</div>
-      </div>
+      <div class="flow-step" id="fs-1"><div class="fs-node">2</div><div class="fs-lbl">関連</div></div>
       <div class="fs-line" id="fl-1"></div>
-      <div class="flow-step" id="fs-2">
-        <div class="fs-node">3</div>
-        <div class="fs-lbl">曜日</div>
-      </div>
+      <div class="flow-step" id="fs-2"><div class="fs-node">3</div><div class="fs-lbl">曜日</div></div>
       <div class="fs-line" id="fl-2"></div>
-      <div class="flow-step" id="fs-3">
-        <div class="fs-node">4</div>
-        <div class="fs-lbl">時間</div>
-      </div>
+      <div class="flow-step" id="fs-3"><div class="fs-node">4</div><div class="fs-lbl">時間</div></div>
     </div>
   </div>
-
-  <!-- Question -->
   <div id="flow-q-section" style="margin-top:12px;">
     <div class="flow-q-card">
       <div class="flow-q-step" id="fq-step">STEP 1 / 4</div>
@@ -368,8 +407,6 @@ body.light .cond-item{color:#888}
       <button class="flow-btn flow-no" onclick="flowAnswer(false)">NO</button>
     </div>
   </div>
-
-  <!-- Result -->
   <div id="flow-result-section" style="display:none;margin-top:12px;padding:0 14px;">
     <div class="fr-top">
       <div class="fr-label">ENTRY JUDGE</div>
@@ -379,8 +416,6 @@ body.light .cond-item{color:#888}
     <div class="fr-path-card" id="fr-path"></div>
     <button class="fr-reset-btn" onclick="flowReset()">🔄 もう一度チェック</button>
   </div>
-
-  <!-- Condition reference -->
   <div class="card" style="margin:12px 14px 14px;">
     <div class="card-hdr cond-hdr" onclick="toggleCond()">
       <span>条件早見表</span>
@@ -405,8 +440,46 @@ body.light .cond-item{color:#888}
       </div>
     </div>
   </div>
+</div>
 
-</div><!-- /entry -->
+<!-- CAL TAB -->
+<div class="tab-content" id="content-cal">
+
+  <div class="cal-status">
+    <span class="cal-status-txt" id="cal-status-txt">読み込み中...</span>
+    <button class="cal-reload-btn" onclick="calLoad()">更新</button>
+  </div>
+
+  <div id="cal-body" style="padding-bottom:8px;"></div>
+
+  <!-- TradingCult 手入力 -->
+  <div class="cult-section">
+    <div class="cult-hdr" onclick="toggleCult()">
+      <span>🟢 TradingCult 手入力</span>
+      <span class="cult-arr" id="cult-arr">▼</span>
+    </div>
+    <div class="cult-body" id="cult-body">
+      <div style="font-size:11px;color:#555;margin-bottom:12px;letter-spacing:0.3px;">カルトの指標を追加するとカレンダーに🟢で表示されます</div>
+      <div class="cult-form-row">
+        <select id="cult-day" class="cult-input" style="flex:1.2;">
+          <option value="">曜日</option>
+          <option value="0">月</option>
+          <option value="1">火</option>
+          <option value="2">水</option>
+          <option value="3">木</option>
+          <option value="4">金</option>
+        </select>
+        <input id="cult-time" class="cult-input" type="text" placeholder="21:30" style="flex:1;" maxlength="5">
+        <input id="cult-cur" class="cult-input" type="text" placeholder="USD" style="flex:1;" maxlength="6">
+        <button class="cult-add-btn" onclick="cultAdd()">追加</button>
+      </div>
+      <div class="cult-list" id="cult-list"></div>
+      <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">カルトデータをリセット</button>
+    </div>
+  </div>
+
+  <div style="height:14px;"></div>
+</div>
 
 <div class="disclaimer">This tool is unofficial and not affiliated with or endorsed by Exness.</div>
 
@@ -457,15 +530,12 @@ const RATE={USD:155,AUD:101,NZD:91,CAD:112,CHF:171,GBP:196};
 async function fetchRates(){
   const st=document.getElementById('rate-status');
   const APIS=[
-    {url:'https://open.er-api.com/v6/latest/JPY',
-     parse(d){['USD','AUD','NZD','CAD','CHF','GBP'].forEach(k=>{if(d.rates[k])RATE[k]=+(1/d.rates[k]).toFixed(4);})}},
-    {url:'https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',
-     parse(d){Object.entries(d.rates).forEach(([k,v])=>{RATE[k]=+(1/v).toFixed(4);})}}
+    {url:'https://open.er-api.com/v6/latest/JPY',parse(d){['USD','AUD','NZD','CAD','CHF','GBP'].forEach(k=>{if(d.rates[k])RATE[k]=+(1/d.rates[k]).toFixed(4);})}},
+    {url:'https://api.frankfurter.app/latest?from=JPY&to=USD,AUD,NZD,CAD,CHF,GBP',parse(d){Object.entries(d.rates).forEach(([k,v])=>{RATE[k]=+(1/v).toFixed(4);});}}
   ];
   for(const api of APIS){
     try{
-      const r=await fetch(api.url);
-      if(!r.ok)continue;
+      const r=await fetch(api.url);if(!r.ok)continue;
       api.parse(await r.json());
       document.getElementById('rate').value=RATE.USD.toFixed(3);
       document.getElementById('rate-display').textContent=RATE.USD.toFixed(3);
@@ -478,10 +548,8 @@ async function fetchRates(){
 }
 
 function pip1(type){
-  if(type==='JPY')return 1000;
-  if(type==='XAU')return RATE.USD;
-  if(type==='JP225')return 1;
-  if(type==='BTC')return RATE.USD;
+  if(type==='JPY')return 1000;if(type==='XAU')return RATE.USD;
+  if(type==='JP225')return 1;if(type==='BTC')return RATE.USD;
   return(RATE[type]||RATE.USD)*10;
 }
 
@@ -501,8 +569,7 @@ function calc(animate=false){
     document.getElementById('res-unit').textContent='ペアとpips数を入力';
     return;
   }
-  const pv=pip1(p.type);
-  const feeJpy=p.fee*rate*2;
+  const pv=pip1(p.type);const feeJpy=p.fee*rate*2;
   const denom=pips*pv+(fee?feeJpy:0);
   const lot=Math.floor((maxLoss/denom)*100)/100;
   const feeTotal=lot*feeJpy;
@@ -521,34 +588,27 @@ function countUp(el,target){
   function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
   function update(now){
     const elapsed=now-start,progress=Math.min(elapsed/duration,1);
-    const current=startVal+(target-startVal)*ease(progress);
-    el.textContent=current.toFixed(2);
+    el.textContent=((startVal+(target-startVal)*ease(progress))).toFixed(2);
     if(progress<1)requestAnimationFrame(update);else el.textContent=target.toFixed(2);
   }
   requestAnimationFrame(update);
 }
 
 function toggleFee(){
-  const h=document.getElementById('fee-toggle');
-  const btn=document.getElementById('toggle-btn');
-  const txt=document.getElementById('toggle-txt');
-  const on=h.value==='1';
-  h.value=on?'0':'1';
-  btn.classList.toggle('on',!on);
-  txt.textContent=on?'OFF':'ON';
+  const h=document.getElementById('fee-toggle'),btn=document.getElementById('toggle-btn'),txt=document.getElementById('toggle-txt');
+  const on=h.value==='1';h.value=on?'0':'1';
+  btn.classList.toggle('on',!on);txt.textContent=on?'OFF':'ON';
   playClick(!on);calc();
 }
 
 function playTheme(isLight){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
     osc.connect(gain);gain.connect(ctx.destination);osc.type='sine';
     if(isLight){osc.frequency.setValueAtTime(300,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(900,ctx.currentTime+0.2);}
     else{osc.frequency.setValueAtTime(900,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(200,ctx.currentTime+0.2);}
-    gain.gain.setValueAtTime(0.25,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);
+    gain.gain.setValueAtTime(0.25,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.25);
   }catch(e){}
 }
@@ -568,8 +628,7 @@ function playClick(on){
 }
 
 function copyLot(){
-  const v=document.getElementById('res-lot').textContent;
-  if(v==='—')return;
+  const v=document.getElementById('res-lot').textContent;if(v==='—')return;
   const btn=document.getElementById('copy-btn');
   const done=()=>{btn.textContent='✅ コピーしました！';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 タップしてlotをコピー';btn.classList.remove('done');},2000);};
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
@@ -587,12 +646,9 @@ let curGroup=0;
 const drumScroll=document.getElementById('drum-scroll');
 const drumTabs=document.getElementById('drum-tabs');
 GROUPS.forEach((g,gi)=>{
-  const pairs=PAIRS.filter(p=>g.types.includes(p.type));
-  if(!pairs.length)return;
+  const pairs=PAIRS.filter(p=>g.types.includes(p.type));if(!pairs.length)return;
   const tab=document.createElement('div');
-  tab.className='drum-tab'+(gi===0?' active':'');
-  tab.textContent=g.lbl;
-  tab.onclick=()=>switchGroup(gi);
+  tab.className='drum-tab'+(gi===0?' active':'');tab.textContent=g.lbl;tab.onclick=()=>switchGroup(gi);
   drumTabs.appendChild(tab);
 });
 
@@ -601,16 +657,13 @@ function buildDrum(gi){
   const pairs=PAIRS.filter(p=>GROUPS[gi].types.includes(p.type));
   const pad2=drumScroll.querySelectorAll('.drum-pad')[1];
   pairs.forEach(p=>{
-    const o=document.createElement('div');
-    o.className='picker-item';o.textContent=p.pair;o.dataset.v=p.pair;
-    o.onclick=()=>pickPair(p.pair,true);
-    pad2.before(o);
+    const o=document.createElement('div');o.className='picker-item';o.textContent=p.pair;o.dataset.v=p.pair;
+    o.onclick=()=>pickPair(p.pair,true);pad2.before(o);
   });
   const current=document.getElementById('pair').value;
   const items=[...drumScroll.querySelectorAll('.picker-item')];
   const idx=items.findIndex(o=>o.dataset.v===current);
-  drumScroll.scrollTop=idx>=0?idx*44:0;
-  lastIdx=-1;updateCenter();
+  drumScroll.scrollTop=idx>=0?idx*44:0;lastIdx=-1;updateCenter();
 }
 
 function switchGroup(gi){
@@ -628,8 +681,7 @@ function playTick(){
     for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,4);
     const src=ctx.createBufferSource();src.buffer=buf;
     const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2500;f.Q.value=1.2;
-    const g=ctx.createGain();g.gain.setValueAtTime(0.35,ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.012);
+    const g=ctx.createGain();g.gain.setValueAtTime(0.35,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.012);
     src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
   }catch(e){}
 }
@@ -638,47 +690,30 @@ function updateCenter(){
   const ci=Math.round(drumScroll.scrollTop/44);
   const items=[...drumScroll.querySelectorAll('.picker-item:not(.hide)')];
   items.forEach((o,i)=>o.classList.toggle('center',i===ci));
-  if(ci!==lastIdx&&lastIdx!==-1)playTick();
-  lastIdx=ci;
+  if(ci!==lastIdx&&lastIdx!==-1)playTick();lastIdx=ci;
 }
 drumScroll.addEventListener('scroll',updateCenter,{passive:true});
 
 function openSheet(){
-  document.getElementById('sheet').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');document.getElementById('overlay').classList.add('open');
   const current=document.getElementById('pair').value;
   if(current){const p=PAIRS.find(x=>x.pair===current);if(p){const gi=GROUPS.findIndex(g=>g.types.includes(p.type));switchGroup(gi>=0?gi:0);}else buildDrum(curGroup);}
   else buildDrum(curGroup);
 }
-
-function closeSheet(){
-  document.getElementById('sheet').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-  window._feeMode=false;
-}
+function closeSheet(){document.getElementById('sheet').classList.remove('open');document.getElementById('overlay').classList.remove('open');window._feeMode=false;}
 
 function pickPair(v,close=true){
   if(window._feeMode){
-    document.getElementById('fee-pair').value=v;
-    const btn=document.getElementById('fee-pair-btn');
-    btn.textContent=v;btn.classList.add('sel');
-    window._feeMode=false;
-    if(close)closeSheet();
-    calcFee();
+    document.getElementById('fee-pair').value=v;const btn=document.getElementById('fee-pair-btn');btn.textContent=v;btn.classList.add('sel');
+    window._feeMode=false;if(close)closeSheet();calcFee();
   }else{
-    document.getElementById('pair').value=v;
-    const btn=document.getElementById('pair-btn');
-    btn.textContent=v;btn.classList.add('sel');
-    localStorage.setItem('ps_pair',v);
-    if(close)closeSheet();
-    calc(true);
+    document.getElementById('pair').value=v;const btn=document.getElementById('pair-btn');btn.textContent=v;btn.classList.add('sel');
+    localStorage.setItem('ps_pair',v);if(close)closeSheet();calc(true);
   }
 }
 
 (function(){
-  const eq=localStorage.getItem('ps_equity');
-  const rk=localStorage.getItem('ps_risk');
-  const pr=localStorage.getItem('ps_pair');
+  const eq=localStorage.getItem('ps_equity'),rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
   if(eq)document.getElementById('equity').value=eq;
   if(rk)document.getElementById('risk').value=rk;
   if(pr){document.getElementById('pair').value=pr;const btn=document.getElementById('pair-btn');btn.textContent=pr;btn.classList.add('sel');}
@@ -691,206 +726,279 @@ if(savedTheme==='light'){document.body.classList.add('light');document.getElemen
 
 function toggleTheme(){
   const btn=document.getElementById('theme-btn');
-  if(document.body.classList.contains('light')){
-    document.body.classList.remove('light');btn.textContent='DARK';localStorage.setItem('ps_theme','dark');
-  }else{
-    document.body.classList.add('light');btn.textContent='LIGHT';localStorage.setItem('ps_theme','light');
-  }
+  if(document.body.classList.contains('light')){document.body.classList.remove('light');btn.textContent='DARK';localStorage.setItem('ps_theme','dark');}
+  else{document.body.classList.add('light');btn.textContent='LIGHT';localStorage.setItem('ps_theme','light');}
   playTheme(document.body.classList.contains('light'));
 }
 
 function switchTab(tab){
-  playClick(tab==='fee'||tab==='entry');
-  ['sizer','fee','entry'].forEach(t=>{
-    document.getElementById(`content-${t}`).classList.toggle('active',t===tab);
-    document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
+  playClick(tab==='fee');
+  ['sizer','fee','entry','cal'].forEach(t=>{
+    document.getElementById('content-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
+  if(tab==='cal')calLoad();
 }
 
 function calcFee(){
-  const pairName=document.getElementById('fee-pair').value;
-  const lot=parseFloat(document.getElementById('fee-lot').value)||0;
-  const rate=parseFloat(document.getElementById('rate').value)||0;
+  const pairName=document.getElementById('fee-pair').value,lot=parseFloat(document.getElementById('fee-lot').value)||0,rate=parseFloat(document.getElementById('rate').value)||0;
   const p=PAIRS.find(x=>x.pair===pairName);
-  if(!p||!lot||!rate){
-    document.getElementById('fee-one-way').textContent='—';
-    document.getElementById('fee-round-trip').textContent='—';
-    document.getElementById('fee-per-lot').textContent='—';
-    return;
-  }
-  const oneWay=Math.round(p.fee*rate*lot);
-  const roundTrip=Math.round(p.fee*rate*2*lot);
-  const perLot=Math.round(p.fee*rate*2);
-  document.getElementById('fee-one-way').textContent=`¥${oneWay.toLocaleString()}`;
-  document.getElementById('fee-round-trip').textContent=`¥${roundTrip.toLocaleString()}`;
-  document.getElementById('fee-per-lot').textContent=`¥${perLot.toLocaleString()} / lot`;
+  if(!p||!lot||!rate){['fee-one-way','fee-round-trip','fee-per-lot'].forEach(id=>document.getElementById(id).textContent='—');return;}
+  document.getElementById('fee-one-way').textContent=`¥${Math.round(p.fee*rate*lot).toLocaleString()}`;
+  document.getElementById('fee-round-trip').textContent=`¥${Math.round(p.fee*rate*2*lot).toLocaleString()}`;
+  document.getElementById('fee-per-lot').textContent=`¥${Math.round(p.fee*rate*2).toLocaleString()} / lot`;
   const feePips=parseFloat(document.getElementById('fee-pips').value)||0;
   if(feePips>0){
-    const pv=pip1(p.type);
-    const pipsLoss=Math.round(feePips*pv*lot);
-    const totalLoss=pipsLoss+roundTrip;
+    const pv=pip1(p.type),pipsLoss=Math.round(feePips*pv*lot),totalLoss=pipsLoss+Math.round(p.fee*rate*2*lot);
     document.getElementById('fee-pips-loss').textContent=`¥${pipsLoss.toLocaleString()}`;
     document.getElementById('fee-pips-total').textContent=`¥${totalLoss.toLocaleString()}`;
     document.getElementById('fee-pip-val').textContent=`¥${Math.round(pv).toLocaleString()} / pip`;
-  }else{
-    document.getElementById('fee-pips-loss').textContent='—';
-    document.getElementById('fee-pips-total').textContent='—';
-    document.getElementById('fee-pip-val').textContent='—';
-  }
+  }else{['fee-pips-loss','fee-pips-total','fee-pip-val'].forEach(id=>document.getElementById(id).textContent='—');}
 }
 
-function openFeeSheet(){
-  document.getElementById('sheet').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-  window._feeMode=true;
-  buildDrum(curGroup);
-}
+function openFeeSheet(){document.getElementById('sheet').classList.add('open');document.getElementById('overlay').classList.add('open');window._feeMode=true;buildDrum(curGroup);}
 
 // ===== ENTRY FLOW =====
 const FQ=[
-  {
-    lbl:'指標', step:'STEP 1 / 4',
-    text:'重要指標が\n1時間以内にあるか？',
-    hint:'米CPI・FOMC・雇用統計・BOJ発表など',
-    auto:()=>''
-  },
-  {
-    lbl:'関連', step:'STEP 2 / 4',
-    text:'エントリーするペアに関連する\n指標まで1時間未満か？',
-    hint:'USD/JPYなら米指標、EUR系ならECB等が対象',
-    auto:()=>''
-  },
-  {
-    lbl:'曜日', step:'STEP 3 / 4',
-    text:'今日は金曜日か？',
-    hint:'週末ギャップ・流動性低下リスクあり',
-    auto:()=>{
-      const d=new Date().getDay();
-      const days=['日','月','火','水','木','金','土'];
-      if(d===5)return '⚠ 今日は金曜日です';
-      if(d===6||d===0)return `⚠ 今日は${days[d]}曜日です`;
-      return `✓ 今日は${days[d]}曜日です`;
-    }
-  },
-  {
-    lbl:'時間', step:'STEP 4 / 4',
-    text:'就寝まで2時間以上あるか？',
-    hint:'ポジション保有中に監視できる時間があるか',
-    auto:()=>{
-      const n=new Date();
-      return `現在 ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
-    }
-  }
+  {lbl:'指標',step:'STEP 1 / 4',text:'重要指標が\n1時間以内にあるか？',hint:'米CPI・FOMC・雇用統計・BOJ発表など',auto:()=>''},
+  {lbl:'関連',step:'STEP 2 / 4',text:'エントリーするペアに関連する\n指標まで1時間未満か？',hint:'USD/JPYなら米指標、EUR系ならECB等が対象',auto:()=>''},
+  {lbl:'曜日',step:'STEP 3 / 4',text:'今日は金曜日か？',hint:'週末ギャップ・流動性低下リスクあり',
+    auto:()=>{const d=new Date().getDay(),days=['日','月','火','水','木','金','土'];if(d===5)return '⚠ 今日は金曜日です';if(d===6||d===0)return `⚠ 今日は${days[d]}曜日です`;return `✓ 今日は${days[d]}曜日です`;}},
+  {lbl:'時間',step:'STEP 4 / 4',text:'就寝まで2時間以上あるか？',hint:'ポジション保有中に監視できる時間があるか',
+    auto:()=>{const n=new Date();return `現在 ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;}}
 ];
-
-let _fStep=0, _fFriday=false, _fHistory=[];
-
-function _setStepper(s){
-  const cls=['','active','passed','stopped'];
-  s.forEach((v,i)=>{
-    document.getElementById(`fs-${i}`).className='flow-step'+(v?' '+cls[v]:'');
-  });
-  for(let i=0;i<3;i++){
-    document.getElementById(`fl-${i}`).className='fs-line'+(s[i]===2?' passed':'');
-  }
-}
-
-function _renderFQ(idx){
-  const q=FQ[idx];
-  document.getElementById('fq-step').textContent=q.step;
-  document.getElementById('fq-text').textContent=q.text;
-  document.getElementById('fq-hint').textContent=q.hint;
-  const autoEl=document.getElementById('fq-auto');
-  const autoText=q.auto();
-  autoEl.textContent=autoText;
-  autoEl.style.color=autoText.startsWith('⚠')?'#F59E0B':'#22C55E66';
-}
-
-function flowReset(){
-  _fStep=0;_fFriday=false;_fHistory=[];
-  document.getElementById('flow-q-section').style.display='block';
-  document.getElementById('flow-result-section').style.display='none';
-  _setStepper([1,0,0,0]);
-  _renderFQ(0);
-}
-
+let _fStep=0,_fFriday=false,_fHistory=[];
+function _setStepper(s){const cls=['','active','passed','stopped'];s.forEach((v,i)=>{document.getElementById('fs-'+i).className='flow-step'+(v?' '+cls[v]:'');});for(let i=0;i<3;i++){document.getElementById('fl-'+i).className='fs-line'+(s[i]===2?' passed':'');}}
+function _renderFQ(idx){const q=FQ[idx];document.getElementById('fq-step').textContent=q.step;document.getElementById('fq-text').textContent=q.text;document.getElementById('fq-hint').textContent=q.hint;const autoEl=document.getElementById('fq-auto'),autoText=q.auto();autoEl.textContent=autoText;autoEl.style.color=autoText.startsWith('⚠')?'#F59E0B':'#22C55E66';}
+function flowReset(){_fStep=0;_fFriday=false;_fHistory=[];document.getElementById('flow-q-section').style.display='block';document.getElementById('flow-result-section').style.display='none';_setStepper([1,0,0,0]);_renderFQ(0);}
 function flowAnswer(yes){
-  _fHistory.push({step:_fStep,yes});
-  playClick(yes);
-
-  if(_fStep===0){
-    if(yes){_setStepper([3,0,0,0]);_showResult('NG','重要指標の発表リスクがあります\nエントリーは見送りましょう');return;}
-    _fStep=1;_setStepper([2,1,0,0]);_renderFQ(1);return;
-  }
-  if(_fStep===1){
-    if(yes){_setStepper([2,3,0,0]);_showResult('NG','指標前エントリーはリスク大\nあと1時間以上経過してから再判断を');return;}
-    _fStep=2;_setStepper([2,2,1,0]);_renderFQ(2);return;
-  }
-  if(_fStep===2){
-    _fFriday=yes;_fStep=3;_setStepper([2,2,2,1]);_renderFQ(3);return;
-  }
-  if(_fStep===3){
-    _setStepper([2,2,2,2]);
-    if(_fFriday){
-      _showResult(
-        yes?'CAUTION':'NG',
-        yes?'金曜日につき週末ギャップに注意\nTP/SL必須・ポジションサイズを絞ること'
-           :'金曜の就寝前エントリーは高リスク\nポジションを週をまたいで保有しないこと'
-      );
-    }else{
-      _showResult(
-        yes?'OK':'CAUTION',
-        yes?'全条件クリア\nエントリーを検討できます'
-           :'就寝まで時間が少ない\nTP/SL必須・ロット数を絞ること'
-      );
-    }
-  }
+  _fHistory.push({step:_fStep,yes});playClick(yes);
+  if(_fStep===0){if(yes){_setStepper([3,0,0,0]);_showResult('NG','重要指標の発表リスクがあります\nエントリーは見送りましょう');return;}_fStep=1;_setStepper([2,1,0,0]);_renderFQ(1);return;}
+  if(_fStep===1){if(yes){_setStepper([2,3,0,0]);_showResult('NG','指標前エントリーはリスク大\nあと1時間以上経過してから再判断を');return;}_fStep=2;_setStepper([2,2,1,0]);_renderFQ(2);return;}
+  if(_fStep===2){_fFriday=yes;_fStep=3;_setStepper([2,2,2,1]);_renderFQ(3);return;}
+  if(_fStep===3){_setStepper([2,2,2,2]);if(_fFriday){_showResult(yes?'CAUTION':'NG',yes?'金曜日につき週末ギャップに注意\nTP/SL必須・ポジションサイズを絞ること':'金曜の就寝前エントリーは高リスク\nポジションを週をまたいで保有しないこと');}else{_showResult(yes?'OK':'CAUTION',yes?'全条件クリア\nエントリーを検討できます':'就寝まで時間が少ない\nTP/SL必須・ロット数を絞ること');}}
 }
-
-function _ansColor(step,yes){
-  if(step===0||step===1)return yes?'#EF4444':'#22C55E';
-  if(step===2)return yes?'#F59E0B':'#22C55E';
-  if(step===3){
-    if(_fFriday)return yes?'#F59E0B':'#EF4444';
-    return yes?'#22C55E':'#F59E0B';
-  }
-  return '#888';
-}
-
+function _ansColor(step,yes){if(step===0||step===1)return yes?'#EF4444':'#22C55E';if(step===2)return yes?'#F59E0B':'#22C55E';if(step===3){if(_fFriday)return yes?'#F59E0B':'#EF4444';return yes?'#22C55E':'#F59E0B';}return '#888';}
 const _RESULT_LABELS={OK:'ENTRY OK',CAUTION:'要注意',NG:'ENTRY NG'};
-
 function _showResult(result,reason){
-  document.getElementById('flow-q-section').style.display='none';
-  document.getElementById('flow-result-section').style.display='block';
-  const badge=document.getElementById('fr-badge');
-  badge.textContent=_RESULT_LABELS[result];
-  badge.className='fr-badge '+result.toLowerCase();
+  document.getElementById('flow-q-section').style.display='none';document.getElementById('flow-result-section').style.display='block';
+  const badge=document.getElementById('fr-badge');badge.textContent=_RESULT_LABELS[result];badge.className='fr-badge '+result.toLowerCase();
   document.getElementById('fr-reason').textContent=reason;
-  const path=document.getElementById('fr-path');
-  path.innerHTML=_fHistory.map(h=>{
-    const color=_ansColor(h.step,h.yes);
-    const qtext=FQ[h.step].text.replace('\n','');
-    return `<div class="fr-path-row">
-      <span class="fr-path-q">${qtext}</span>
-      <span class="fr-path-a" style="color:${color};">${h.yes?'YES':'NO'}</span>
-    </div>`;
-  }).join('');
-  if(result==='OK')playTheme(true);
-  else if(result==='NG')playTheme(false);
-  else playClick(false);
+  document.getElementById('fr-path').innerHTML=_fHistory.map(h=>{const color=_ansColor(h.step,h.yes),qtext=FQ[h.step].text.replace('\n','');return `<div class="fr-path-row"><span class="fr-path-q">${qtext}</span><span class="fr-path-a" style="color:${color};">${h.yes?'YES':'NO'}</span></div>`;}).join('');
+  if(result==='OK')playTheme(true);else if(result==='NG')playTheme(false);else playClick(false);
   setTimeout(()=>document.getElementById('flow-result-section').scrollIntoView({behavior:'smooth',block:'start'}),100);
 }
+function toggleCond(){const body=document.getElementById('cond-body'),arr=document.getElementById('cond-arr'),open=body.classList.toggle('open');arr.classList.toggle('open',open);}
 
-function toggleCond(){
-  const body=document.getElementById('cond-body');
-  const arr=document.getElementById('cond-arr');
-  const open=body.classList.toggle('open');
-  arr.classList.toggle('open',open);
+// ===== CALENDAR =====
+// 表示する週の月曜日を返す（土曜10:00以降は翌週）
+function getWeekMonday(){
+  const now=new Date();
+  const day=now.getDay(); // 0=日,1=月,...,6=土
+  const hour=now.getHours();
+  // 土曜10:00以降 → 来週分
+  let offset=0;
+  if(day===6&&hour>=10) offset=7;
+  // 今週の月曜日を求める
+  const mon=new Date(now);
+  const diffToMon=(day===0)?-6:(1-day); // 日曜は-6、それ以外は1-day
+  mon.setDate(now.getDate()+diffToMon+offset);
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function calDateStr(date){
+  return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+}
+
+// FF APIから指標取得
+let _ffData=[];
+async function calLoad(){
+  const st=document.getElementById('cal-status-txt');
+  st.textContent='読み込み中...';
+  const FF_URL='https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+  const PROXIES=[
+    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+    u=>'https://corsproxy.io/?'+encodeURIComponent(u),
+    u=>u
+  ];
+  let data=null;
+  for(const proxy of PROXIES){
+    try{
+      const r=await fetch(proxy(FF_URL),{cache:'no-store'});
+      if(!r.ok)continue;
+      const text=await r.text();
+      if(text.trim().startsWith('<'))continue;
+      data=JSON.parse(text);
+      if(data&&data.length)break;
+    }catch(e){continue;}
+  }
+  if(data&&data.length){
+    _ffData=data;
+    const now=new Date();
+    st.textContent='FF取得済 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+    st.style.color='#059669';
+  }else{
+    _ffData=[];
+    st.textContent='FF取得失敗 — カルトデータのみ表示';
+    st.style.color='#F59E0B';
+  }
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const mon=getWeekMonday();
+  const DAY_NAMES=['月','火','水','木','金'];
+  const TODAY=calDateStr(new Date());
+  const cultData=loadCultData();
+
+  let html='';
+  for(let i=0;i<5;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    const dStr=calDateStr(d);
+    const isToday=dStr===TODAY;
+    const md=`${d.getMonth()+1}/${d.getDate()}`;
+
+    // FF events for this day (orange/red only)
+    const ffEvents=_ffData.filter(e=>{
+      if(!e.date)return false;
+      const eDate=e.date.split('T')[0];
+      return eDate===dStr&&(e.impact==='High'||e.impact==='Medium');
+    }).map(e=>({
+      time:fmtFFTime(e.date),
+      cur:e.currency||'',
+      title:e.title||'',
+      impact:e.impact,
+      dot:e.impact==='High'?'🔴':'🟠',
+      src:'FF'
+    }));
+
+    // Cult events for this day
+    const cultEvents=(cultData[i]||[]).map(e=>({
+      time:e.time,cur:e.cur,title:'',dot:'🟢',src:'カルト'
+    }));
+
+    // Merge and sort
+    const allEvents=[...ffEvents,...cultEvents].sort((a,b)=>a.time.localeCompare(b.time));
+
+    const hasRed=allEvents.some(e=>e.dot==='🔴');
+    const hasOrange=allEvents.some(e=>e.dot==='🟠');
+    const badge=allEvents.length===0?'<span class="cal-day-badge free">FREE</span>':
+      hasRed?'<span class="cal-day-badge danger">要回避</span>':
+      hasOrange?'<span class="cal-day-badge warn">注意</span>':'<span class="cal-day-badge free">🟢あり</span>';
+
+    html+=`<div class="cal-day${isToday?' cal-today':''}">
+      <div class="cal-day-hdr">
+        <span class="cal-day-name">${DAY_NAMES[i]} ${md}</span>
+        ${badge}
+      </div>`;
+
+    if(allEvents.length===0){
+      html+=`<div class="cal-empty">指標なし</div>`;
+    }else{
+      html+=`<div class="cal-events">`;
+      allEvents.forEach(e=>{
+        html+=`<div class="cal-event">
+          <span class="cal-event-dot">${e.dot}</span>
+          <span class="cal-event-time">${e.time}</span>
+          <span class="cal-event-cur">${e.cur}</span>
+          <span class="cal-event-title">${e.title}</span>
+          <span class="cal-event-src">${e.src}</span>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+  document.getElementById('cal-body').innerHTML=html;
+  renderCultList();
+}
+
+function fmtFFTime(dateStr){
+  if(!dateStr||!dateStr.includes('T'))return 'All';
+  const d=new Date(dateStr);
+  if(isNaN(d.getTime()))return '—';
+  // JST = UTC+9
+  const jst=new Date(d.getTime()+9*60*60*1000);
+  return String(jst.getUTCHours()).padStart(2,'0')+':'+String(jst.getUTCMinutes()).padStart(2,'0');
+}
+
+// ===== CULT DATA =====
+const CULT_KEY='ps_cult_v2';
+
+function loadCultData(){
+  try{return JSON.parse(localStorage.getItem(CULT_KEY))||[[],[],[],[],[]];}
+  catch(e){return [[],[],[],[],[]];}
+}
+function saveCultData(data){localStorage.setItem(CULT_KEY,JSON.stringify(data));}
+
+function cultAdd(){
+  const dayEl=document.getElementById('cult-day');
+  const timeEl=document.getElementById('cult-time');
+  const curEl=document.getElementById('cult-cur');
+  const day=dayEl.value;
+  const time=timeEl.value.trim();
+  const cur=curEl.value.trim().toUpperCase();
+  if(day===''||!time||!cur){return;}
+  const data=loadCultData();
+  data[parseInt(day)].push({time,cur});
+  data[parseInt(day)].sort((a,b)=>a.time.localeCompare(b.time));
+  saveCultData(data);
+  timeEl.value='';curEl.value='';dayEl.value='';
+  renderCalendar();
+  playClick(true);
+}
+
+function cultDel(dayIdx,itemIdx){
+  const data=loadCultData();
+  data[dayIdx].splice(itemIdx,1);
+  saveCultData(data);
+  renderCalendar();
+  playClick(false);
+}
+
+function renderCultList(){
+  const data=loadCultData();
+  const DAY_NAMES=['月','火','水','木','金'];
+  let html='';
+  let total=0;
+  data.forEach((items,di)=>{
+    items.forEach((item,ii)=>{
+      total++;
+      html+=`<div class="cult-item">
+        <button class="cult-item-del" onclick="cultDel(${di},${ii})">×</button>
+        <span class="cult-item-text">${DAY_NAMES[di]} ${item.time} ${item.cur}</span>
+        <span class="cult-item-badge">カルト</span>
+      </div>`;
+    });
+  });
+  if(total===0)html=`<div style="font-size:11px;color:#333;padding:8px 0;">登録なし</div>`;
+  document.getElementById('cult-list').innerHTML=html;
+}
+
+function toggleCult(){
+  const body=document.getElementById('cult-body'),arr=document.getElementById('cult-arr');
+  const open=body.classList.toggle('open');arr.classList.toggle('open',open);
+}
+
+function cultResetConfirm(){
+  const btn=document.getElementById('cult-reset-btn');
+  if(btn.dataset.c==='1'){
+    saveCultData([[],[],[],[],[]]);
+    btn.textContent='カルトデータをリセット';
+    btn.style.color='';btn.dataset.c='0';
+    renderCalendar();playClick(false);
+  }else{
+    btn.textContent='もう一度タップで実行';
+    btn.style.color='#EF4444';btn.dataset.c='1';
+    setTimeout(()=>{btn.textContent='カルトデータをリセット';btn.style.color='';btn.dataset.c='0';},3000);
+  }
 }
 
 fetchRates();
 calc();
 flowReset();
+calLoad();
 </script>
 </body>
 </html>
