@@ -134,10 +134,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cond-item{font-size:12px;color:#555;padding:3px 0;letter-spacing:0.3px}
 
 /* ===== CALENDAR TAB ===== */
-.cal-status{margin:14px 14px 0;padding:10px 14px;background:#141414;border-radius:10px;border:1px solid #D4AF5A22;display:flex;align-items:center;justify-content:space-between}
-.cal-status-txt{font-size:10px;color:#555;letter-spacing:0.5px}
-.cal-reload-btn{background:transparent;border:1px solid #D4AF5A44;border-radius:6px;padding:5px 10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none}
-.cal-week-label{margin:14px 14px 0;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase}
+.cat-btns{display:flex;gap:6px;margin-bottom:12px}
+.cat-btn{flex:1;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;border:2px solid transparent;transition:all 0.15s;text-align:center;letter-spacing:0.3px}
+.cat-btn.red{background:#1A1A1A;border-color:#EF444433;color:#EF444866}
+.cat-btn.red.sel{background:#EF444418;border-color:#EF4444;color:#EF4444}
+.cat-btn.orange{background:#1A1A1A;border-color:#F59E0B33;color:#F59E0B66}
+.cat-btn.orange.sel{background:#F59E0B18;border-color:#F59E0B;color:#F59E0B}
+.cat-btn.green{background:#1A1A1A;border-color:#22C55E33;color:#22C55E66}
+.cat-btn.green.sel{background:#22C55E18;border-color:#22C55E;color:#22C55E}
 .cal-day{margin:8px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .cal-day-hdr{background:#1A1A1A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #D4AF5A22}
 .cal-day-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#E8E0D0}
@@ -445,21 +449,20 @@ body.light .cal-today{border-color:#D4AF5A55}
 <!-- CAL TAB -->
 <div class="tab-content" id="content-cal">
 
-  <div class="cal-status">
-    <span class="cal-status-txt" id="cal-status-txt">読み込み中...</span>
-    <button class="cal-reload-btn" onclick="calLoad()">更新</button>
-  </div>
-
   <div id="cal-body" style="padding-bottom:8px;"></div>
 
-  <!-- TradingCult 手入力 -->
+  <!-- 指標手入力 -->
   <div class="cult-section">
     <div class="cult-hdr" onclick="toggleCult()">
-      <span>🟢 TradingCult 手入力</span>
+      <span>指標を追加</span>
       <span class="cult-arr" id="cult-arr">▼</span>
     </div>
     <div class="cult-body" id="cult-body">
-      <div style="font-size:11px;color:#555;margin-bottom:12px;letter-spacing:0.3px;">カルトの指標を追加するとカレンダーに🟢で表示されます</div>
+      <div class="cat-btns">
+        <button class="cat-btn red" id="cat-red" onclick="selectCat('red')">🔴 FF 赤</button>
+        <button class="cat-btn orange" id="cat-orange" onclick="selectCat('orange')">🟠 FF 橙</button>
+        <button class="cat-btn green" id="cat-green" onclick="selectCat('green')">🟢 カルト</button>
+      </div>
       <div class="cult-form-row">
         <select id="cult-day" class="cult-input" style="flex:1.2;">
           <option value="">曜日</option>
@@ -476,7 +479,7 @@ body.light .cal-today{border-color:#D4AF5A55}
         <button class="cult-add-btn" onclick="cultAdd()">追加</button>
       </div>
       <div class="cult-list" id="cult-list"></div>
-      <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">カルトデータをリセット</button>
+      <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
     </div>
   </div>
 
@@ -784,7 +787,7 @@ function switchTab(tab){
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
-  if(tab==='cal')calLoad();
+  if(tab==='cal')renderCalendar();
 }
 
 function calcFee(){
@@ -843,113 +846,60 @@ function _showResult(result,reason){
 function toggleCond(){const body=document.getElementById('cond-body'),arr=document.getElementById('cond-arr'),open=body.classList.toggle('open');arr.classList.toggle('open',open);}
 
 // ===== CALENDAR =====
-// 表示する週の月曜日を返す（土曜10:00以降は翌週）
 function getWeekMonday(){
-  const now=new Date();
-  const day=now.getDay(); // 0=日,1=月,...,6=土
-  const hour=now.getHours();
-  // 土曜10:00以降 または 日曜 → 来週月曜を表示
+  const now=new Date(),day=now.getDay(),hour=now.getHours();
   let offset=0;
-  if(day===0) offset=1;                  // 日曜 → 翌月曜
-  else if(day===6&&hour>=10) offset=7;   // 土曜10時以降 → 翌週月曜
-  // 今週の月曜日を求める（日曜以外）
+  if(day===0)offset=1;
+  else if(day===6&&hour>=10)offset=7;
   const mon=new Date(now);
   const diffToMon=(day===0)?0:(1-day);
   mon.setDate(now.getDate()+diffToMon+offset);
-  mon.setHours(0,0,0,0);
-  return mon;
+  mon.setHours(0,0,0,0);return mon;
 }
-
 function calDateStr(date){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
 }
 
-// FF データ取得（GitHub Actions が毎日更新する ff_data.json から）
-let _ffData=[];
-const FF_JSON_URL='https://raw.githubusercontent.com/chetocheke152-collab/fx-tool/main/ff_data.json';
-async function calLoad(){
-  const st=document.getElementById('cal-status-txt');
-  st.textContent='読み込み中...';
-  let data=null;
-  try{
-    const r=await fetch(FF_JSON_URL+'?_='+Date.now(),{cache:'no-store'});
-    if(r.ok){
-      const parsed=await r.json();
-      if(Array.isArray(parsed)&&parsed.length)data=parsed;
-    }
-  }catch(e){}
-  if(data&&data.length){
-    _ffData=data;
-    const now=new Date();
-    st.textContent='FF取得済 '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-    st.style.color='#059669';
-  }else{
-    _ffData=[];
-    st.textContent='FF取得失敗 — カルトデータのみ表示';
-    st.style.color='#F59E0B';
-  }
-  renderCalendar();
+// ===== CAL DATA (FF+Cult unified) =====
+const CAL_KEY='ps_cal_v3';
+let _selectedCat='';
+
+function loadCultData(){
+  try{return JSON.parse(localStorage.getItem(CAL_KEY))||[[],[],[],[],[]];}
+  catch(e){return [[],[],[],[],[]];}
+}
+function saveCultData(data){localStorage.setItem(CAL_KEY,JSON.stringify(data));}
+
+function selectCat(cat){
+  _selectedCat=cat;
+  ['red','orange','green'].forEach(c=>document.getElementById('cat-'+c).classList.toggle('sel',c===cat));
+  playClick(true);
 }
 
 function renderCalendar(){
   const mon=getWeekMonday();
   const DAY_NAMES=['月','火','水','木','金'];
   const TODAY=calDateStr(new Date());
-  const cultData=loadCultData();
-
+  const calData=loadCultData();
   let html='';
   for(let i=0;i<5;i++){
     const d=new Date(mon);d.setDate(mon.getDate()+i);
-    const dStr=calDateStr(d);
-    const isToday=dStr===TODAY;
-    const md=`${d.getMonth()+1}/${d.getDate()}`;
-
-    // FF events for this day (orange/red only)
-    const ffEvents=_ffData.filter(e=>{
-      if(!e.date)return false;
-      const eDate=e.date.split('T')[0];
-      return eDate===dStr&&(e.impact==='High'||e.impact==='Medium');
-    }).map(e=>({
-      time:fmtFFTime(e.date),
-      cur:e.currency||'',
-      title:e.title||'',
-      impact:e.impact,
-      dot:e.impact==='High'?'🔴':'🟠',
-      src:'FF'
-    }));
-
-    // Cult events for this day
-    const cultEvents=(cultData[i]||[]).map(e=>({
-      time:e.time,cur:e.cur,title:'',dot:'🟢',src:'カルト'
-    }));
-
-    // Merge and sort
-    const allEvents=[...ffEvents,...cultEvents].sort((a,b)=>a.time.localeCompare(b.time));
-
-    const hasRed=allEvents.some(e=>e.dot==='🔴');
-    const hasOrange=allEvents.some(e=>e.dot==='🟠');
-    const badge=allEvents.length===0?'<span class="cal-day-badge free">FREE</span>':
+    const dStr=calDateStr(d),isToday=dStr===TODAY,md=(d.getMonth()+1)+'/'+d.getDate();
+    const events=(calData[i]||[]).map(e=>({
+      time:e.time,cur:e.cur,
+      dot:e.cat==='red'?'🔴':e.cat==='orange'?'🟠':'🟢',
+      src:e.cat==='green'?'カルト':'FF'
+    })).sort((a,b)=>a.time.localeCompare(b.time));
+    const hasRed=events.some(e=>e.dot==='🔴'),hasOrange=events.some(e=>e.dot==='🟠');
+    const badge=events.length===0?'<span class="cal-day-badge free">FREE</span>':
       hasRed?'<span class="cal-day-badge danger">要回避</span>':
       hasOrange?'<span class="cal-day-badge warn">注意</span>':'<span class="cal-day-badge free">🟢あり</span>';
-
-    html+=`<div class="cal-day${isToday?' cal-today':''}">
-      <div class="cal-day-hdr">
-        <span class="cal-day-name">${DAY_NAMES[i]} ${md}</span>
-        ${badge}
-      </div>`;
-
-    if(allEvents.length===0){
-      html+=`<div class="cal-empty">指標なし</div>`;
-    }else{
+    html+=`<div class="cal-day${isToday?' cal-today':''}"><div class="cal-day-hdr"><span class="cal-day-name">${DAY_NAMES[i]} ${md}</span>${badge}</div>`;
+    if(events.length===0){html+=`<div class="cal-empty">指標なし</div>`;}
+    else{
       html+=`<div class="cal-events">`;
-      allEvents.forEach(e=>{
-        html+=`<div class="cal-event">
-          <span class="cal-event-dot">${e.dot}</span>
-          <span class="cal-event-time">${e.time}</span>
-          <span class="cal-event-cur">${e.cur}</span>
-          <span class="cal-event-title">${e.title}</span>
-          <span class="cal-event-src${e.dot==='🟢'?' cult':''}">${e.src}</span>
-        </div>`;
+      events.forEach(e=>{
+        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span><span class="cal-event-title"></span><span class="cal-event-src${e.dot==='🟢'?' cult':''}">${e.src}</span></div>`;
       });
       html+=`</div>`;
     }
@@ -958,24 +908,6 @@ function renderCalendar(){
   document.getElementById('cal-body').innerHTML=html;
   renderCultList();
 }
-
-function fmtFFTime(dateStr){
-  if(!dateStr||!dateStr.includes('T'))return 'All';
-  const d=new Date(dateStr);
-  if(isNaN(d.getTime()))return '—';
-  // JST = UTC+9
-  const jst=new Date(d.getTime()+9*60*60*1000);
-  return String(jst.getUTCHours()).padStart(2,'0')+':'+String(jst.getUTCMinutes()).padStart(2,'0');
-}
-
-// ===== CULT DATA =====
-const CULT_KEY='ps_cult_v2';
-
-function loadCultData(){
-  try{return JSON.parse(localStorage.getItem(CULT_KEY))||[[],[],[],[],[]];}
-  catch(e){return [[],[],[],[],[]];}
-}
-function saveCultData(data){localStorage.setItem(CULT_KEY,JSON.stringify(data));}
 
 // ===== CULT DRUM PICKERS =====
 // ドラムの中央アイテムをdataset.vから確実に取得する共通関数
@@ -1125,14 +1057,17 @@ function cultAdd(){
   const day=dayEl.value;
   const time=timeEl.value.trim();
   const cur=curEl.value.trim().toUpperCase();
+  if(!_selectedCat){
+    document.querySelectorAll('.cat-btn').forEach(b=>{b.style.outline='2px solid #EF4444';setTimeout(()=>b.style.outline='',1200);});
+    return;
+  }
   if(day===''||!time||!cur){
-    // 未選択の項目を視覚的にハイライト
     if(!time){const b=document.getElementById('cult-time-btn');b.style.borderColor='#EF4444';setTimeout(()=>b.style.borderColor='',1200);}
     if(!cur){const b=document.getElementById('cult-cur-btn');b.style.borderColor='#EF4444';setTimeout(()=>b.style.borderColor='',1200);}
     return;
   }
   const data=loadCultData();
-  data[parseInt(day)].push({time,cur});
+  data[parseInt(day)].push({time,cur,cat:_selectedCat});
   data[parseInt(day)].sort((a,b)=>a.time.localeCompare(b.time));
   saveCultData(data);
   // リセット
@@ -1156,15 +1091,18 @@ function cultDel(dayIdx,itemIdx){
 function renderCultList(){
   const data=loadCultData();
   const DAY_NAMES=['月','火','水','木','金'];
-  let html='';
-  let total=0;
+  let html='',total=0;
   data.forEach((items,di)=>{
     items.forEach((item,ii)=>{
       total++;
+      const dot=item.cat==='red'?'🔴':item.cat==='orange'?'🟠':'🟢';
+      const src=item.cat==='green'?'カルト':'FF';
+      const badgeBg=item.cat==='red'?'#EF444422':item.cat==='orange'?'#F59E0B22':'#22C55E22';
+      const badgeColor=item.cat==='red'?'#EF4444':item.cat==='orange'?'#F59E0B':'#4ADE80';
       html+=`<div class="cult-item">
         <button class="cult-item-del" onclick="cultDel(${di},${ii})">×</button>
-        <span class="cult-item-text">${DAY_NAMES[di]} ${item.time} ${item.cur}</span>
-        <span class="cult-item-badge">カルト</span>
+        <span class="cult-item-text">${dot} ${DAY_NAMES[di]} ${item.time} ${item.cur}</span>
+        <span class="cult-item-badge" style="background:${badgeBg};color:${badgeColor};">${src}</span>
       </div>`;
     });
   });
@@ -1181,7 +1119,7 @@ function cultResetConfirm(){
   const btn=document.getElementById('cult-reset-btn');
   if(btn.dataset.c==='1'){
     saveCultData([[],[],[],[],[]]);
-    btn.textContent='カルトデータをリセット';
+    btn.textContent='全データをリセット';
     btn.style.color='';btn.dataset.c='0';
     renderCalendar();playClick(false);
   }else{
@@ -1194,7 +1132,7 @@ function cultResetConfirm(){
 fetchRates();
 calc();
 flowReset();
-calLoad();
+renderCalendar();
 </script>
 </body>
 </html>
