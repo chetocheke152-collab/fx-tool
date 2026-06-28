@@ -1,0 +1,45 @@
+name: Fetch ForexFactory Calendar
+
+on:
+  schedule:
+    # 毎日 JST 7:00 (UTC 22:00) に実行
+    - cron: '0 22 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch FF Calendar
+        run: |
+          curl -s \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36" \
+            -H "Accept: application/json, text/plain, */*" \
+            -H "Referer: https://www.forexfactory.com/" \
+            "https://nfs.faireconomy.media/ff_calendar_thisweek.json" \
+            -o ff_data.json
+          # 取得できたか確認（空・HTML・エラーなら失敗扱い）
+          if [ ! -s ff_data.json ] || python3 -c "
+          import json,sys
+          try:
+            d=json.load(open('ff_data.json'))
+            sys.exit(0 if isinstance(d,list) and len(d)>0 else 1)
+          except: sys.exit(1)
+          "; then
+            echo "FF data fetched successfully"
+          else
+            echo "Fetch failed or empty"
+            exit 1
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ff_data.json
+          # 変化がなければコミットしない
+          git diff --cached --quiet && echo "No changes" || git commit -m "chore: update ff_data.json [skip ci]"
+          git push
