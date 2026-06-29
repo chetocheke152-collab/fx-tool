@@ -86,53 +86,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .fee-result-val{font-size:17px;font-weight:700;color:#D4AF5A}
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
-/* ===== ENTRY FLOW ===== */
-.flow-stepper{display:flex;align-items:center;padding:16px 20px 14px;justify-content:center}
-.flow-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
-.fs-node{width:38px;height:38px;border-radius:50%;border:2px solid #252525;background:#141414;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;color:#2E2E2E;transition:all 0.35s}
-.fs-lbl{font-size:9px;font-weight:700;color:#2E2E2E;letter-spacing:1px;text-transform:uppercase;transition:color 0.35s}
-.fs-line{flex:1;height:2px;background:#252525;margin:0 6px;margin-bottom:20px;transition:background 0.35s;min-width:12px}
-.flow-step.active .fs-node{border-color:#D4AF5A;color:#D4AF5A;background:#D4AF5A18;box-shadow:0 0 14px #D4AF5A44}
-.flow-step.active .fs-lbl{color:#D4AF5A}
-.flow-step.passed .fs-node{border-color:#D4AF5A55;color:#D4AF5A55;background:#D4AF5A08}
-.flow-step.passed .fs-lbl{color:#D4AF5A55}
-.fs-line.passed{background:#D4AF5A44}
-.flow-step.stopped .fs-node{border-color:#EF4444;color:#EF4444;background:#EF444418}
-.flow-step.stopped .fs-lbl{color:#EF4444}
-.flow-q-card{background:#141414;border:1px solid #D4AF5A22;border-radius:12px;padding:28px 20px 22px;margin:0 14px;text-align:center}
-.flow-q-step{font-size:9px;font-weight:700;color:#D4AF5A55;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
-.flow-q-text{font-size:19px;font-weight:700;color:#E8E0D0;line-height:1.5;margin-bottom:10px;white-space:pre-line}
-.flow-q-hint{font-size:12px;color:#444;letter-spacing:0.3px;line-height:1.6}
-.flow-q-auto{font-size:11px;font-weight:700;margin-top:8px;letter-spacing:0.5px;min-height:18px}
-.flow-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 14px 0}
-.flow-btn{padding:16px;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s;border-width:2px;border-style:solid}
-.flow-yes{background:#141414;border-color:#22C55E44;color:#22C55E}
-.flow-yes:active{background:#22C55E18;border-color:#22C55E}
-.flow-no{background:#141414;border-color:#EF444444;color:#EF4444}
-.flow-no:active{background:#EF444418;border-color:#EF4444}
-.fr-top{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%);border-radius:12px;border:1px solid #D4AF5A22;padding:32px 20px 24px;text-align:center}
-.fr-label{font-size:9px;font-weight:700;color:#D4AF5A55;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
-.fr-badge{font-family:'Oswald',sans-serif;font-size:52px;font-weight:700;letter-spacing:-1px;line-height:1}
-.fr-badge.ok{color:#22C55E;text-shadow:0 0 30px #22C55E55}
-.fr-badge.caution{color:#F59E0B;text-shadow:0 0 30px #F59E0B55}
-.fr-badge.ng{color:#EF4444;text-shadow:0 0 30px #EF444455}
-.fr-reason{font-size:13px;color:#666;margin-top:10px;line-height:1.7;white-space:pre-line}
-.fr-path-card{background:#141414;border-radius:12px;border:1px solid #D4AF5A22;padding:4px 16px;margin-top:12px}
-.fr-path-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #D4AF5A11;font-size:13px}
-.fr-path-row:last-child{border-bottom:none}
-.fr-path-q{color:#666;flex:1;line-height:1.3}
-.fr-path-a{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;flex-shrink:0}
-.fr-reset-btn{width:100%;padding:14px;background:#1A1A1A;border:1px solid #D4AF5A44;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none;display:block;margin-top:12px}
-.cond-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.cond-arr{font-size:11px;color:#D4AF5A;margin-left:8px;transition:transform 0.2s;flex-shrink:0}
-.cond-arr.open{transform:rotate(180deg)}
-.cond-body{display:none;padding:4px 16px 16px}
-.cond-body.open{display:block}
-.cond-group{margin-bottom:14px}
-.cond-group:last-child{margin-bottom:0}
-.cond-g-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}
-.cond-item{font-size:12px;color:#555;padding:3px 0;letter-spacing:0.3px}
-
 /* ===== CALENDAR TAB ===== */
 .cat-btns{display:flex;gap:6px;margin-bottom:12px}
 .cat-btn{flex:1;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;border:2px solid transparent;transition:all 0.15s;text-align:center;letter-spacing:0.3px}
@@ -145,7 +98,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cal-day{margin:8px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .cal-day-hdr{background:#1A1A1A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #D4AF5A22}
 .cal-day-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#E8E0D0}
-.cal-day-date{font-size:11px;color:#555;letter-spacing:0.5px}
 .cal-day-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.5px}
 .cal-day-badge.free{background:#22C55E18;color:#22C55E}
 .cal-day-badge.warn{background:#F59E0B18;color:#F59E0B}
@@ -230,21 +182,6 @@ body.light .fee-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
 body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
-body.light .fs-node{background:#F0EDE6;border-color:#E0DDD6;color:#AAA}
-body.light .fs-lbl{color:#AAA}
-body.light .fs-line{background:#E0DDD6}
-body.light .flow-q-card{background:#FFFFFF;border-color:#D4AF5A22}
-body.light .flow-q-text{color:#1A1A1A}
-body.light .flow-q-hint{color:#888}
-body.light .flow-yes{background:#F6FBF7}
-body.light .flow-no{background:#FEF6F6}
-body.light .fr-top{background:linear-gradient(135deg,#FFFFFF,#F9F7F2);border-color:#D4AF5A22}
-body.light .fr-path-card{background:#FFFFFF;border-color:#D4AF5A22}
-body.light .fr-path-q{color:#888}
-body.light .fr-path-row{border-bottom-color:#D4AF5A11}
-body.light .fr-reset-btn{background:#F0EDE6;border-color:#D4AF5A44}
-body.light .cond-item{color:#888}
-body.light .cal-status{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .cal-day{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .cal-day-hdr{background:#F0EDE6}
 body.light .cal-day-name{color:#1A1A1A}
@@ -415,6 +352,7 @@ body.light .cal-today{border-color:#D4AF5A55}
           <option value="2">水</option>
           <option value="3">木</option>
           <option value="4">金</option>
+          <option value="5">土</option>
         </select>
         <button class="pair-btn cult-picker-btn" id="cult-time-btn" onclick="openCultTimeSheet()" style="flex:1;font-size:14px;padding:10px 12px;">時間</button>
         <input type="hidden" id="cult-time" value="">
@@ -766,10 +704,9 @@ function openFeeSheet(){
 
 // ===== CALENDAR =====
 function getWeekMonday(){
-  const now=new Date(),day=now.getDay(),hour=now.getHours();
-  let offset=0;
-  if(day===0)offset=1;
-  else if(day===6&&hour>=10)offset=7;
+  const now=new Date(),day=now.getDay();
+  // 日曜のみ来週表示（土曜は当週に含む）
+  const offset=(day===0)?1:0;
   const mon=new Date(now);
   const diffToMon=(day===0)?0:(1-day);
   mon.setDate(now.getDate()+diffToMon+offset);
@@ -784,8 +721,11 @@ const CAL_KEY='ps_cal_v3';
 let _selectedCat='';
 
 function loadCultData(){
-  try{return JSON.parse(localStorage.getItem(CAL_KEY))||[[],[],[],[],[]];}
-  catch(e){return [[],[],[],[],[]];}
+  try{
+    const data=JSON.parse(localStorage.getItem(CAL_KEY))||[];
+    while(data.length<6)data.push([]); // 6日分（月〜土）を確保
+    return data;
+  }catch(e){return [[],[],[],[],[],[]];}
 }
 function saveCultData(data){localStorage.setItem(CAL_KEY,JSON.stringify(data));}
 
@@ -797,11 +737,11 @@ function selectCat(cat){
 
 function renderCalendar(){
   const mon=getWeekMonday();
-  const DAY_NAMES=['月','火','水','木','金'];
+  const DAY_NAMES=['月','火','水','木','金','土'];
   const TODAY=calDateStr(new Date());
   const calData=loadCultData();
   let html='';
-  for(let i=0;i<5;i++){
+  for(let i=0;i<6;i++){
     const d=new Date(mon);d.setDate(mon.getDate()+i);
     const dStr=calDateStr(d),isToday=dStr===TODAY,md=(d.getMonth()+1)+'/'+d.getDate();
     const events=(calData[i]||[]).map(e=>({
@@ -1023,7 +963,7 @@ function toggleCultList(){
 
 function renderCultList(){
   const data=loadCultData();
-  const DAY_NAMES=['月','火','水','木','金'];
+  const DAY_NAMES=['月','火','水','木','金','土'];
   let html='',total=0;
   data.forEach((items,di)=>{
     items.forEach((item,ii)=>{
@@ -1077,6 +1017,7 @@ function migrateCultData(){
     const migrated=old.map(dayItems=>
       Array.isArray(dayItems)?dayItems.map(item=>({time:item.time,cur:item.cur,cat:item.cat||'green'})):[]
     );
+    while(migrated.length<6)migrated.push([]); // 土曜分を補完
     localStorage.setItem(CAL_KEY,JSON.stringify(migrated));
   }catch(e){}
 }
