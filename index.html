@@ -183,6 +183,10 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cult-item-text{color:#888;flex:1}
 .cult-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#22C55E33;color:#4ADE80}
 .cult-reset-btn{width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.cult-list-hdr{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cult-list-hdr span:first-child{font-size:11px;font-weight:700;color:#555;letter-spacing:0.5px}
+.cult-list-arr{font-size:11px;color:#555;transition:transform 0.2s}
+.cult-list-arr.open{transform:rotate(180deg)}
 
 /* Light theme */
 body.light{background:#F4F4F0;color:#1A1A1A}
@@ -480,8 +484,15 @@ body.light .cal-today{border-color:#D4AF5A55}
         <input type="hidden" id="cult-cur" value="">
         <button class="cult-add-btn" onclick="cultAdd()">追加</button>
       </div>
-      <div class="cult-list" id="cult-list"></div>
-      <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
+      <!-- 登録一覧（折りたたみ） -->
+      <div class="cult-list-hdr" onclick="toggleCultList()">
+        <span id="cult-list-count">登録一覧</span>
+        <span class="cult-list-arr" id="cult-list-arr">▼</span>
+      </div>
+      <div id="cult-list-wrap" style="display:none;">
+        <div class="cult-list" id="cult-list"></div>
+        <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
+      </div>
     </div>
   </div>
 
@@ -1095,6 +1106,15 @@ function cultDel(dayIdx,itemIdx){
   playClick(false);
 }
 
+function toggleCultList(){
+  const wrap=document.getElementById('cult-list-wrap');
+  const arr=document.getElementById('cult-list-arr');
+  const isOpen=wrap.style.display==='none';
+  wrap.style.display=isOpen?'block':'none';
+  arr.classList.toggle('open',isOpen);
+  playClick(isOpen);
+}
+
 function renderCultList(){
   const data=loadCultData();
   const DAY_NAMES=['月','火','水','木','金'];
@@ -1115,6 +1135,8 @@ function renderCultList(){
   });
   if(total===0)html=`<div style="font-size:11px;color:#333;padding:8px 0;">登録なし</div>`;
   document.getElementById('cult-list').innerHTML=html;
+  const countEl=document.getElementById('cult-list-count');
+  if(countEl)countEl.textContent=total>0?`登録一覧（${total}件）`:'登録一覧';
 }
 
 function toggleCult(){
