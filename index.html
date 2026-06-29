@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Position Sizer v3.3</title>
+<title>Position Sizer v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -158,6 +158,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cal-event-cur{font-size:11px;font-weight:700;color:#E8E0D0;flex-shrink:0;min-width:36px}
 .cal-event-title{font-size:11px;color:#555;flex:1;letter-spacing:0.3px;line-height:1.3}
 .cal-event-src{font-size:9px;color:#333;flex-shrink:0;letter-spacing:0.5px}.cal-event-src.cult{color:#4ADE80;font-weight:700}
+.cal-event-del{background:transparent;border:none;color:#2A2A2A;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
+.cal-event-del:active{color:#EF4444}
 .cal-empty{padding:14px 16px;font-size:12px;color:#333;letter-spacing:0.5px}
 .cal-today .cal-day-name{color:#D4AF5A}
 .cal-today{border-color:#D4AF5A33}
@@ -509,7 +511,7 @@ body.light .cal-today{border-color:#D4AF5A55}
   <div class="sheet-handle"></div>
   <div class="sheet-title">時間を選択</div>
   <div style="padding:8px 16px 4px;">
-    <input id="cult-time-search" type="text" inputmode="numeric" placeholder="21:30 で検索..." oninput="filterCultTime(this.value)" autocomplete="off" style="width:100%;background:#1A1A1A;border:1px solid #D4AF5A44;border-radius:8px;padding:10px 14px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:15px;outline:none;">
+    <input id="cult-time-search" type="text" inputmode="text" placeholder="例: 21:30 または 2130" oninput="filterCultTime(this.value)" autocomplete="off" style="width:100%;background:#1A1A1A;border:1px solid #D4AF5A44;border-radius:8px;padding:10px 14px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:15px;outline:none;">
   </div>
   <div class="drum-wrap">
     <div class="drum-line"></div>
@@ -898,8 +900,8 @@ function renderCalendar(){
     if(events.length===0){html+=`<div class="cal-empty">指標なし</div>`;}
     else{
       html+=`<div class="cal-events">`;
-      events.forEach(e=>{
-        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span><span class="cal-event-title"></span><span class="cal-event-src${e.dot==='🟢'?' cult':''}">${e.src}</span></div>`;
+      events.forEach((e,j)=>{
+        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span><span class="cal-event-title"></span><span class="cal-event-src${e.dot==='🟢'?' cult':''}">${e.src}</span><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
       });
       html+=`</div>`;
     }
@@ -974,9 +976,14 @@ function closeCultTimeSheet(){
   document.getElementById('cult-time-overlay').classList.remove('open');
 }
 function filterCultTime(q){
+  let val=q.trim();
+  // 数字3〜4桁（例:2130 or 213）→ コロン付きに正規化
+  if(/^\d{3,4}$/.test(val)){
+    val=val.slice(0,-2)+':'+val.slice(-2);
+  }
   const items=[...document.getElementById('cult-time-scroll').querySelectorAll('.picker-item')];
-  const matched=items.filter(o=>o.dataset.v.startsWith(q.trim()));
-  items.forEach(o=>o.classList.toggle('hide',q!==''&&!o.dataset.v.startsWith(q.trim())));
+  const matched=items.filter(o=>o.dataset.v.startsWith(val));
+  items.forEach(o=>o.classList.toggle('hide',val!==''&&!o.dataset.v.startsWith(val)));
   if(matched.length>0){
     const idx=items.indexOf(matched[0]);
     document.getElementById('cult-time-scroll').scrollTop=idx*44;
@@ -1129,9 +1136,27 @@ function cultResetConfirm(){
   }
 }
 
+// データマイグレーション: ps_cult_v2 → ps_cal_v3
+function migrateCultData(){
+  const v3=localStorage.getItem(CAL_KEY);
+  if(v3)return; // v3が既にあればスキップ
+  const v2=localStorage.getItem('ps_cult_v2');
+  if(!v2)return; // 旧データもなければ何もしない
+  try{
+    const old=JSON.parse(v2);
+    if(!Array.isArray(old))return;
+    // 旧データ（cat未設定）は全てカルト扱いで移行
+    const migrated=old.map(dayItems=>
+      Array.isArray(dayItems)?dayItems.map(item=>({time:item.time,cur:item.cur,cat:item.cat||'green'})):[]
+    );
+    localStorage.setItem(CAL_KEY,JSON.stringify(migrated));
+  }catch(e){}
+}
+
 fetchRates();
 calc();
 flowReset();
+migrateCultData();
 renderCalendar();
 </script>
 </body>
