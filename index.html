@@ -267,7 +267,6 @@ body.light .cal-today{border-color:#D4AF5A55}
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-sizer" onclick="switchTab('sizer')">SIZER</button>
   <button class="tab-btn" id="tab-fee" onclick="switchTab('fee')">FEE</button>
-  <button class="tab-btn" id="tab-entry" onclick="switchTab('entry')">ENTRY</button>
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
 </div>
 
@@ -386,67 +385,6 @@ body.light .cal-today{border-color:#D4AF5A55}
         <div class="fee-result-row"><span class="fee-result-lbl">pips損失額</span><span class="fee-result-val" id="fee-pips-loss">—</span></div>
         <div class="fee-result-row"><span class="fee-result-lbl">手数料込み損失</span><span class="fee-result-val" id="fee-pips-total">—</span></div>
         <div class="fee-result-row"><span class="fee-result-lbl">1pip 値</span><span class="fee-result-val" id="fee-pip-val">—</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ENTRY TAB -->
-<div class="tab-content" id="content-entry">
-  <div class="card" style="margin-top:14px;">
-    <div class="card-hdr">Entry Check</div>
-    <div class="flow-stepper">
-      <div class="flow-step active" id="fs-0"><div class="fs-node">1</div><div class="fs-lbl">指標</div></div>
-      <div class="fs-line" id="fl-0"></div>
-      <div class="flow-step" id="fs-1"><div class="fs-node">2</div><div class="fs-lbl">関連</div></div>
-      <div class="fs-line" id="fl-1"></div>
-      <div class="flow-step" id="fs-2"><div class="fs-node">3</div><div class="fs-lbl">曜日</div></div>
-      <div class="fs-line" id="fl-2"></div>
-      <div class="flow-step" id="fs-3"><div class="fs-node">4</div><div class="fs-lbl">時間</div></div>
-    </div>
-  </div>
-  <div id="flow-q-section" style="margin-top:12px;">
-    <div class="flow-q-card">
-      <div class="flow-q-step" id="fq-step">STEP 1 / 4</div>
-      <div class="flow-q-text" id="fq-text">重要指標が1時間以内にあるか？</div>
-      <div class="flow-q-hint" id="fq-hint">米CPI・FOMC・雇用統計・BOJ発表など</div>
-      <div class="flow-q-auto" id="fq-auto"></div>
-    </div>
-    <div class="flow-btns">
-      <button class="flow-btn flow-yes" onclick="flowAnswer(true)">YES</button>
-      <button class="flow-btn flow-no" onclick="flowAnswer(false)">NO</button>
-    </div>
-  </div>
-  <div id="flow-result-section" style="display:none;margin-top:12px;padding:0 14px;">
-    <div class="fr-top">
-      <div class="fr-label">ENTRY JUDGE</div>
-      <div class="fr-badge ok" id="fr-badge">ENTRY OK</div>
-      <div class="fr-reason" id="fr-reason"></div>
-    </div>
-    <div class="fr-path-card" id="fr-path"></div>
-    <button class="fr-reset-btn" onclick="flowReset()">🔄 もう一度チェック</button>
-  </div>
-  <div class="card" style="margin:12px 14px 14px;">
-    <div class="card-hdr cond-hdr" onclick="toggleCond()">
-      <span>条件早見表</span>
-      <span class="cond-arr" id="cond-arr">▼</span>
-    </div>
-    <div class="cond-body" id="cond-body">
-      <div class="cond-group" style="margin-top:2px;">
-        <div class="cond-g-lbl" style="color:#EF4444;">🔴 NG — エントリー見送り</div>
-        <div class="cond-item">• 重要指標が1時間以内にある</div>
-        <div class="cond-item">• エントリーペア関連指標まで1時間未満</div>
-        <div class="cond-item">• 金曜日 かつ 就寝まで2時間未満</div>
-      </div>
-      <div class="cond-group">
-        <div class="cond-g-lbl" style="color:#F59E0B;">⚠ 要注意 — 慎重に判断</div>
-        <div class="cond-item">• 金曜日 かつ 就寝まで2時間以上</div>
-        <div class="cond-item">• 平日 かつ 就寝まで2時間未満</div>
-      </div>
-      <div class="cond-group">
-        <div class="cond-g-lbl" style="color:#22C55E;">✅ OK — エントリー検討可</div>
-        <div class="cond-item">• 平日 かつ 就寝まで2時間以上</div>
-        <div class="cond-item">• すべての指標リスクなし</div>
       </div>
     </div>
   </div>
@@ -796,7 +734,7 @@ function toggleTheme(){
 
 function switchTab(tab){
   playClick(tab==='fee');
-  ['sizer','fee','entry','cal'].forEach(t=>{
+  ['sizer','fee','cal'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
@@ -825,38 +763,6 @@ function openFeeSheet(){
   if(current){const p=PAIRS.find(x=>x.pair===current);if(p){const gi=GROUPS.findIndex(g=>g.types.includes(p.type));switchGroup(gi>=0?gi:0);}else buildDrum(curGroup);}
   else buildDrum(curGroup);
 }
-
-// ===== ENTRY FLOW =====
-const FQ=[
-  {lbl:'指標',step:'STEP 1 / 4',text:'重要指標が\n1時間以内にあるか？',hint:'米CPI・FOMC・雇用統計・BOJ発表など',auto:()=>''},
-  {lbl:'関連',step:'STEP 2 / 4',text:'エントリーするペアに関連する\n指標まで1時間未満か？',hint:'USD/JPYなら米指標、EUR系ならECB等が対象',auto:()=>''},
-  {lbl:'曜日',step:'STEP 3 / 4',text:'今日は金曜日か？',hint:'週末ギャップ・流動性低下リスクあり',
-    auto:()=>{const d=new Date().getDay(),days=['日','月','火','水','木','金','土'];if(d===5)return '⚠ 今日は金曜日です';if(d===6||d===0)return `⚠ 今日は${days[d]}曜日です`;return `✓ 今日は${days[d]}曜日です`;}},
-  {lbl:'時間',step:'STEP 4 / 4',text:'就寝まで2時間以上あるか？',hint:'ポジション保有中に監視できる時間があるか',
-    auto:()=>{const n=new Date();return `現在 ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;}}
-];
-let _fStep=0,_fFriday=false,_fHistory=[];
-function _setStepper(s){const cls=['','active','passed','stopped'];s.forEach((v,i)=>{document.getElementById('fs-'+i).className='flow-step'+(v?' '+cls[v]:'');});for(let i=0;i<3;i++){document.getElementById('fl-'+i).className='fs-line'+(s[i]===2?' passed':'');}}
-function _renderFQ(idx){const q=FQ[idx];document.getElementById('fq-step').textContent=q.step;document.getElementById('fq-text').textContent=q.text;document.getElementById('fq-hint').textContent=q.hint;const autoEl=document.getElementById('fq-auto'),autoText=q.auto();autoEl.textContent=autoText;autoEl.style.color=autoText.startsWith('⚠')?'#F59E0B':'#22C55E66';}
-function flowReset(){_fStep=0;_fFriday=false;_fHistory=[];document.getElementById('flow-q-section').style.display='block';document.getElementById('flow-result-section').style.display='none';_setStepper([1,0,0,0]);_renderFQ(0);}
-function flowAnswer(yes){
-  _fHistory.push({step:_fStep,yes});playClick(yes);
-  if(_fStep===0){if(yes){_setStepper([3,0,0,0]);_showResult('NG','重要指標の発表リスクがあります\nエントリーは見送りましょう');return;}_fStep=1;_setStepper([2,1,0,0]);_renderFQ(1);return;}
-  if(_fStep===1){if(yes){_setStepper([2,3,0,0]);_showResult('NG','指標前エントリーはリスク大\nあと1時間以上経過してから再判断を');return;}_fStep=2;_setStepper([2,2,1,0]);_renderFQ(2);return;}
-  if(_fStep===2){_fFriday=yes;_fStep=3;_setStepper([2,2,2,1]);_renderFQ(3);return;}
-  if(_fStep===3){_setStepper([2,2,2,2]);if(_fFriday){_showResult(yes?'CAUTION':'NG',yes?'金曜日につき週末ギャップに注意\nTP/SL必須・ポジションサイズを絞ること':'金曜の就寝前エントリーは高リスク\nポジションを週をまたいで保有しないこと');}else{_showResult(yes?'OK':'CAUTION',yes?'全条件クリア\nエントリーを検討できます':'就寝まで時間が少ない\nTP/SL必須・ロット数を絞ること');}}
-}
-function _ansColor(step,yes){if(step===0||step===1)return yes?'#EF4444':'#22C55E';if(step===2)return yes?'#F59E0B':'#22C55E';if(step===3){if(_fFriday)return yes?'#F59E0B':'#EF4444';return yes?'#22C55E':'#F59E0B';}return '#888';}
-const _RESULT_LABELS={OK:'ENTRY OK',CAUTION:'要注意',NG:'ENTRY NG'};
-function _showResult(result,reason){
-  document.getElementById('flow-q-section').style.display='none';document.getElementById('flow-result-section').style.display='block';
-  const badge=document.getElementById('fr-badge');badge.textContent=_RESULT_LABELS[result];badge.className='fr-badge '+result.toLowerCase();
-  document.getElementById('fr-reason').textContent=reason;
-  document.getElementById('fr-path').innerHTML=_fHistory.map(h=>{const color=_ansColor(h.step,h.yes),qtext=FQ[h.step].text.replace('\n','');return `<div class="fr-path-row"><span class="fr-path-q">${qtext}</span><span class="fr-path-a" style="color:${color};">${h.yes?'YES':'NO'}</span></div>`;}).join('');
-  if(result==='OK')playTheme(true);else if(result==='NG')playTheme(false);else playClick(false);
-  setTimeout(()=>document.getElementById('flow-result-section').scrollIntoView({behavior:'smooth',block:'start'}),100);
-}
-function toggleCond(){const body=document.getElementById('cond-body'),arr=document.getElementById('cond-arr'),open=body.classList.toggle('open');arr.classList.toggle('open',open);}
 
 // ===== CALENDAR =====
 function getWeekMonday(){
@@ -1177,7 +1083,6 @@ function migrateCultData(){
 
 fetchRates();
 calc();
-flowReset();
 migrateCultData();
 renderCalendar();
 </script>
