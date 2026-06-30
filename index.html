@@ -346,6 +346,10 @@ body.light .cal-today{border-color:#D4AF5A55}
       <span class="cult-arr" id="cult-arr">▼</span>
     </div>
     <div class="cult-body" id="cult-body">
+      <div style="margin-bottom:10px;">
+        <button class="pair-btn cult-picker-btn" id="cult-event-btn" onclick="openCultEventSheet()" style="width:100%;font-size:14px;padding:10px 14px;text-align:left;">指標名から選ぶ（任意）</button>
+        <input type="hidden" id="cult-event" value="">
+      </div>
       <div class="cat-btns">
         <button class="cat-btn red" id="cat-red" onclick="selectCat('red')">🔴 FF 赤</button>
         <button class="cat-btn orange" id="cat-orange" onclick="selectCat('orange')">🟠 FF 橙</button>
@@ -433,6 +437,24 @@ body.light .cal-today{border-color:#D4AF5A55}
     </div>
   </div>
   <button onclick="confirmCultCur()" style="margin:10px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定</button>
+</div>
+
+<!-- Cult Event Picker Sheet -->
+<div class="overlay" id="cult-event-overlay" onclick="closeCultEventSheet()"></div>
+<div class="sheet" id="cult-event-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">指標名を選択</div>
+  <div style="padding:8px 16px 4px;">
+    <input id="cult-event-search" type="text" inputmode="text" placeholder="CPI で検索..." oninput="filterCultEvent(this.value)" autocomplete="off" style="width:100%;background:#1A1A1A;border:1px solid #D4AF5A44;border-radius:8px;padding:10px 14px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:15px;outline:none;">
+  </div>
+  <div class="drum-wrap">
+    <div class="drum-line"></div>
+    <div class="drum-scroll" id="cult-event-scroll">
+      <div class="drum-pad"></div>
+      <div class="drum-pad"></div>
+    </div>
+  </div>
+  <button onclick="confirmCultEvent()" style="margin:10px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定</button>
 </div>
 
 <script>
@@ -800,6 +822,81 @@ const CULT_TIMES=(()=>{
 })();
 const CULT_CURRENCIES=['USD','EUR','GBP','CHF','AUD','NZD','JPY','CAD'];
 
+// 指標プリセット: 通貨別に「主要指標」→「マイナー・特別イベント」の順で配置
+// cat: 'red'(高)|'orange'(中)|'green'(低・カルト系扱い)
+const CULT_EVENTS=[
+  // ── USD 主要 ──
+  {name:'NFP（非農業部門雇用者数）', cur:'USD', cat:'red'},
+  {name:'CPI（消費者物価指数）',      cur:'USD', cat:'red'},
+  {name:'FOMC政策金利発表',          cur:'USD', cat:'red'},
+  {name:'パウエル議長発言（FOMC会見）', cur:'USD', cat:'red'},
+  {name:'PCEデフレーター',           cur:'USD', cat:'red'},
+  {name:'GDP（米）',                 cur:'USD', cat:'red'},
+  {name:'FOMC議事録',                cur:'USD', cat:'orange'},
+  {name:'PPI（生産者物価指数）',      cur:'USD', cat:'orange'},
+  {name:'小売売上高（米）',          cur:'USD', cat:'orange'},
+  {name:'ADP雇用統計',               cur:'USD', cat:'orange'},
+  {name:'失業保険申請件数',          cur:'USD', cat:'orange'},
+  {name:'ISM製造業景況指数',         cur:'USD', cat:'orange'},
+  {name:'ISMサービス業景況指数',     cur:'USD', cat:'orange'},
+  {name:'ミシガン大消費者信頼感',    cur:'USD', cat:'green'},
+  {name:'CB消費者信頼感',            cur:'USD', cat:'green'},
+  {name:'住宅着工件数',              cur:'USD', cat:'green'},
+  // ── USD マイナー・特別イベント ──
+  {name:'ジャクソンホール会議（パウエル講演）', cur:'USD', cat:'red'},
+  {name:'FRB高官発言（地区連銀総裁など）',      cur:'USD', cat:'orange'},
+
+  // ── EUR 主要 ──
+  {name:'ECB政策金利発表',           cur:'EUR', cat:'red'},
+  {name:'ECBラガルド総裁発言',       cur:'EUR', cat:'red'},
+  {name:'CPI（欧）',                 cur:'EUR', cat:'red'},
+  {name:'GDP（欧）',                 cur:'EUR', cat:'red'},
+  {name:'PMI製造業（欧）',           cur:'EUR', cat:'orange'},
+  // ── EUR マイナー・特別イベント ──
+  {name:'ECB年次フォーラム（シントラ会議）', cur:'EUR', cat:'red'},
+  {name:'ECB高官発言（ラガルド以外）',       cur:'EUR', cat:'orange'},
+
+  // ── GBP 主要 ──
+  {name:'BOE政策金利発表',           cur:'GBP', cat:'red'},
+  {name:'CPI（英）',                 cur:'GBP', cat:'red'},
+  {name:'GDP（英）',                 cur:'GBP', cat:'red'},
+  {name:'PMI（英）',                 cur:'GBP', cat:'orange'},
+  // ── GBP マイナー ──
+  {name:'BOE高官発言',               cur:'GBP', cat:'orange'},
+
+  // ── JPY 主要 ──
+  {name:'BOJ政策金利発表',           cur:'JPY', cat:'red'},
+  {name:'植田総裁定例会見',          cur:'JPY', cat:'red'},
+  {name:'CPI（日）',                 cur:'JPY', cat:'red'},
+  {name:'GDP（日）',                 cur:'JPY', cat:'red'},
+  {name:'日銀議事録',                cur:'JPY', cat:'orange'},
+  // ── JPY マイナー ──
+  {name:'日銀高官発言（植田以外）',  cur:'JPY', cat:'orange'},
+
+  // ── AUD 主要 ──
+  {name:'RBA政策金利発表',           cur:'AUD', cat:'red'},
+  {name:'CPI（豪）',                 cur:'AUD', cat:'red'},
+  {name:'雇用統計（豪）',            cur:'AUD', cat:'red'},
+
+  // ── NZD 主要 ──
+  {name:'RBNZ政策金利発表',          cur:'NZD', cat:'red'},
+  {name:'CPI（NZ）',                 cur:'NZD', cat:'red'},
+
+  // ── CAD 主要 ──
+  {name:'BOC政策金利発表',           cur:'CAD', cat:'red'},
+  {name:'CPI（加）',                 cur:'CAD', cat:'red'},
+  {name:'雇用統計（加）',            cur:'CAD', cat:'red'},
+
+  // ── CHF 主要 ──
+  {name:'SNB政策金利発表',           cur:'CHF', cat:'red'},
+  {name:'CPI（スイス）',             cur:'CHF', cat:'orange'},
+
+  // ── その他 ──
+  {name:'その他（手動で設定）',      cur:'',    cat:''},
+];
+
+let _cultEventLastIdx=-1;
+
 let _cultTimeLastIdx=-1,_cultCurLastIdx=-1;
 
 function buildCultTimeDrum(){
@@ -924,6 +1021,68 @@ function confirmCultCur(){
 }
 document.getElementById('cult-cur-scroll').addEventListener('scroll',updateCultCurCenter,{passive:true});
 
+function buildCultEventDrum(){
+  const scroll=document.getElementById('cult-event-scroll');
+  [...scroll.querySelectorAll('.picker-item')].forEach(o=>o.remove());
+  const pad2=scroll.querySelectorAll('.drum-pad')[1];
+  CULT_EVENTS.forEach((e,i)=>{
+    const o=document.createElement('div');o.className='picker-item';o.textContent=e.name;o.dataset.v=String(i);
+    pad2.before(o);
+  });
+  scroll.scrollTop=0;
+  _cultEventLastIdx=-1;updateCultEventCenter();
+}
+
+function updateCultEventCenter(){
+  const scroll=document.getElementById('cult-event-scroll');
+  const ci=Math.round(scroll.scrollTop/44);
+  const items=[...scroll.querySelectorAll('.picker-item')];
+  items.forEach((o,i)=>o.classList.toggle('center',i===ci));
+  if(ci!==_cultEventLastIdx&&_cultEventLastIdx!==-1)playTick();
+  _cultEventLastIdx=ci;
+}
+
+function openCultEventSheet(){
+  document.getElementById('cult-event-sheet').classList.add('open');
+  document.getElementById('cult-event-overlay').classList.add('open');
+  document.getElementById('cult-event-search').value='';
+  buildCultEventDrum();
+  setTimeout(()=>document.getElementById('cult-event-search').focus(),350);
+}
+function closeCultEventSheet(){
+  document.getElementById('cult-event-sheet').classList.remove('open');
+  document.getElementById('cult-event-overlay').classList.remove('open');
+}
+function filterCultEvent(q){
+  const query=q.trim().toLowerCase();
+  const items=[...document.getElementById('cult-event-scroll').querySelectorAll('.picker-item')];
+  const matched=items.filter(o=>o.textContent.toLowerCase().includes(query));
+  items.forEach(o=>o.classList.toggle('hide',query!==''&&!o.textContent.toLowerCase().includes(query)));
+  if(matched.length>0){
+    const idx=items.indexOf(matched[0]);
+    document.getElementById('cult-event-scroll').scrollTop=idx*44;
+    _cultEventLastIdx=-1;updateCultEventCenter();
+  }
+}
+
+function confirmCultEvent(){
+  const idxStr=getCenterItem('cult-event-scroll');
+  if(idxStr===null)return;
+  document.getElementById('cult-event-scroll').querySelectorAll('.picker-item').forEach(o=>o.classList.remove('hide'));
+  const evt=CULT_EVENTS[parseInt(idxStr)];
+  document.getElementById('cult-event').value=evt.name;
+  const btn=document.getElementById('cult-event-btn');btn.textContent=evt.name;btn.classList.add('sel');
+  // 通貨を自動セット
+  if(evt.cur){
+    document.getElementById('cult-cur').value=evt.cur;
+    const curBtn=document.getElementById('cult-cur-btn');curBtn.textContent=evt.cur;curBtn.classList.add('sel');
+  }
+  // カテゴリを自動セット
+  if(evt.cat){selectCat(evt.cat);}
+  playClick(true);closeCultEventSheet();
+}
+document.getElementById('cult-event-scroll').addEventListener('scroll',updateCultEventCenter,{passive:true});
+
 // ===== プレビュー（一括追加） =====
 let _previewItems=[];
 
@@ -955,11 +1114,13 @@ function cultAdd(){
     return;
   }
   _previewItems.push({day:dayIdx,time,cur,cat:_selectedCat});
-  // 時間・通貨のみリセット（曜日・カテゴリは連続入力のため保持）
+  // 時間・通貨・指標名のみリセット（曜日・カテゴリは連続入力のため保持）
   timeEl.value='';
   const timBtn=document.getElementById('cult-time-btn');timBtn.textContent='時間';timBtn.classList.remove('sel');
   curEl.value='';
   const curBtn=document.getElementById('cult-cur-btn');curBtn.textContent='通貨';curBtn.classList.remove('sel');
+  document.getElementById('cult-event').value='';
+  const evtBtn=document.getElementById('cult-event-btn');evtBtn.textContent='指標名から選ぶ（任意）';evtBtn.classList.remove('sel');
   renderPreviewList();
   playClick(true);
 }
