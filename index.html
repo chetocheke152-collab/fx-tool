@@ -135,10 +135,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cult-item-text{color:#888;flex:1}
 .cult-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#22C55E33;color:#4ADE80}
 .cult-reset-btn{width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
-.cult-list-hdr{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cult-list-hdr{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px}
 .cult-list-hdr span:first-child{font-size:11px;font-weight:700;color:#555;letter-spacing:0.5px}
-.cult-list-arr{font-size:11px;color:#555;transition:transform 0.2s}
-.cult-list-arr.open{transform:rotate(180deg)}
+.cult-confirm-btn{width:100%;margin-top:12px;padding:13px;background:#D4AF5A18;border:2px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
+.cult-confirm-btn:disabled{opacity:0.3;cursor:default;border-color:#333;color:#444;background:transparent}
+.preview-item-del{background:transparent;border:1px solid #333;border-radius:5px;color:#444;font-size:11px;font-weight:700;cursor:pointer;padding:3px 7px;-webkit-appearance:none;flex-shrink:0}
+.preview-item-del:active{color:#EF4444;border-color:#EF444444}
 
 /* Light theme */
 body.light{background:#F4F4F0;color:#1A1A1A}
@@ -332,6 +334,11 @@ body.light .cal-today{border-color:#D4AF5A55}
 
   <div id="cal-body" style="padding-bottom:8px;"></div>
 
+  <!-- 全データリセット（カレンダー本体の下、独立設置） -->
+  <div style="margin:0 14px;">
+    <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
+  </div>
+
   <!-- 指標手入力 -->
   <div class="cult-section">
     <div class="cult-hdr" onclick="toggleCult()">
@@ -360,15 +367,15 @@ body.light .cal-today{border-color:#D4AF5A55}
         <input type="hidden" id="cult-cur" value="">
         <button class="cult-add-btn" onclick="cultAdd()">追加</button>
       </div>
-      <!-- 登録一覧（折りたたみ） -->
-      <div class="cult-list-hdr" onclick="toggleCultList()">
-        <span id="cult-list-count">登録一覧</span>
-        <span class="cult-list-arr" id="cult-list-arr">▼</span>
+
+      <!-- 一括登録ボタン -->
+      <button class="cult-confirm-btn" id="cult-confirm-btn" onclick="cultCommit()" disabled>登録する（<span id="preview-count">0</span>件）</button>
+
+      <!-- プレビュー一覧 -->
+      <div class="cult-list-hdr" style="margin-top:10px;">
+        <span>プレビュー（未登録）</span>
       </div>
-      <div id="cult-list-wrap" style="display:none;">
-        <div class="cult-list" id="cult-list"></div>
-        <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
-      </div>
+      <div class="cult-list" id="preview-list"></div>
     </div>
   </div>
 
@@ -765,7 +772,6 @@ function renderCalendar(){
     html+=`</div>`;
   }
   document.getElementById('cal-body').innerHTML=html;
-  renderCultList();
 }
 
 // ===== CULT DRUM PICKERS =====
@@ -855,6 +861,10 @@ function confirmCultTime(){
   document.getElementById('cult-time').value=val;
   const btn=document.getElementById('cult-time-btn');btn.textContent=val;btn.classList.add('sel');
   playClick(true);closeCultTimeSheet();
+  // 時間確定後、自動で通貨ピッカーへ（通貨未選択時のみ連続フロー化）
+  if(!document.getElementById('cult-cur').value){
+    setTimeout(()=>openCultCurSheet(),320);
+  }
 }
 document.getElementById('cult-time-scroll').addEventListener('scroll',updateCultTimeCenter,{passive:true});
 
@@ -914,6 +924,9 @@ function confirmCultCur(){
 }
 document.getElementById('cult-cur-scroll').addEventListener('scroll',updateCultCurCenter,{passive:true});
 
+// ===== プレビュー（一括追加） =====
+let _previewItems=[];
+
 function cultAdd(){
   const dayEl=document.getElementById('cult-day');
   const timeEl=document.getElementById('cult-time');
@@ -926,22 +939,69 @@ function cultAdd(){
     return;
   }
   if(day===''||!time||!cur){
+    if(day===''){const b=dayEl;b.style.borderColor='#EF4444';setTimeout(()=>b.style.borderColor='',1200);}
     if(!time){const b=document.getElementById('cult-time-btn');b.style.borderColor='#EF4444';setTimeout(()=>b.style.borderColor='',1200);}
     if(!cur){const b=document.getElementById('cult-cur-btn');b.style.borderColor='#EF4444';setTimeout(()=>b.style.borderColor='',1200);}
     return;
   }
+  const dayIdx=parseInt(day);
   const data=loadCultData();
-  data[parseInt(day)].push({time,cur,cat:_selectedCat});
-  data[parseInt(day)].sort((a,b)=>a.time.localeCompare(b.time));
-  saveCultData(data);
-  // リセット
-  dayEl.value='';
+  // 既存登録データ との重複チェック
+  const dupSaved=data[dayIdx].some(e=>e.time===time&&e.cur===cur&&e.cat===_selectedCat);
+  // プレビュー内 との重複チェック
+  const dupPreview=_previewItems.some(e=>e.day===dayIdx&&e.time===time&&e.cur===cur&&e.cat===_selectedCat);
+  if(dupSaved||dupPreview){
+    alert('同じ内容がすでに登録・追加されています');
+    return;
+  }
+  _previewItems.push({day:dayIdx,time,cur,cat:_selectedCat});
+  // 時間・通貨のみリセット（曜日・カテゴリは連続入力のため保持）
   timeEl.value='';
   const timBtn=document.getElementById('cult-time-btn');timBtn.textContent='時間';timBtn.classList.remove('sel');
   curEl.value='';
   const curBtn=document.getElementById('cult-cur-btn');curBtn.textContent='通貨';curBtn.classList.remove('sel');
-  renderCalendar();
+  renderPreviewList();
   playClick(true);
+}
+
+function removePreviewItem(idx){
+  _previewItems.splice(idx,1);
+  renderPreviewList();
+  playClick(false);
+}
+
+function renderPreviewList(){
+  const DAY_NAMES=['月','火','水','木','金','土'];
+  let html='';
+  _previewItems.forEach((item,i)=>{
+    const dot=item.cat==='red'?'🔴':item.cat==='orange'?'🟠':'🟢';
+    const src=item.cat==='green'?'カルト':'FF';
+    const badgeBg=item.cat==='red'?'#EF444422':item.cat==='orange'?'#F59E0B22':'#22C55E22';
+    const badgeColor=item.cat==='red'?'#EF4444':item.cat==='orange'?'#F59E0B':'#4ADE80';
+    html+=`<div class="cult-item">
+      <button class="preview-item-del" onclick="removePreviewItem(${i})">×</button>
+      <span class="cult-item-text">${dot} ${DAY_NAMES[item.day]} ${item.time} ${item.cur}</span>
+      <span class="cult-item-badge" style="background:${badgeBg};color:${badgeColor};">${src}</span>
+    </div>`;
+  });
+  if(_previewItems.length===0)html=`<div style="font-size:11px;color:#333;padding:8px 0;">まだ追加されていません</div>`;
+  document.getElementById('preview-list').innerHTML=html;
+  document.getElementById('preview-count').textContent=_previewItems.length;
+  document.getElementById('cult-confirm-btn').disabled=_previewItems.length===0;
+}
+
+function cultCommit(){
+  if(_previewItems.length===0)return;
+  const data=loadCultData();
+  _previewItems.forEach(item=>{
+    data[item.day].push({time:item.time,cur:item.cur,cat:item.cat});
+  });
+  data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
+  saveCultData(data);
+  _previewItems=[];
+  renderPreviewList();
+  renderCalendar();
+  playTheme(true);
 }
 
 function cultDel(dayIdx,itemIdx){
@@ -952,39 +1012,6 @@ function cultDel(dayIdx,itemIdx){
   playClick(false);
 }
 
-function toggleCultList(){
-  const wrap=document.getElementById('cult-list-wrap');
-  const arr=document.getElementById('cult-list-arr');
-  const isOpen=wrap.style.display==='none';
-  wrap.style.display=isOpen?'block':'none';
-  arr.classList.toggle('open',isOpen);
-  playClick(isOpen);
-}
-
-function renderCultList(){
-  const data=loadCultData();
-  const DAY_NAMES=['月','火','水','木','金','土'];
-  let html='',total=0;
-  data.forEach((items,di)=>{
-    items.forEach((item,ii)=>{
-      total++;
-      const dot=item.cat==='red'?'🔴':item.cat==='orange'?'🟠':'🟢';
-      const src=item.cat==='green'?'カルト':'FF';
-      const badgeBg=item.cat==='red'?'#EF444422':item.cat==='orange'?'#F59E0B22':'#22C55E22';
-      const badgeColor=item.cat==='red'?'#EF4444':item.cat==='orange'?'#F59E0B':'#4ADE80';
-      html+=`<div class="cult-item">
-        <button class="cult-item-del" onclick="cultDel(${di},${ii})">×</button>
-        <span class="cult-item-text">${dot} ${DAY_NAMES[di]} ${item.time} ${item.cur}</span>
-        <span class="cult-item-badge" style="background:${badgeBg};color:${badgeColor};">${src}</span>
-      </div>`;
-    });
-  });
-  if(total===0)html=`<div style="font-size:11px;color:#333;padding:8px 0;">登録なし</div>`;
-  document.getElementById('cult-list').innerHTML=html;
-  const countEl=document.getElementById('cult-list-count');
-  if(countEl)countEl.textContent=total>0?`登録一覧（${total}件）`:'登録一覧';
-}
-
 function toggleCult(){
   const body=document.getElementById('cult-body'),arr=document.getElementById('cult-arr');
   const open=body.classList.toggle('open');arr.classList.toggle('open',open);
@@ -993,14 +1020,14 @@ function toggleCult(){
 function cultResetConfirm(){
   const btn=document.getElementById('cult-reset-btn');
   if(btn.dataset.c==='1'){
-    saveCultData([[],[],[],[],[]]);
+    saveCultData([[],[],[],[],[],[]]);
     btn.textContent='全データをリセット';
     btn.style.color='';btn.dataset.c='0';
     renderCalendar();playClick(false);
   }else{
     btn.textContent='もう一度タップで実行';
     btn.style.color='#EF4444';btn.dataset.c='1';
-    setTimeout(()=>{btn.textContent='カルトデータをリセット';btn.style.color='';btn.dataset.c='0';},3000);
+    setTimeout(()=>{btn.textContent='全データをリセット';btn.style.color='';btn.dataset.c='0';},3000);
   }
 }
 
