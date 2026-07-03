@@ -112,6 +112,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cal-event-src{font-size:9px;color:#333;flex-shrink:0;letter-spacing:0.5px}.cal-event-src.cult{color:#4ADE80;font-weight:700}
 .cal-event-del{background:transparent;border:none;color:#2A2A2A;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-event-del:active{color:#EF4444}
+.cal-event-edit{background:transparent;border:none;color:#444;font-size:13px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
+.cal-event-edit:active{color:#D4AF5A}
+.cal-event-name{font-size:11px;font-weight:600;color:#D4AF5A;flex:1;letter-spacing:0.3px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-empty{padding:14px 16px;font-size:12px;color:#333;letter-spacing:0.5px}
 .cal-today .cal-day-name{color:#D4AF5A}
 .cal-today{border-color:#D4AF5A33}
@@ -212,10 +215,13 @@ body.light .cal-today{border-color:#D4AF5A55}
 <!-- SIZER TAB -->
 <div class="tab-content active" id="content-sizer">
 <div class="card">
-  <div class="card-hdr">Account</div>
+  <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Account</span>
+    <button id="currency-toggle-btn" onclick="toggleCurrency()" style="background:transparent;border:1px solid #D4AF5A66;border-radius:5px;padding:3px 9px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;">¥ JPY</button>
+  </div>
   <div class="card-body">
     <div class="field">
-      <span class="lbl">証拠金（円）</span>
+      <span class="lbl" id="equity-lbl">証拠金（円）</span>
       <input id="equity" class="input-short" type="number" inputmode="numeric" pattern="[0-9]*" value="200000" step="1000" oninput="calc()">
     </div>
     <div class="field">
@@ -512,15 +518,58 @@ function pip1(type){
   return(RATE[type]||RATE.USD)*10;
 }
 
+// ===== 通貨表示切替（円⇔ドル） =====
+let _currency=localStorage.getItem('ps_currency')||'JPY';
+
+function fmtCur(jpyAmount){
+  if(_currency==='USD'){
+    const rate=+document.getElementById('rate').value||1;
+    const usd=jpyAmount/rate;
+    return '$'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  return '¥'+Math.round(jpyAmount).toLocaleString();
+}
+
+function applyCurrencyUI(){
+  const btn=document.getElementById('currency-toggle-btn');
+  const lbl=document.getElementById('equity-lbl');
+  const eqInput=document.getElementById('equity');
+  if(_currency==='USD'){
+    btn.textContent='$ USD';
+    lbl.textContent='証拠金（ドル）';
+    eqInput.step='10';
+    eqInput.value=localStorage.getItem('ps_equity_usd')||'1300';
+  }else{
+    btn.textContent='¥ JPY';
+    lbl.textContent='証拠金（円）';
+    eqInput.step='1000';
+    eqInput.value=localStorage.getItem('ps_equity_jpy')||'200000';
+  }
+}
+
+function toggleCurrency(){
+  // 切替前の値を現在通貨のキーに保存
+  const eqInput=document.getElementById('equity');
+  if(_currency==='USD'){localStorage.setItem('ps_equity_usd',eqInput.value);}
+  else{localStorage.setItem('ps_equity_jpy',eqInput.value);}
+  _currency=_currency==='JPY'?'USD':'JPY';
+  localStorage.setItem('ps_currency',_currency);
+  applyCurrencyUI();
+  playClick(_currency==='USD');
+  calc();
+}
+
 function calc(animate=false){
-  const equity=+document.getElementById('equity').value||0;
-  const risk=+document.getElementById('risk').value||0;
+  const equityRaw=+document.getElementById('equity').value||0;
   const rate=+document.getElementById('rate').value||0;
+  // USD入力の場合は内部計算用にJPY換算
+  const equity=_currency==='USD'?equityRaw*rate:equityRaw;
+  const risk=+document.getElementById('risk').value||0;
   const pips=+document.getElementById('pips').value||0;
   const pName=document.getElementById('pair').value;
   const fee=document.getElementById('fee-toggle').value==='1';
   const maxLoss=equity*risk;
-  document.getElementById('res-loss').textContent=maxLoss>0?`¥${Math.round(maxLoss).toLocaleString()}`:'—';
+  document.getElementById('res-loss').textContent=maxLoss>0?fmtCur(maxLoss):'—';
   const p=PAIRS.find(x=>x.pair===pName);
   if(!p||!pips||!rate){
     ['res-lot','res-pip','res-fee','res-sl'].forEach(id=>{document.getElementById(id).textContent='—';});
@@ -537,7 +586,7 @@ function calc(animate=false){
     lotEl.className='result-lot';
     lotEl.textContent='0.00';
     document.getElementById('res-unit').textContent='SL pipsが大きすぎます';
-    document.getElementById('res-pip').textContent=`¥${Math.round(pv).toLocaleString()} / pip`;
+    document.getElementById('res-pip').textContent=fmtCur(pv)+' / pip';
     document.getElementById('res-fee').textContent='—';
     document.getElementById('res-sl').textContent='—';
     return;
@@ -545,9 +594,9 @@ function calc(animate=false){
   lotEl.className='result-lot ok';
   document.getElementById('res-unit').textContent='lot';
   if(animate){countUp(lotEl,lot);}else{lotEl.textContent=lot.toFixed(2);}
-  document.getElementById('res-pip').textContent=`¥${Math.round(pv).toLocaleString()} / pip`;
-  document.getElementById('res-fee').textContent=fee?`¥${Math.round(feeTotal).toLocaleString()}`:'OFF';
-  document.getElementById('res-sl').textContent=fee?`¥${Math.round(maxLoss-feeTotal).toLocaleString()}`:`¥${Math.round(maxLoss).toLocaleString()}`;
+  document.getElementById('res-pip').textContent=fmtCur(pv)+' / pip';
+  document.getElementById('res-fee').textContent=fee?fmtCur(feeTotal):'OFF';
+  document.getElementById('res-sl').textContent=fee?fmtCur(maxLoss-feeTotal):fmtCur(maxLoss);
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('on',+b.textContent===pips));
 }
 
@@ -681,12 +730,18 @@ function pickPair(v,close=true){
 }
 
 (function(){
-  const eq=localStorage.getItem('ps_equity'),rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
-  if(eq)document.getElementById('equity').value=eq;
+  // 旧キー ps_equity → ps_equity_jpy に移行
+  const oldEq=localStorage.getItem('ps_equity');
+  if(oldEq&&!localStorage.getItem('ps_equity_jpy')){localStorage.setItem('ps_equity_jpy',oldEq);}
+  const rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
   if(rk)document.getElementById('risk').value=rk;
   if(pr){document.getElementById('pair').value=pr;const btn=document.getElementById('pair-btn');btn.textContent=pr;btn.classList.add('sel');}
+  applyCurrencyUI();
 })();
-document.getElementById('equity').addEventListener('change',()=>localStorage.setItem('ps_equity',document.getElementById('equity').value));
+document.getElementById('equity').addEventListener('change',()=>{
+  const key=_currency==='USD'?'ps_equity_usd':'ps_equity_jpy';
+  localStorage.setItem(key,document.getElementById('equity').value);
+});
 document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
 
 const savedTheme=localStorage.getItem('ps_theme');
@@ -774,7 +829,7 @@ function renderCalendar(){
     const d=new Date(mon);d.setDate(mon.getDate()+i);
     const dStr=calDateStr(d),isToday=dStr===TODAY,md=(d.getMonth()+1)+'/'+d.getDate();
     const events=(calData[i]||[]).map(e=>({
-      time:e.time,cur:e.cur,
+      time:e.time,cur:e.cur,event:e.event||'',
       dot:e.cat==='red'?'🔴':e.cat==='orange'?'🟠':'🟢',
       src:e.cat==='green'?'カルト':'FF'
     })).sort((a,b)=>a.time.localeCompare(b.time));
@@ -787,7 +842,8 @@ function renderCalendar(){
     else{
       html+=`<div class="cal-events">`;
       events.forEach((e,j)=>{
-        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span><span class="cal-event-title"></span><span class="cal-event-src${e.dot==='🟢'?' cult':''}">${e.src}</span><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
+        const eventName=`<span class="cal-event-name">${e.event||''}</span>`;
+        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
       });
       html+=`</div>`;
     }
@@ -1042,6 +1098,15 @@ function updateCultEventCenter(){
   _cultEventLastIdx=ci;
 }
 
+// 編集モード用
+let _editTarget=null; // {dayIdx, itemIdx}
+
+function openEditEventSheet(dayIdx, time, cur){
+  _editTarget={dayIdx, time, cur};
+  document.querySelector('#cult-event-sheet .sheet-title').textContent='指標名を編集';
+  openCultEventSheet();
+}
+
 function openCultEventSheet(){
   document.getElementById('cult-event-sheet').classList.add('open');
   document.getElementById('cult-event-overlay').classList.add('open');
@@ -1052,6 +1117,12 @@ function openCultEventSheet(){
 function closeCultEventSheet(){
   document.getElementById('cult-event-sheet').classList.remove('open');
   document.getElementById('cult-event-overlay').classList.remove('open');
+}
+function cancelCultEventSheet(){
+  // オーバーレイタップ時のみ編集モードをキャンセル
+  _editTarget=null;
+  document.querySelector('#cult-event-sheet .sheet-title').textContent='指標名を選択';
+  closeCultEventSheet();
 }
 function filterCultEvent(q){
   const query=q.trim().toLowerCase();
@@ -1070,6 +1141,19 @@ function confirmCultEvent(){
   if(idxStr===null)return;
   document.getElementById('cult-event-scroll').querySelectorAll('.picker-item').forEach(o=>o.classList.remove('hide'));
   const evt=CULT_EVENTS[parseInt(idxStr)];
+  playClick(true);closeCultEventSheet();
+  // 編集モード：time+curで対象を特定してeventフィールドだけ更新
+  if(_editTarget){
+    const data=loadCultData();
+    const item=data[_editTarget.dayIdx].find(e=>e.time===_editTarget.time&&e.cur===_editTarget.cur);
+    if(item)item.event=evt.name;
+    saveCultData(data);
+    _editTarget=null;
+    document.querySelector('#cult-event-sheet .sheet-title').textContent='指標名を選択';
+    renderCalendar();
+    return;
+  }
+  // 新規追加モード
   document.getElementById('cult-event').value=evt.name;
   const btn=document.getElementById('cult-event-btn');btn.textContent=evt.name;btn.classList.add('sel');
   // 通貨を自動セット
@@ -1079,7 +1163,6 @@ function confirmCultEvent(){
   }
   // カテゴリを自動セット
   if(evt.cat){selectCat(evt.cat);}
-  playClick(true);closeCultEventSheet();
 }
 document.getElementById('cult-event-scroll').addEventListener('scroll',updateCultEventCenter,{passive:true});
 
@@ -1113,7 +1196,7 @@ function cultAdd(){
     alert('同じ内容がすでに登録・追加されています');
     return;
   }
-  _previewItems.push({day:dayIdx,time,cur,cat:_selectedCat});
+  _previewItems.push({day:dayIdx,time,cur,cat:_selectedCat,event:document.getElementById('cult-event').value||''});
   // 時間・通貨・指標名のみリセット（曜日・カテゴリは連続入力のため保持）
   timeEl.value='';
   const timBtn=document.getElementById('cult-time-btn');timBtn.textContent='時間';timBtn.classList.remove('sel');
@@ -1139,9 +1222,10 @@ function renderPreviewList(){
     const src=item.cat==='green'?'カルト':'FF';
     const badgeBg=item.cat==='red'?'#EF444422':item.cat==='orange'?'#F59E0B22':'#22C55E22';
     const badgeColor=item.cat==='red'?'#EF4444':item.cat==='orange'?'#F59E0B':'#4ADE80';
+    const eventLabel=item.event?` · ${item.event}`:'';
     html+=`<div class="cult-item">
       <button class="preview-item-del" onclick="removePreviewItem(${i})">×</button>
-      <span class="cult-item-text">${dot} ${DAY_NAMES[item.day]} ${item.time} ${item.cur}</span>
+      <span class="cult-item-text">${dot} ${DAY_NAMES[item.day]} ${item.time} ${item.cur}${eventLabel}</span>
       <span class="cult-item-badge" style="background:${badgeBg};color:${badgeColor};">${src}</span>
     </div>`;
   });
@@ -1155,7 +1239,7 @@ function cultCommit(){
   if(_previewItems.length===0)return;
   const data=loadCultData();
   _previewItems.forEach(item=>{
-    data[item.day].push({time:item.time,cur:item.cur,cat:item.cat});
+    data[item.day].push({time:item.time,cur:item.cur,cat:item.cat,event:item.event||''});
   });
   data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
   saveCultData(data);
