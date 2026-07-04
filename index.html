@@ -86,6 +86,60 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .fee-result-val{font-size:17px;font-weight:700;color:#D4AF5A}
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
+/* ===== ENTRY FLOW ===== */
+.close-check-card{margin:14px 14px 0;padding:16px;border-radius:12px;display:flex;align-items:center;gap:14px;background:#141414;border:1px solid #22C55E33;transition:all 0.3s}
+.close-check-card.alert{background:#1A0F0F;border-color:#EF4444;box-shadow:0 0 20px #EF444422}
+.close-check-icon{font-size:28px;flex-shrink:0}
+.close-check-info{flex:1;min-width:0}
+.close-check-title{font-size:13px;font-weight:700;color:#E8E0D0;letter-spacing:0.3px}
+.close-check-sub{font-size:11px;color:#22C55E99;margin-top:3px;letter-spacing:0.3px;line-height:1.5}
+.close-check-card.alert .close-check-sub{color:#EF4444;font-weight:700}
+.flow-stepper{display:flex;align-items:center;padding:16px 16px 14px;justify-content:center;overflow-x:auto}
+.flow-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.fs-node{width:34px;height:34px;border-radius:50%;border:2px solid #252525;background:#141414;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:#2E2E2E;transition:all 0.35s}
+.fs-lbl{font-size:8px;font-weight:700;color:#2E2E2E;letter-spacing:0.5px;text-transform:uppercase;transition:color 0.35s;white-space:nowrap}
+.fs-line{flex:1;height:2px;background:#252525;margin:0 4px;margin-bottom:19px;transition:background 0.35s;min-width:8px}
+.flow-step.active .fs-node{border-color:#D4AF5A;color:#D4AF5A;background:#D4AF5A18;box-shadow:0 0 14px #D4AF5A44}
+.flow-step.active .fs-lbl{color:#D4AF5A}
+.flow-step.passed .fs-node{border-color:#D4AF5A55;color:#D4AF5A55;background:#D4AF5A08}
+.flow-step.passed .fs-lbl{color:#D4AF5A55}
+.fs-line.passed{background:#D4AF5A44}
+.flow-step.stopped .fs-node{border-color:#EF4444;color:#EF4444;background:#EF444418}
+.flow-step.stopped .fs-lbl{color:#EF4444}
+.flow-q-card{background:#141414;border:1px solid #D4AF5A22;border-radius:12px;padding:28px 20px 22px;margin:0 14px;text-align:center}
+.flow-q-step{font-size:9px;font-weight:700;color:#D4AF5A55;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.flow-q-text{font-size:19px;font-weight:700;color:#E8E0D0;line-height:1.5;margin-bottom:10px;white-space:pre-line}
+.flow-q-hint{font-size:12px;color:#444;letter-spacing:0.3px;line-height:1.6}
+.flow-q-auto{font-size:11px;font-weight:700;margin-top:8px;letter-spacing:0.5px;min-height:18px}
+.flow-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 14px 0}
+.flow-btn{padding:16px;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s;border-width:2px;border-style:solid}
+.flow-yes{background:#141414;border-color:#22C55E44;color:#22C55E}
+.flow-yes:active{background:#22C55E18;border-color:#22C55E}
+.flow-no{background:#141414;border-color:#EF444444;color:#EF4444}
+.flow-no:active{background:#EF444418;border-color:#EF4444}
+.fr-top{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%);border-radius:12px;border:1px solid #D4AF5A22;padding:32px 20px 24px;text-align:center}
+.fr-label{font-size:9px;font-weight:700;color:#D4AF5A55;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.fr-badge{font-family:'Oswald',sans-serif;font-size:52px;font-weight:700;letter-spacing:-1px;line-height:1}
+.fr-badge.ok{color:#22C55E;text-shadow:0 0 30px #22C55E55}
+.fr-badge.caution{color:#F59E0B;text-shadow:0 0 30px #F59E0B55}
+.fr-badge.ng{color:#EF4444;text-shadow:0 0 30px #EF444455}
+.fr-reason{font-size:13px;color:#666;margin-top:10px;line-height:1.7;white-space:pre-line}
+.fr-path-card{background:#141414;border-radius:12px;border:1px solid #D4AF5A22;padding:4px 16px;margin-top:12px}
+.fr-path-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #D4AF5A11;font-size:13px}
+.fr-path-row:last-child{border-bottom:none}
+.fr-path-q{color:#666;flex:1;line-height:1.3}
+.fr-path-a{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;flex-shrink:0}
+.fr-reset-btn{width:100%;padding:14px;background:#1A1A1A;border:1px solid #D4AF5A44;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none;display:block;margin-top:12px}
+.cond-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cond-arr{font-size:11px;color:#D4AF5A;margin-left:8px;transition:transform 0.2s;flex-shrink:0}
+.cond-arr.open{transform:rotate(180deg)}
+.cond-body{display:none;padding:4px 16px 16px}
+.cond-body.open{display:block}
+.cond-group{margin-bottom:14px}
+.cond-group:last-child{margin-bottom:0}
+.cond-g-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}
+.cond-item{font-size:12px;color:#555;padding:3px 0;letter-spacing:0.3px}
+
 /* ===== CALENDAR TAB ===== */
 .cat-btns{display:flex;gap:6px;margin-bottom:12px}
 .cat-btn{flex:1;padding:9px 4px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;border:2px solid transparent;transition:all 0.15s;text-align:center;letter-spacing:0.3px}
@@ -187,6 +241,23 @@ body.light .fee-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
 body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
+body.light .close-check-card{background:#FFFFFF;border-color:#22C55E44}
+body.light .close-check-card.alert{background:#FFF5F5;border-color:#EF4444}
+body.light .close-check-title{color:#1A1A1A}
+body.light .fs-node{background:#F0EDE6;border-color:#E0DDD6;color:#AAA}
+body.light .fs-lbl{color:#AAA}
+body.light .fs-line{background:#E0DDD6}
+body.light .flow-q-card{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .flow-q-text{color:#1A1A1A}
+body.light .flow-q-hint{color:#888}
+body.light .flow-yes{background:#F6FBF7}
+body.light .flow-no{background:#FEF6F6}
+body.light .fr-top{background:linear-gradient(135deg,#FFFFFF,#F9F7F2);border-color:#D4AF5A22}
+body.light .fr-path-card{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .fr-path-q{color:#888}
+body.light .fr-path-row{border-bottom-color:#D4AF5A11}
+body.light .fr-reset-btn{background:#F0EDE6;border-color:#D4AF5A44}
+body.light .cond-item{color:#888}
 body.light .cal-day{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .cal-day-hdr{background:#F0EDE6}
 body.light .cal-day-name{color:#1A1A1A}
@@ -209,6 +280,7 @@ body.light .cal-today{border-color:#D4AF5A55}
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-sizer" onclick="switchTab('sizer')">SIZER</button>
   <button class="tab-btn" id="tab-fee" onclick="switchTab('fee')">FEE</button>
+  <button class="tab-btn" id="tab-entry" onclick="switchTab('entry')">ENTRY</button>
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
 </div>
 
@@ -330,6 +402,77 @@ body.light .cal-today{border-color:#D4AF5A55}
         <div class="fee-result-row"><span class="fee-result-lbl">pips損失額</span><span class="fee-result-val" id="fee-pips-loss">—</span></div>
         <div class="fee-result-row"><span class="fee-result-lbl">手数料込み損失</span><span class="fee-result-val" id="fee-pips-total">—</span></div>
         <div class="fee-result-row"><span class="fee-result-lbl">1pip 値</span><span class="fee-result-val" id="fee-pip-val">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTRY TAB -->
+<div class="tab-content" id="content-entry">
+
+  <!-- 決済チェック（独立・常時表示） -->
+  <div class="close-check-card" id="close-check-card">
+    <div class="close-check-icon" id="close-check-icon">🌙</div>
+    <div class="close-check-info">
+      <div class="close-check-title" id="close-check-title">保有ポジションの決済チェック</div>
+      <div class="close-check-sub" id="close-check-sub">確認中...</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">Entry Check</div>
+    <div class="flow-stepper">
+      <div class="flow-step active" id="fs-0"><div class="fs-node">1</div><div class="fs-lbl">指標</div></div>
+      <div class="fs-line" id="fl-0"></div>
+      <div class="flow-step" id="fs-1"><div class="fs-node">2</div><div class="fs-lbl">関連</div></div>
+      <div class="fs-line" id="fl-1"></div>
+      <div class="flow-step" id="fs-2"><div class="fs-node">3</div><div class="fs-lbl">曜日</div></div>
+      <div class="fs-line" id="fl-2"></div>
+      <div class="flow-step" id="fs-3"><div class="fs-node">4</div><div class="fs-lbl">時間</div></div>
+    </div>
+  </div>
+  <div id="flow-q-section" style="margin-top:12px;">
+    <div class="flow-q-card">
+      <div class="flow-q-step" id="fq-step">STEP 1 / 4</div>
+      <div class="flow-q-text" id="fq-text">重要指標が1時間以内にあるか？</div>
+      <div class="flow-q-hint" id="fq-hint">米CPI・FOMC・雇用統計・BOJ発表など</div>
+      <div class="flow-q-auto" id="fq-auto"></div>
+    </div>
+    <div class="flow-btns">
+      <button class="flow-btn flow-yes" onclick="flowAnswer(true)">YES</button>
+      <button class="flow-btn flow-no" onclick="flowAnswer(false)">NO</button>
+    </div>
+  </div>
+  <div id="flow-result-section" style="display:none;margin-top:12px;padding:0 14px;">
+    <div class="fr-top">
+      <div class="fr-label">ENTRY JUDGE</div>
+      <div class="fr-badge ok" id="fr-badge">ENTRY OK</div>
+      <div class="fr-reason" id="fr-reason"></div>
+    </div>
+    <div class="fr-path-card" id="fr-path"></div>
+    <button class="fr-reset-btn" onclick="flowReset()">🔄 もう一度チェック</button>
+  </div>
+  <div class="card" style="margin:12px 14px 14px;">
+    <div class="card-hdr cond-hdr" onclick="toggleCond()">
+      <span>条件早見表</span>
+      <span class="cond-arr" id="cond-arr">▼</span>
+    </div>
+    <div class="cond-body" id="cond-body">
+      <div class="cond-group" style="margin-top:2px;">
+        <div class="cond-g-lbl" style="color:#EF4444;">🔴 NG — エントリー見送り</div>
+        <div class="cond-item">• 重要指標が1時間以内にある</div>
+        <div class="cond-item">• エントリーペア関連指標まで1時間未満</div>
+        <div class="cond-item">• 金曜日 かつ 就寝まで2時間未満</div>
+      </div>
+      <div class="cond-group">
+        <div class="cond-g-lbl" style="color:#F59E0B;">⚠ 要注意 — 慎重に判断</div>
+        <div class="cond-item">• 金曜日 かつ 就寝まで2時間以上</div>
+        <div class="cond-item">• 平日 かつ 就寝まで2時間未満</div>
+      </div>
+      <div class="cond-group">
+        <div class="cond-g-lbl" style="color:#22C55E;">✅ OK — エントリー検討可</div>
+        <div class="cond-item">• 平日 かつ 就寝まで2時間以上</div>
+        <div class="cond-item">• すべての指標リスクなし</div>
       </div>
     </div>
   </div>
@@ -756,11 +899,12 @@ function toggleTheme(){
 
 function switchTab(tab){
   playClick(tab==='fee');
-  ['sizer','fee','cal'].forEach(t=>{
+  ['sizer','fee','entry','cal'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='cal')renderCalendar();
+  if(tab==='entry')updateCloseCheck();
 }
 
 function calcFee(){
@@ -784,6 +928,105 @@ function openFeeSheet(){
   const current=document.getElementById('fee-pair').value;
   if(current){const p=PAIRS.find(x=>x.pair===current);if(p){const gi=GROUPS.findIndex(g=>g.types.includes(p.type));switchGroup(gi>=0?gi:0);}else buildDrum(curGroup);}
   else buildDrum(curGroup);
+}
+
+// ===== 決済チェック（独立・金曜0時〜24時は常時アラート） =====
+function updateCloseCheck(){
+  const card=document.getElementById('close-check-card');
+  const icon=document.getElementById('close-check-icon');
+  const title=document.getElementById('close-check-title');
+  const sub=document.getElementById('close-check-sub');
+  const now=new Date();
+  const isFriday=now.getDay()===5;
+  if(isFriday){
+    card.classList.add('alert');
+    icon.textContent='⚠️';
+    title.textContent='保有ポジションの決済チェック';
+    sub.textContent='今日は金曜日です。含み損益に関わらず、週末を挟む前に決済を検討しましょう';
+  }else{
+    card.classList.remove('alert');
+    icon.textContent='🌙';
+    title.textContent='保有ポジションの決済チェック';
+    sub.textContent='平日です。金曜日になると決済アラートが表示されます';
+  }
+}
+
+// ===== ENTRY FLOW =====
+const FQ=[
+  {lbl:'指標',step:'STEP 1 / 4',text:'重要指標が\n1時間以内にあるか？',hint:'米CPI・FOMC・雇用統計・BOJ発表など',auto:()=>''},
+  {lbl:'関連',step:'STEP 2 / 4',text:'エントリーするペアに関連する\n指標まで1時間未満か？',hint:'USD/JPYなら米指標、EUR系ならECB等が対象',auto:()=>''},
+  {lbl:'曜日',step:'STEP 3 / 4',text:'今日は金曜日か？',hint:'週末ギャップ・流動性低下リスクあり',
+    auto:()=>{const d=new Date().getDay(),days=['日','月','火','水','木','金','土'];if(d===5)return '⚠ 今日は金曜日です';if(d===6||d===0)return '⚠ 今日は'+days[d]+'曜日です';return '✓ 今日は'+days[d]+'曜日です';}},
+  {lbl:'時間',step:'STEP 4 / 4',text:'就寝まで2時間以上あるか？',hint:'ポジション保有中に監視できる時間があるか',
+    auto:()=>{const n=new Date();return '現在 '+n.getHours()+':'+String(n.getMinutes()).padStart(2,'0');}}
+];
+let _fStep=0,_fFriday=false,_fHistory=[];
+function _setStepper(s){
+  const cls=['','active','passed','stopped'];
+  s.forEach((v,i)=>{document.getElementById('fs-'+i).className='flow-step'+(v?' '+cls[v]:'');});
+  for(let i=0;i<3;i++){document.getElementById('fl-'+i).className='fs-line'+(s[i]===2?' passed':'');}
+}
+function _renderFQ(idx){
+  const q=FQ[idx];
+  document.getElementById('fq-step').textContent=q.step;
+  document.getElementById('fq-text').textContent=q.text;
+  document.getElementById('fq-hint').textContent=q.hint;
+  const autoEl=document.getElementById('fq-auto'),autoText=q.auto();
+  autoEl.textContent=autoText;
+  autoEl.style.color=autoText.startsWith('⚠')?'#F59E0B':'#22C55E66';
+}
+function flowReset(){
+  _fStep=0;_fFriday=false;_fHistory=[];
+  document.getElementById('flow-q-section').style.display='block';
+  document.getElementById('flow-result-section').style.display='none';
+  _setStepper([1,0,0,0]);
+  _renderFQ(0);
+}
+function flowAnswer(yes){
+  _fHistory.push({step:_fStep,yes});playClick(yes);
+  if(_fStep===0){
+    if(yes){_setStepper([3,0,0,0]);_showResult('NG','重要指標の発表リスクがあります\nエントリーは見送りましょう');return;}
+    _fStep=1;_setStepper([2,1,0,0]);_renderFQ(1);return;
+  }
+  if(_fStep===1){
+    if(yes){_setStepper([2,3,0,0]);_showResult('NG','指標前エントリーはリスク大\nあと1時間以上経過してから再判断を');return;}
+    _fStep=2;_setStepper([2,2,1,0]);_renderFQ(2);return;
+  }
+  if(_fStep===2){
+    _fFriday=yes;_fStep=3;_setStepper([2,2,2,1]);_renderFQ(3);return;
+  }
+  if(_fStep===3){
+    _setStepper([2,2,2,2]);
+    if(_fFriday){
+      _showResult(yes?'CAUTION':'NG',yes?'金曜日につき週末ギャップに注意\nTP/SL必須・ポジションサイズを絞ること':'金曜の就寝前エントリーは高リスク\nポジションを週をまたいで保有しないこと');
+    }else{
+      _showResult(yes?'OK':'CAUTION',yes?'全条件クリア\nエントリーを検討できます':'就寝まで時間が少ない\nTP/SL必須・ロット数を絞ること');
+    }
+  }
+}
+function _ansColor(step,yes){
+  if(step===0||step===1)return yes?'#EF4444':'#22C55E';
+  if(step===2)return yes?'#F59E0B':'#22C55E';
+  if(step===3){if(_fFriday)return yes?'#F59E0B':'#EF4444';return yes?'#22C55E':'#F59E0B';}
+  return '#888';
+}
+const _RESULT_LABELS={OK:'ENTRY OK',CAUTION:'要注意',NG:'ENTRY NG'};
+function _showResult(result,reason){
+  document.getElementById('flow-q-section').style.display='none';
+  document.getElementById('flow-result-section').style.display='block';
+  const badge=document.getElementById('fr-badge');
+  badge.textContent=_RESULT_LABELS[result];badge.className='fr-badge '+result.toLowerCase();
+  document.getElementById('fr-reason').textContent=reason;
+  document.getElementById('fr-path').innerHTML=_fHistory.map(h=>{
+    const color=_ansColor(h.step,h.yes),qtext=FQ[h.step].text.replace('\n','');
+    return '<div class="fr-path-row"><span class="fr-path-q">'+qtext+'</span><span class="fr-path-a" style="color:'+color+';">'+(h.yes?'YES':'NO')+'</span></div>';
+  }).join('');
+  if(result==='OK')playTheme(true);else if(result==='NG')playTheme(false);else playClick(false);
+  setTimeout(()=>document.getElementById('flow-result-section').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+function toggleCond(){
+  const body=document.getElementById('cond-body'),arr=document.getElementById('cond-arr'),open=body.classList.toggle('open');
+  arr.classList.toggle('open',open);
 }
 
 // ===== CALENDAR =====
@@ -813,6 +1056,19 @@ function loadCultData(){
 }
 function saveCultData(data){localStorage.setItem(CAL_KEY,JSON.stringify(data));}
 
+// 日曜日を迎えたら、その日1回だけカレンダーを自動リセット
+const SUNDAY_RESET_KEY='ps_cal_last_sunday_reset';
+function checkWeekReset(){
+  const now=new Date();
+  if(now.getDay()!==0)return; // 日曜以外は何もしない
+  const todayStr=calDateStr(now);
+  const lastReset=localStorage.getItem(SUNDAY_RESET_KEY);
+  if(lastReset!==todayStr){
+    saveCultData([[],[],[],[],[],[]]);
+    localStorage.setItem(SUNDAY_RESET_KEY,todayStr);
+  }
+}
+
 function selectCat(cat){
   _selectedCat=cat;
   ['red','orange','green'].forEach(c=>document.getElementById('cat-'+c).classList.toggle('sel',c===cat));
@@ -820,6 +1076,7 @@ function selectCat(cat){
 }
 
 function renderCalendar(){
+  checkWeekReset();
   const mon=getWeekMonday();
   const DAY_NAMES=['月','火','水','木','金','土'];
   const TODAY=calDateStr(new Date());
@@ -882,73 +1139,73 @@ const CULT_CURRENCIES=['USD','EUR','GBP','CHF','AUD','NZD','JPY','CAD'];
 // cat: 'red'(高)|'orange'(中)|'green'(低・カルト系扱い)
 const CULT_EVENTS=[
   // ── USD 主要 ──
-  {name:'NFP（非農業部門雇用者数）', cur:'USD', cat:'red'},
-  {name:'CPI（消費者物価指数）',      cur:'USD', cat:'red'},
-  {name:'FOMC政策金利発表',          cur:'USD', cat:'red'},
-  {name:'パウエル議長発言（FOMC会見）', cur:'USD', cat:'red'},
-  {name:'PCEデフレーター',           cur:'USD', cat:'red'},
-  {name:'GDP（米）',                 cur:'USD', cat:'red'},
-  {name:'FOMC議事録',                cur:'USD', cat:'orange'},
-  {name:'PPI（生産者物価指数）',      cur:'USD', cat:'orange'},
-  {name:'小売売上高（米）',          cur:'USD', cat:'orange'},
-  {name:'ADP雇用統計',               cur:'USD', cat:'orange'},
-  {name:'失業保険申請件数',          cur:'USD', cat:'orange'},
-  {name:'ISM製造業景況指数',         cur:'USD', cat:'orange'},
-  {name:'ISMサービス業景況指数',     cur:'USD', cat:'orange'},
-  {name:'ミシガン大消費者信頼感',    cur:'USD', cat:'green'},
-  {name:'CB消費者信頼感',            cur:'USD', cat:'green'},
-  {name:'住宅着工件数',              cur:'USD', cat:'green'},
+  {name:'NFP（非農業部門雇用者数）', short:'NFP',        cur:'USD', cat:'red'},
+  {name:'CPI（消費者物価指数）',      short:'CPI',        cur:'USD', cat:'red'},
+  {name:'FOMC政策金利発表',          short:'FOMC金利',   cur:'USD', cat:'red'},
+  {name:'パウエル議長発言（FOMC会見）', short:'パウエル会見', cur:'USD', cat:'red'},
+  {name:'PCEデフレーター',           short:'PCE',        cur:'USD', cat:'red'},
+  {name:'GDP（米）',                 short:'GDP',        cur:'USD', cat:'red'},
+  {name:'FOMC議事録',                short:'FOMC議事録', cur:'USD', cat:'orange'},
+  {name:'PPI（生産者物価指数）',      short:'PPI',        cur:'USD', cat:'orange'},
+  {name:'小売売上高（米）',          short:'小売売上高', cur:'USD', cat:'orange'},
+  {name:'ADP雇用統計',               short:'ADP',        cur:'USD', cat:'orange'},
+  {name:'失業保険申請件数',          short:'失業保険',   cur:'USD', cat:'orange'},
+  {name:'ISM製造業景況指数',         short:'ISM製造業',  cur:'USD', cat:'orange'},
+  {name:'ISMサービス業景況指数',     short:'ISMサービス', cur:'USD', cat:'orange'},
+  {name:'ミシガン大消費者信頼感',    short:'ミシガン信頼感', cur:'USD', cat:'green'},
+  {name:'CB消費者信頼感',            short:'CB信頼感',   cur:'USD', cat:'green'},
+  {name:'住宅着工件数',              short:'住宅着工',   cur:'USD', cat:'green'},
   // ── USD マイナー・特別イベント ──
-  {name:'ジャクソンホール会議（パウエル講演）', cur:'USD', cat:'red'},
-  {name:'FRB高官発言（地区連銀総裁など）',      cur:'USD', cat:'orange'},
+  {name:'ジャクソンホール会議（パウエル講演）', short:'ジャクソンホール', cur:'USD', cat:'red'},
+  {name:'FRB高官発言（地区連銀総裁など）',      short:'FRB高官発言',     cur:'USD', cat:'orange'},
 
   // ── EUR 主要 ──
-  {name:'ECB政策金利発表',           cur:'EUR', cat:'red'},
-  {name:'ECBラガルド総裁発言',       cur:'EUR', cat:'red'},
-  {name:'CPI（欧）',                 cur:'EUR', cat:'red'},
-  {name:'GDP（欧）',                 cur:'EUR', cat:'red'},
-  {name:'PMI製造業（欧）',           cur:'EUR', cat:'orange'},
+  {name:'ECB政策金利発表',           short:'ECB金利',    cur:'EUR', cat:'red'},
+  {name:'ECBラガルド総裁発言',       short:'ラガルド発言', cur:'EUR', cat:'red'},
+  {name:'CPI（欧）',                 short:'CPI',        cur:'EUR', cat:'red'},
+  {name:'GDP（欧）',                 short:'GDP',        cur:'EUR', cat:'red'},
+  {name:'PMI製造業（欧）',           short:'PMI製造業',  cur:'EUR', cat:'orange'},
   // ── EUR マイナー・特別イベント ──
-  {name:'ECB年次フォーラム（シントラ会議）', cur:'EUR', cat:'red'},
-  {name:'ECB高官発言（ラガルド以外）',       cur:'EUR', cat:'orange'},
+  {name:'ECB年次フォーラム（シントラ会議）', short:'シントラ会議', cur:'EUR', cat:'red'},
+  {name:'ECB高官発言（ラガルド以外）',       short:'ECB高官発言', cur:'EUR', cat:'orange'},
 
   // ── GBP 主要 ──
-  {name:'BOE政策金利発表',           cur:'GBP', cat:'red'},
-  {name:'CPI（英）',                 cur:'GBP', cat:'red'},
-  {name:'GDP（英）',                 cur:'GBP', cat:'red'},
-  {name:'PMI（英）',                 cur:'GBP', cat:'orange'},
+  {name:'BOE政策金利発表',           short:'BOE金利',    cur:'GBP', cat:'red'},
+  {name:'CPI（英）',                 short:'CPI',        cur:'GBP', cat:'red'},
+  {name:'GDP（英）',                 short:'GDP',        cur:'GBP', cat:'red'},
+  {name:'PMI（英）',                 short:'PMI',        cur:'GBP', cat:'orange'},
   // ── GBP マイナー ──
-  {name:'BOE高官発言',               cur:'GBP', cat:'orange'},
+  {name:'BOE高官発言',               short:'BOE高官発言', cur:'GBP', cat:'orange'},
 
   // ── JPY 主要 ──
-  {name:'BOJ政策金利発表',           cur:'JPY', cat:'red'},
-  {name:'植田総裁定例会見',          cur:'JPY', cat:'red'},
-  {name:'CPI（日）',                 cur:'JPY', cat:'red'},
-  {name:'GDP（日）',                 cur:'JPY', cat:'red'},
-  {name:'日銀議事録',                cur:'JPY', cat:'orange'},
+  {name:'BOJ政策金利発表',           short:'BOJ金利',    cur:'JPY', cat:'red'},
+  {name:'植田総裁定例会見',          short:'植田会見',   cur:'JPY', cat:'red'},
+  {name:'CPI（日）',                 short:'CPI',        cur:'JPY', cat:'red'},
+  {name:'GDP（日）',                 short:'GDP',        cur:'JPY', cat:'red'},
+  {name:'日銀議事録',                short:'日銀議事録', cur:'JPY', cat:'orange'},
   // ── JPY マイナー ──
-  {name:'日銀高官発言（植田以外）',  cur:'JPY', cat:'orange'},
+  {name:'日銀高官発言（植田以外）',  short:'日銀高官発言', cur:'JPY', cat:'orange'},
 
   // ── AUD 主要 ──
-  {name:'RBA政策金利発表',           cur:'AUD', cat:'red'},
-  {name:'CPI（豪）',                 cur:'AUD', cat:'red'},
-  {name:'雇用統計（豪）',            cur:'AUD', cat:'red'},
+  {name:'RBA政策金利発表',           short:'RBA金利',    cur:'AUD', cat:'red'},
+  {name:'CPI（豪）',                 short:'CPI',        cur:'AUD', cat:'red'},
+  {name:'雇用統計（豪）',            short:'雇用統計',   cur:'AUD', cat:'red'},
 
   // ── NZD 主要 ──
-  {name:'RBNZ政策金利発表',          cur:'NZD', cat:'red'},
-  {name:'CPI（NZ）',                 cur:'NZD', cat:'red'},
+  {name:'RBNZ政策金利発表',          short:'RBNZ金利',   cur:'NZD', cat:'red'},
+  {name:'CPI（NZ）',                 short:'CPI',        cur:'NZD', cat:'red'},
 
   // ── CAD 主要 ──
-  {name:'BOC政策金利発表',           cur:'CAD', cat:'red'},
-  {name:'CPI（加）',                 cur:'CAD', cat:'red'},
-  {name:'雇用統計（加）',            cur:'CAD', cat:'red'},
+  {name:'BOC政策金利発表',           short:'BOC金利',    cur:'CAD', cat:'red'},
+  {name:'CPI（加）',                 short:'CPI',        cur:'CAD', cat:'red'},
+  {name:'雇用統計（加）',            short:'雇用統計',   cur:'CAD', cat:'red'},
 
   // ── CHF 主要 ──
-  {name:'SNB政策金利発表',           cur:'CHF', cat:'red'},
-  {name:'CPI（スイス）',             cur:'CHF', cat:'orange'},
+  {name:'SNB政策金利発表',           short:'SNB金利',    cur:'CHF', cat:'red'},
+  {name:'CPI（スイス）',             short:'CPI',        cur:'CHF', cat:'orange'},
 
   // ── その他 ──
-  {name:'その他（手動で設定）',      cur:'',    cat:''},
+  {name:'その他（手動で設定）',      short:'その他',     cur:'',    cat:''},
 ];
 
 let _cultEventLastIdx=-1;
@@ -1142,19 +1399,19 @@ function confirmCultEvent(){
   document.getElementById('cult-event-scroll').querySelectorAll('.picker-item').forEach(o=>o.classList.remove('hide'));
   const evt=CULT_EVENTS[parseInt(idxStr)];
   playClick(true);closeCultEventSheet();
-  // 編集モード：time+curで対象を特定してeventフィールドだけ更新
+  // 編集モード：time+curで対象を特定してeventフィールドだけ更新（表示用は短縮名）
   if(_editTarget){
     const data=loadCultData();
     const item=data[_editTarget.dayIdx].find(e=>e.time===_editTarget.time&&e.cur===_editTarget.cur);
-    if(item)item.event=evt.name;
+    if(item)item.event=evt.short||evt.name;
     saveCultData(data);
     _editTarget=null;
     document.querySelector('#cult-event-sheet .sheet-title').textContent='指標名を選択';
     renderCalendar();
     return;
   }
-  // 新規追加モード
-  document.getElementById('cult-event').value=evt.name;
+  // 新規追加モード（保存用の値は短縮名、ボタン表示は正式名称）
+  document.getElementById('cult-event').value=evt.short||evt.name;
   const btn=document.getElementById('cult-event-btn');btn.textContent=evt.name;btn.classList.add('sel');
   // 通貨を自動セット
   if(evt.cur){
@@ -1296,6 +1553,8 @@ function migrateCultData(){
 
 fetchRates();
 calc();
+flowReset();
+updateCloseCheck();
 migrateCultData();
 renderCalendar();
 </script>
