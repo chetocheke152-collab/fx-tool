@@ -1425,7 +1425,12 @@ function confirmCultEvent(){
 document.getElementById('cult-event-scroll').addEventListener('scroll',updateCultEventCenter,{passive:true});
 
 // ===== プレビュー（一括追加） =====
-let _previewItems=[];
+const PREVIEW_KEY='ps_cal_preview';
+function savePreviewItems(){localStorage.setItem(PREVIEW_KEY,JSON.stringify(_previewItems));}
+function loadPreviewItems(){
+  try{return JSON.parse(localStorage.getItem(PREVIEW_KEY))||[];}catch(e){return [];}
+}
+let _previewItems=loadPreviewItems();
 
 function cultAdd(){
   const dayEl=document.getElementById('cult-day');
@@ -1455,6 +1460,7 @@ function cultAdd(){
     return;
   }
   _previewItems.push({day:dayIdx,time,cur,cat:_selectedCat,event:document.getElementById('cult-event').value||''});
+  savePreviewItems();
   // 時間・通貨・指標名のみリセット（曜日・カテゴリは連続入力のため保持）
   timeEl.value='';
   const timBtn=document.getElementById('cult-time-btn');timBtn.textContent='時間';timBtn.classList.remove('sel');
@@ -1468,6 +1474,7 @@ function cultAdd(){
 
 function removePreviewItem(idx){
   _previewItems.splice(idx,1);
+  savePreviewItems();
   renderPreviewList();
   playClick(false);
 }
@@ -1502,6 +1509,7 @@ function cultCommit(){
   data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
   saveCultData(data);
   _previewItems=[];
+  savePreviewItems();
   renderPreviewList();
   renderCalendar();
   playTheme(true);
@@ -1558,6 +1566,7 @@ flowReset();
 updateCloseCheck();
 migrateCultData();
 renderCalendar();
+renderPreviewList();
 </script>
 </body>
 </html>
