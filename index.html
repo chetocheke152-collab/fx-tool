@@ -1124,7 +1124,7 @@ const IMG_RED_RULES=[
   {cur:'USD', re:/core pce|pce price index/i},
   {cur:'USD', re:/employment change|unemployment rate|average hourly earnings/i},
   {cur:'USD', re:/powell|press conference|testimony/i},
-  {cur:'EUR', re:/\bcpi\b/i},
+  {cur:'EUR', re:/\bcpi\b/i, excludeRe:/german|french|italian|spanish|\bfinal\b/i}, // ユーロ圏全体のCPIのみ赤。国別Final CPIはFFでも黄色のため除外
   {cur:'EUR', re:/\bgdp\b/i},
   {cur:'EUR', re:/interest rate|rate decision|refinancing/i},
   {cur:'EUR', re:/lagarde/i},
@@ -1201,9 +1201,10 @@ function parseImgResult(){
 
 let _imgParsedItems=[];
 function setImgItemCat(idx,cat){
-  _imgParsedItems[idx].cat=cat;
+  // 既に選択中の色を再タップした場合は未判定に戻す（トグル式）
+  _imgParsedItems[idx].cat=(_imgParsedItems[idx].cat===cat)?null:cat;
   renderImgParseList(_imgParsedItems);
-  playClick(true);
+  playClick(_imgParsedItems[idx].cat!==null);
 }
 function renderImgParseList(items){
   _imgParsedItems=items;
