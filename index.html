@@ -591,8 +591,9 @@ body.light .cal-today{border-color:#D4AF5A55}
         <div class="lbl" style="margin-bottom:6px;">抽出候補（曜日・時間・通貨・指標名）</div>
         <div id="img-parse-list"></div>
         <div style="font-size:10px;color:#333;margin-top:8px;letter-spacing:0.3px;">
-          ※ 重要度（色）は未判定です。次のステップで手動選択できるようにする予定です。
+          ※ タップで色を選択・変更できます（未判定のままの項目はCALに送られません）
         </div>
+        <button class="cult-confirm-btn" style="margin-top:12px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
       </div>
     </div>
   </div>
@@ -1140,16 +1141,33 @@ const IMG_RED_RULES=[
   {cur:'CAD', re:/employment change|unemployment rate/i},
   {cur:'CHF', re:/interest rate|rate decision/i},
 ];
+// オレンジ（medium）判定は実績確認済みのものだけをホワイトリスト方式で追加
+const IMG_ORANGE_RULES=[
+  {cur:'GBP', re:/bailey.*speaks|gov bailey speaks/i}, // BOE総裁発言
+  {cur:'CAD', re:/ivey pmi/i}, // Ivey PMI
+];
 function guessImgCategory(title,cur){
-  const hit=IMG_RED_RULES.find(r=>r.cur===cur&&r.re.test(title)&&!(r.excludeRe&&r.excludeRe.test(title)));
-  return hit?'red':null; // 一致しなければ未判定（オレンジの自動推定は行わない）
+  const redHit=IMG_RED_RULES.find(r=>r.cur===cur&&r.re.test(title)&&!(r.excludeRe&&r.excludeRe.test(title)));
+  if(redHit)return 'red';
+  const orangeHit=IMG_ORANGE_RULES.find(r=>r.cur===cur&&r.re.test(title)&&!(r.excludeRe&&r.excludeRe.test(title)));
+  if(orangeHit)return 'orange';
+  return null; // 一致しなければ未判定
 }
+
+// ===== 学習データ（通貨＋指標名 → 色）＝CALへ一括登録した時点で保存 =====
+const IMG_LEARN_KEY='ps_img_learned_cat';
+function loadLearnedCat(){
+  try{return JSON.parse(localStorage.getItem(IMG_LEARN_KEY))||{};}catch(e){return {};}
+}
+function saveLearnedCat(map){localStorage.setItem(IMG_LEARN_KEY,JSON.stringify(map));}
+function learnKey(cur,title){return cur+'|'+title.toLowerCase().trim();}
 
 function parseImgResult(){
   const text=document.getElementById('img-ocr-result').value;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   let curDay=null;
   const found=[];
+  const learned=loadLearnedCat();
 
   const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
   // 時間パターン: 9:40am / 10:00pm / 12:00am など
@@ -1192,7 +1210,8 @@ function parseImgResult(){
     title=cleanTitleNoise(title);
     if(!title)title='（指標名不明）';
 
-    const cat=guessImgCategory(title,curMatch);
+    const catAuto=guessImgCategory(title,curMatch);
+    const cat=learned[learnKey(curMatch,title)]||catAuto;
     found.push({day:curDay,time,cur:curMatch,title,cat});
   });
 
@@ -1228,6 +1247,34 @@ function renderImgParseList(items){
   }
   wrap.style.display='block';
   playClick(items.length>0);
+}
+
+// IMGの解析結果をCALのプレビューに送信＋学習データを保存
+function sendImgItemsToCal(){
+  const withCat=_imgParsedItems.filter(it=>it.cat!==null);
+  if(withCat.length===0){
+    alert('色が選択された項目がありません（未判定のままの項目は送れません）');
+    return;
+  }
+  // 学習データを更新
+  const learned=loadLearnedCat();
+  withCat.forEach(it=>{learned[learnKey(it.cur,it.title)]=it.cat;});
+  saveLearnedCat(learned);
+
+  // CALのプレビュー（_previewItems）に合流。重複（曜日・時間・通貨・カテゴリ完全一致）はスキップ
+  let addedCount=0;
+  withCat.forEach(it=>{
+    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat)
+      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat);})();
+    if(dup)return;
+    _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
+    addedCount++;
+  });
+  savePreviewItems();
+  renderPreviewList();
+
+  playTheme(true);
+  alert(addedCount+'件をCALのプレビューに追加しました（重複分はスキップ）。CALタブで確認・登録してください。');
 }
 
 // ===== ENTRY FLOW =====
