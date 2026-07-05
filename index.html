@@ -1036,6 +1036,12 @@ async function handleImgFile(event){
   const statusEl=document.getElementById('img-ocr-status');
   const resultWrap=document.getElementById('img-ocr-result-wrap');
   const resultEl=document.getElementById('img-ocr-result');
+  const parseWrap=document.getElementById('img-parse-wrap');
+  // 前回の解析結果を完全にリセット
+  resultEl.value='';
+  parseWrap.style.display='none';
+  document.getElementById('img-parse-list').innerHTML='';
+  _imgParsedItems=[];
   statusEl.style.display='block';
   resultWrap.style.display='none';
   statusEl.textContent='読み込み準備中...';
