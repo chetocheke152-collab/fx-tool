@@ -1110,30 +1110,39 @@ function cleanTitleNoise(title){
   return result;
 }
 
-// ===== 指標名から重要度（色）を推定するキーワード辞書 =====
-// ※ FFの実際の色分けと完全一致しない場合あり。未一致・不確実な場合はnull（未判定）のままにする
-const IMG_HIGH_KEYWORDS=[
-  /non.?farm|\bnfp\b/i, /\bcpi\b/i, /\bgdp\b/i,
-  /interest rate|rate decision|official cash rate/i,
-  /\bfomc\b(?!.*(minutes|member))/i, // FOMC本体（議事録・メンバー発言は除く→medium扱い）
-  /employment change|unemployment rate/i,
-  /ism (manufacturing|services) pmi/i,
-  /press conference|testimony/i,
-  /retail sales/i, /core pce|pce price index/i,
+// ===== 指標名から重要度（色）を推定するホワイトリスト =====
+// 通貨×指標名の組み合わせで「ほぼ確実に高重要度」と言えるものだけを厳選。
+// それ以外は全て未判定(null)にして、人間の判断に委ねる（誤判定を避けるため保守的に運用）
+const IMG_RED_RULES=[
+  {cur:'USD', re:/non.?farm|\bnfp\b/i},
+  {cur:'USD', re:/\bcpi\b/i},
+  {cur:'USD', re:/\bfomc\b/i, excludeRe:/member|minutes/i}, // FOMC本体のみ（メンバー発言・議事録は除外→未判定）
+  {cur:'USD', re:/interest rate|rate decision|federal funds/i},
+  {cur:'USD', re:/ism (manufacturing|services) pmi/i},
+  {cur:'USD', re:/retail sales/i},
+  {cur:'USD', re:/\bgdp\b/i},
+  {cur:'USD', re:/core pce|pce price index/i},
+  {cur:'USD', re:/employment change|unemployment rate|average hourly earnings/i},
+  {cur:'USD', re:/powell|press conference|testimony/i},
+  {cur:'EUR', re:/\bcpi\b/i},
+  {cur:'EUR', re:/\bgdp\b/i},
+  {cur:'EUR', re:/interest rate|rate decision|refinancing/i},
+  {cur:'EUR', re:/lagarde/i},
+  {cur:'GBP', re:/\bcpi\b/i},
+  {cur:'GBP', re:/\bgdp\b/i},
+  {cur:'GBP', re:/interest rate|rate decision|bank rate/i},
+  {cur:'JPY', re:/\bcpi\b/i},
+  {cur:'JPY', re:/interest rate|rate decision/i},
+  {cur:'AUD', re:/\bcpi\b/i},
+  {cur:'AUD', re:/interest rate|rate decision|cash rate/i},
+  {cur:'NZD', re:/interest rate|rate decision|official cash rate/i},
+  {cur:'CAD', re:/interest rate|rate decision/i},
+  {cur:'CAD', re:/employment change|unemployment rate/i},
+  {cur:'CHF', re:/interest rate|rate decision/i},
 ];
-const IMG_MED_KEYWORDS=[
-  /\bpmi\b/i, /trade balance/i, /industrial production/i,
-  /factory orders/i, /durable goods/i, /building permits|housing starts/i,
-  /consumer confidence|business confidence|sentiment|confidence/i,
-  /\bppi\b/i, /\badp\b/i, /jobless claims|unemployment claims/i,
-  /current account/i, /existing home sales|new home sales/i,
-  /average cash earnings|household spending/i, /leading indicators/i,
-  /fomc.*(minutes|member)/i, /financial stability|meeting minutes/i,
-];
-function guessImgCategory(title){
-  if(IMG_HIGH_KEYWORDS.some(re=>re.test(title)))return 'red';
-  if(IMG_MED_KEYWORDS.some(re=>re.test(title)))return 'orange';
-  return null; // 未判定
+function guessImgCategory(title,cur){
+  const hit=IMG_RED_RULES.find(r=>r.cur===cur&&r.re.test(title)&&!(r.excludeRe&&r.excludeRe.test(title)));
+  return hit?'red':null; // 一致しなければ未判定（オレンジの自動推定は行わない）
 }
 
 function parseImgResult(){
@@ -1182,7 +1191,7 @@ function parseImgResult(){
     title=cleanTitleNoise(title);
     if(!title)title='（指標名不明）';
 
-    const cat=guessImgCategory(title);
+    const cat=guessImgCategory(title,curMatch);
     found.push({day:curDay,time,cur:curMatch,title,cat});
   });
 
