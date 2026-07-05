@@ -1167,8 +1167,9 @@ function parseImgResult(){
     if(curDay===null||curDay===-1)return; // 曜日未特定 or 日曜はスキップ
 
     const tm=line.match(timeRe);
-    // 通貨コードを検出
-    const curMatch=IMG_CUR_LIST.find(c=>new RegExp('\\b'+c+'\\b').test(line));
+    // 通貨コードを検出（OCRで文字が重複する誤読(例: NZD→NzZD)にも対応）
+    const buildCurRe=code=>new RegExp('\\b'+code.split('').map(ch=>ch+'{1,2}').join('')+'\\b','i');
+    const curMatch=IMG_CUR_LIST.find(c=>buildCurRe(c).test(line));
     if(!curMatch)return; // 通貨が見つからない行は指標行とみなさない
 
     let time='';
@@ -1184,7 +1185,7 @@ function parseImgResult(){
     // 指標名候補：行から時間・通貨・記号類を除いた残り
     let title=line
       .replace(timeRe,'')
-      .replace(new RegExp('\\b'+curMatch+'\\b'),'')
+      .replace(buildCurRe(curMatch),'')
       .replace(/[\[\]|_]/g,'')
       .replace(/\s+/g,' ')
       .trim();
