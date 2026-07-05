@@ -87,6 +87,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
 /* ===== ENTRY FLOW ===== */
+.img-toggle-row{margin:14px 14px 0;padding:10px 14px;background:#141414;border:1px solid #D4AF5A22;border-radius:10px;display:flex;align-items:center;justify-content:space-between}
+.img-toggle-lbl{font-size:11px;color:#555;letter-spacing:0.3px}
+.img-toggle-btn{background:transparent;border:1px solid #333;border-radius:6px;padding:5px 12px;color:#444;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;transition:all 0.2s}
+.img-toggle-btn.on{border-color:#D4AF5A;color:#D4AF5A;background:#D4AF5A18}
+.img-upload-btn{width:100%;padding:14px;background:#1A1A1A;border:2px dashed #D4AF5A44;border-radius:10px;color:#D4AF5A;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
+.img-upload-btn:active{border-color:#D4AF5A;background:#D4AF5A0A}
 .close-check-card{margin:14px 14px 0;padding:16px;border-radius:12px;display:flex;align-items:center;gap:14px;background:#141414;border:1px solid #22C55E33;transition:all 0.3s}
 .close-check-card.alert{background:#1A0F0F;border-color:#EF4444;box-shadow:0 0 20px #EF444422}
 .close-check-icon{font-size:28px;flex-shrink:0}
@@ -241,6 +247,11 @@ body.light .fee-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
 body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
+body.light .img-toggle-row{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .img-toggle-lbl{color:#888}
+body.light .img-toggle-btn{border-color:#D4AF5A44;color:#AAA;background:#F9F7F2}
+body.light .img-toggle-btn.on{border-color:#D4AF5A;color:#D4AF5A;background:#D4AF5A18}
+body.light .img-upload-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#D4AF5A}
 body.light .close-check-card{background:#FFFFFF;border-color:#22C55E44}
 body.light .close-check-card.alert{background:#FFF5F5;border-color:#EF4444}
 body.light .close-check-title{color:#1A1A1A}
@@ -268,6 +279,7 @@ body.light .cult-hdr{background:#F0EDE6}
 body.light .cult-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
 body.light .cal-today{border-color:#D4AF5A55}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -282,6 +294,7 @@ body.light .cal-today{border-color:#D4AF5A55}
   <button class="tab-btn" id="tab-fee" onclick="switchTab('fee')">FEE</button>
   <button class="tab-btn" id="tab-entry" onclick="switchTab('entry')">ENTRY</button>
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
+  <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
 </div>
 
 <!-- SIZER TAB -->
@@ -410,6 +423,12 @@ body.light .cal-today{border-color:#D4AF5A55}
 <!-- ENTRY TAB -->
 <div class="tab-content" id="content-entry">
 
+  <!-- 画像登録タブ ON/OFF 入り口（実験的機能） -->
+  <div class="img-toggle-row" id="img-toggle-row">
+    <span class="img-toggle-lbl">📷 画像登録タブ（実験的機能）</span>
+    <button class="img-toggle-btn" id="img-toggle-btn" onclick="toggleImgTab()">OFF</button>
+  </div>
+
   <!-- 決済チェック（独立・常時表示） -->
   <div class="close-check-card" id="close-check-card">
     <div class="close-check-icon" id="close-check-icon">🌙</div>
@@ -533,6 +552,30 @@ body.light .cal-today{border-color:#D4AF5A55}
   </div>
 
   <div style="height:14px;"></div>
+</div>
+
+<!-- IMG TAB (実験的機能) -->
+<div class="tab-content" id="content-img">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">画像から指標を読み取る（実験的機能）</div>
+    <div class="card-body">
+      <div style="font-size:11px;color:#555;line-height:1.7;margin-bottom:14px;">
+        カルト・FFのスクリーンショットを読み込み、文字を抽出します。<br>
+        ※ ローカルOCR処理のみ・画像は端末外へ送信されません
+      </div>
+      <input type="file" id="img-file-input" accept="image/*" style="display:none;" onchange="handleImgFile(event)">
+      <button class="img-upload-btn" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
+      <div id="img-preview-wrap" style="display:none;margin-top:14px;">
+        <img id="img-preview" style="width:100%;border-radius:8px;border:1px solid #D4AF5A22;">
+      </div>
+      <div id="img-ocr-status" style="display:none;margin-top:12px;text-align:center;font-size:12px;color:#D4AF5A;letter-spacing:0.5px;"></div>
+      <div id="img-ocr-result-wrap" style="display:none;margin-top:14px;">
+        <div class="lbl" style="margin-bottom:6px;">読み取り結果（テキスト）</div>
+        <textarea id="img-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <div class="disclaimer">This tool is unofficial and not affiliated with or endorsed by Exness.</div>
@@ -899,12 +942,31 @@ function toggleTheme(){
 
 function switchTab(tab){
   playClick(tab==='fee');
-  ['sizer','fee','entry','cal'].forEach(t=>{
+  ['sizer','fee','entry','cal','img'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='cal')renderCalendar();
   if(tab==='entry')updateCloseCheck();
+}
+
+// ===== 画像登録タブ ON/OFF（実験的機能） =====
+const IMG_TAB_KEY='ps_img_tab_enabled';
+function applyImgTabState(){
+  const enabled=localStorage.getItem(IMG_TAB_KEY)==='1';
+  document.getElementById('tab-img').style.display=enabled?'':'none';
+  document.getElementById('img-toggle-btn').textContent=enabled?'ON':'OFF';
+  document.getElementById('img-toggle-btn').classList.toggle('on',enabled);
+  // OFFにした際、IMGタブが表示中だったらSIZERへ戻す
+  if(!enabled&&document.getElementById('tab-img').classList.contains('active')){
+    switchTab('sizer');
+  }
+}
+function toggleImgTab(){
+  const enabled=localStorage.getItem(IMG_TAB_KEY)==='1';
+  localStorage.setItem(IMG_TAB_KEY,enabled?'0':'1');
+  applyImgTabState();
+  playClick(!enabled);
 }
 
 function calcFee(){
@@ -948,6 +1010,45 @@ function updateCloseCheck(){
     icon.textContent='🌙';
     title.textContent='保有ポジションの決済チェック';
     sub.textContent='平日です。金曜日になると決済アラートが表示されます';
+  }
+}
+
+// ===== 画像OCR（実験的機能・ローカル処理のみ） =====
+async function handleImgFile(event){
+  const file=event.target.files[0];
+  if(!file)return;
+
+  // プレビュー表示
+  const previewWrap=document.getElementById('img-preview-wrap');
+  const preview=document.getElementById('img-preview');
+  const reader=new FileReader();
+  reader.onload=e=>{preview.src=e.target.result;previewWrap.style.display='block';};
+  reader.readAsDataURL(file);
+
+  const statusEl=document.getElementById('img-ocr-status');
+  const resultWrap=document.getElementById('img-ocr-result-wrap');
+  const resultEl=document.getElementById('img-ocr-result');
+  statusEl.style.display='block';
+  resultWrap.style.display='none';
+  statusEl.textContent='読み込み準備中...';
+
+  try{
+    const result=await Tesseract.recognize(file,'jpn+eng',{
+      logger:m=>{
+        if(m.status==='recognizing text'){
+          statusEl.textContent='解析中... '+Math.round(m.progress*100)+'%';
+        }else if(m.status){
+          statusEl.textContent=m.status;
+        }
+      }
+    });
+    statusEl.textContent='✅ 解析完了';
+    resultEl.value=result.data.text;
+    resultWrap.style.display='block';
+    playClick(true);
+  }catch(e){
+    statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
+    playClick(false);
   }
 }
 
@@ -1192,7 +1293,8 @@ const CULT_EVENTS=[
   {name:'雇用統計（豪）',            short:'雇用統計',   cur:'AUD', cat:'red'},
 
   // ── NZD 主要 ──
-  {name:'RBNZ政策金利発表',          short:'RBNZ金利',   cur:'NZD', cat:'red'},
+  {name:'RBNZ政策金利発表（OCR）',    short:'RBNZ金利',   cur:'NZD', cat:'red'},
+  {name:'RBNZ総裁記者会見',          short:'RBNZ会見',   cur:'NZD', cat:'red'},
   {name:'CPI（NZ）',                 short:'CPI',        cur:'NZD', cat:'red'},
 
   // ── CAD 主要 ──
@@ -1567,6 +1669,7 @@ updateCloseCheck();
 migrateCultData();
 renderCalendar();
 renderPreviewList();
+applyImgTabState();
 </script>
 </body>
 </html>
