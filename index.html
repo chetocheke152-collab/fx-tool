@@ -1097,7 +1097,10 @@ function cleanTitleNoise(title){
     // それ以外（ひらがな・カタカナ・漢字1〜2文字などOCRノイズ）は除去
     return false;
   });
-  return cleaned.join(' ').replace(/\s+/g,' ').trim();
+  let result=cleaned.join(' ').replace(/\s+/g,' ').trim();
+  // 例: "PPIm/m" → "PPI m/m"（大文字略語とm/m・y/y・q/qの間の欠落スペースを補完）
+  result=result.replace(/([A-Z]{2,})(m\/m|y\/y|q\/q|w\/w)\b/g,'$1 $2');
+  return result;
 }
 
 function parseImgResult(){
