@@ -95,6 +95,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .img-upload-btn:active{border-color:#D4AF5A;background:#D4AF5A0A}
 .img-clear-btn{padding:0 18px;background:transparent;border:1px solid #333;border-radius:10px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s;flex-shrink:0}
 .img-clear-btn:active{border-color:#EF4444;color:#EF4444}
+.img-parse-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #D4AF5A08}
+.img-parse-row:last-child{border-bottom:none}
+.img-cat-mini{display:flex;gap:1px;flex-shrink:0}
+.img-cat-dot{background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 5px;font-size:13px;cursor:pointer;-webkit-appearance:none;opacity:0.3;transition:all 0.15s}
+.img-cat-dot.sel{opacity:1;border-color:#D4AF5A44;background:#D4AF5A0A}
+.img-unmatched-lbl{font-size:9px;font-weight:700;color:#F59E0B;letter-spacing:0.3px;background:#F59E0B18;padding:1px 5px;border-radius:4px;margin-left:2px}
 .close-check-card{margin:14px 14px 0;padding:16px;border-radius:12px;display:flex;align-items:center;gap:14px;background:#141414;border:1px solid #22C55E33;transition:all 0.3s}
 .close-check-card.alert{background:#1A0F0F;border-color:#EF4444;box-shadow:0 0 20px #EF444422}
 .close-check-icon{font-size:28px;flex-shrink:0}
@@ -255,6 +261,7 @@ body.light .img-toggle-btn{border-color:#D4AF5A44;color:#AAA;background:#F9F7F2}
 body.light .img-toggle-btn.on{border-color:#D4AF5A;color:#D4AF5A;background:#D4AF5A18}
 body.light .img-upload-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#D4AF5A}
 body.light .img-clear-btn{border-color:#D4AF5A33;color:#AAA}
+body.light .img-cat-dot.sel{background:#D4AF5A18;border-color:#D4AF5A44}
 body.light .close-check-card{background:#FFFFFF;border-color:#22C55E44}
 body.light .close-check-card.alert{background:#FFF5F5;border-color:#EF4444}
 body.light .close-check-title{color:#1A1A1A}
@@ -1103,6 +1110,32 @@ function cleanTitleNoise(title){
   return result;
 }
 
+// ===== 指標名から重要度（色）を推定するキーワード辞書 =====
+// ※ FFの実際の色分けと完全一致しない場合あり。未一致・不確実な場合はnull（未判定）のままにする
+const IMG_HIGH_KEYWORDS=[
+  /non.?farm|\bnfp\b/i, /\bcpi\b/i, /\bgdp\b/i,
+  /interest rate|rate decision|official cash rate/i,
+  /\bfomc\b(?!.*(minutes|member))/i, // FOMC本体（議事録・メンバー発言は除く→medium扱い）
+  /employment change|unemployment rate/i,
+  /ism (manufacturing|services) pmi/i,
+  /press conference|testimony/i,
+  /retail sales/i, /core pce|pce price index/i,
+];
+const IMG_MED_KEYWORDS=[
+  /\bpmi\b/i, /trade balance/i, /industrial production/i,
+  /factory orders/i, /durable goods/i, /building permits|housing starts/i,
+  /consumer confidence|business confidence|sentiment|confidence/i,
+  /\bppi\b/i, /\badp\b/i, /jobless claims|unemployment claims/i,
+  /current account/i, /existing home sales|new home sales/i,
+  /average cash earnings|household spending/i, /leading indicators/i,
+  /fomc.*(minutes|member)/i, /financial stability|meeting minutes/i,
+];
+function guessImgCategory(title){
+  if(IMG_HIGH_KEYWORDS.some(re=>re.test(title)))return 'red';
+  if(IMG_MED_KEYWORDS.some(re=>re.test(title)))return 'orange';
+  return null; // 未判定
+}
+
 function parseImgResult(){
   const text=document.getElementById('img-ocr-result').value;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -1149,13 +1182,19 @@ function parseImgResult(){
     title=cleanTitleNoise(title);
     if(!title)title='（指標名不明）';
 
-    found.push({day:curDay,time,cur:curMatch,title});
+    const cat=guessImgCategory(title);
+    found.push({day:curDay,time,cur:curMatch,title,cat});
   });
 
   renderImgParseList(found);
 }
 
 let _imgParsedItems=[];
+function setImgItemCat(idx,cat){
+  _imgParsedItems[idx].cat=cat;
+  renderImgParseList(_imgParsedItems);
+  playClick(true);
+}
 function renderImgParseList(items){
   _imgParsedItems=items;
   const wrap=document.getElementById('img-parse-wrap');
@@ -1165,7 +1204,15 @@ function renderImgParseList(items){
     list.innerHTML='<div style="font-size:11px;color:#333;padding:8px 0;">抽出できる指標が見つかりませんでした</div>';
   }else{
     list.innerHTML=items.map((it,i)=>{
-      return '<div class="cult-item"><span class="cult-item-text">'+DAY_NAMES[it.day]+' '+(it.time||'--:--')+' '+it.cur+' · '+it.title+'</span></div>';
+      const unmatched=it.cat===null;
+      const dots=['red','orange','green'].map(c=>{
+        const emoji=c==='red'?'🔴':c==='orange'?'🟠':'🟢';
+        return '<button class="img-cat-dot'+(it.cat===c?' sel':'')+'" onclick="setImgItemCat('+i+',\''+c+'\')">'+emoji+'</button>';
+      }).join('');
+      return '<div class="img-parse-row">'
+        +'<span class="cult-item-text">'+DAY_NAMES[it.day]+' '+(it.time||'--:--')+' '+it.cur+' · '+it.title+(unmatched?' <span class="img-unmatched-lbl">未判定</span>':'')+'</span>'
+        +'<div class="img-cat-mini">'+dots+'</div>'
+        +'</div>';
     }).join('');
   }
   wrap.style.display='block';
