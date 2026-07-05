@@ -572,6 +572,14 @@ body.light .cal-today{border-color:#D4AF5A55}
       <div id="img-ocr-result-wrap" style="display:none;margin-top:14px;">
         <div class="lbl" style="margin-bottom:6px;">読み取り結果（テキスト）</div>
         <textarea id="img-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+        <button class="img-upload-btn" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
+      </div>
+      <div id="img-parse-wrap" style="display:none;margin-top:14px;">
+        <div class="lbl" style="margin-bottom:6px;">抽出候補（曜日・時間・通貨・指標名）</div>
+        <div id="img-parse-list"></div>
+        <div style="font-size:10px;color:#333;margin-top:8px;letter-spacing:0.3px;">
+          ※ 重要度（色）は未判定です。次のステップで手動選択できるようにする予定です。
+        </div>
       </div>
     </div>
   </div>
@@ -1050,6 +1058,78 @@ async function handleImgFile(event){
     statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
     playClick(false);
   }
+}
+
+// ===== OCR結果パース（曜日・時間・通貨・指標名を抽出） =====
+const IMG_DAY_MAP={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:-1}; // Sunは対象外(月〜土のみ)
+const IMG_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD'];
+
+function parseImgResult(){
+  const text=document.getElementById('img-ocr-result').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let curDay=null;
+  const found=[];
+
+  const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
+  // 時間パターン: 9:40am / 10:00pm / 12:00am など
+  const timeRe=/(\d{1,2}):(\d{2})\s*(am|pm)/i;
+
+  lines.forEach(line=>{
+    const dm=line.match(dayLineRe);
+    if(dm){
+      const key=dm[1].slice(0,3);
+      key.charAt(0).toUpperCase();
+      const norm=key.charAt(0).toUpperCase()+key.slice(1,3).toLowerCase();
+      if(IMG_DAY_MAP[norm]!==undefined)curDay=IMG_DAY_MAP[norm];
+      return; // 日付行自体は指標行として扱わない
+    }
+    if(curDay===null||curDay===-1)return; // 曜日未特定 or 日曜はスキップ
+
+    const tm=line.match(timeRe);
+    // 通貨コードを検出
+    const curMatch=IMG_CUR_LIST.find(c=>new RegExp('\\b'+c+'\\b').test(line));
+    if(!curMatch)return; // 通貨が見つからない行は指標行とみなさない
+
+    let time='';
+    if(tm){
+      let h=parseInt(tm[1],10);
+      const min=tm[2];
+      const ampm=tm[3].toLowerCase();
+      if(ampm==='pm'&&h!==12)h+=12;
+      if(ampm==='am'&&h===12)h=0;
+      time=String(h).padStart(2,'0')+':'+min;
+    }
+
+    // 指標名候補：行から時間・通貨・記号類を除いた残り
+    let title=line
+      .replace(timeRe,'')
+      .replace(new RegExp('\\b'+curMatch+'\\b'),'')
+      .replace(/[\[\]|_]/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+    if(!title)title='（指標名不明）';
+
+    found.push({day:curDay,time,cur:curMatch,title});
+  });
+
+  renderImgParseList(found);
+}
+
+let _imgParsedItems=[];
+function renderImgParseList(items){
+  _imgParsedItems=items;
+  const wrap=document.getElementById('img-parse-wrap');
+  const list=document.getElementById('img-parse-list');
+  const DAY_NAMES=['月','火','水','木','金','土'];
+  if(items.length===0){
+    list.innerHTML='<div style="font-size:11px;color:#333;padding:8px 0;">抽出できる指標が見つかりませんでした</div>';
+  }else{
+    list.innerHTML=items.map((it,i)=>{
+      return '<div class="cult-item"><span class="cult-item-text">'+DAY_NAMES[it.day]+' '+(it.time||'--:--')+' '+it.cur+' · '+it.title+'</span></div>';
+    }).join('');
+  }
+  wrap.style.display='block';
+  playClick(items.length>0);
 }
 
 // ===== ENTRY FLOW =====
