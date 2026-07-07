@@ -176,13 +176,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cal-event-dot{font-size:13px;flex-shrink:0;width:20px;text-align:center}
 .cal-event-time{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;color:#888;flex-shrink:0;min-width:44px;letter-spacing:0.5px}
 .cal-event-cur{font-size:11px;font-weight:700;color:#E8E0D0;flex-shrink:0;min-width:36px}
-.cal-event-title{font-size:11px;color:#555;flex:1;letter-spacing:0.3px;line-height:1.3}
-.cal-event-src{font-size:9px;color:#333;flex-shrink:0;letter-spacing:0.5px}.cal-event-src.cult{color:#4ADE80;font-weight:700}
 .cal-event-del{background:transparent;border:none;color:#2A2A2A;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-event-del:active{color:#EF4444}
 .cal-event-edit{background:transparent;border:none;color:#444;font-size:13px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-event-edit:active{color:#D4AF5A}
 .cal-event-name{font-size:11px;font-weight:600;color:#D4AF5A;flex:1;letter-spacing:0.3px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event.sort-mode{background:#D4AF5A08}
+.cal-drag-handle{font-size:13px;color:#D4AF5A66;flex-shrink:0;width:16px;text-align:center;letter-spacing:-1px}
+.cal-sort-btn{background:transparent;border:1px solid #D4AF5A44;border-radius:5px;color:#D4AF5A;font-size:11px;cursor:pointer;padding:4px 7px;-webkit-appearance:none;flex-shrink:0;line-height:1}
+.cal-sort-btn:active{background:#D4AF5A18}
+.cal-sort-btn:disabled{opacity:0.2;pointer-events:none}
 .cal-empty{padding:14px 16px;font-size:12px;color:#333;letter-spacing:0.5px}
 .cal-today .cal-day-name{color:#D4AF5A}
 .cal-today{border-color:#D4AF5A33}
@@ -201,8 +204,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cult-list{margin-top:10px}
 .cult-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #D4AF5A08;font-size:12px}
 .cult-item:last-child{border-bottom:none}
-.cult-item-del{background:transparent;border:none;color:#333;font-size:14px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0}
-.cult-item-del:active{color:#EF4444}
 .cult-item-text{color:#888;flex:1}
 .cult-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#22C55E33;color:#4ADE80}
 .cult-reset-btn{width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -283,7 +284,8 @@ body.light .cal-day{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .cal-day-hdr{background:#F0EDE6}
 body.light .cal-day-name{color:#1A1A1A}
 body.light .cal-event-cur{color:#1A1A1A}
-body.light .cal-event-title{color:#888}
+body.light .cal-event.sort-mode{background:#D4AF5A0A}
+body.light .cal-sort-btn{border-color:#D4AF5A44}
 body.light .cult-section{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .cult-hdr{background:#F0EDE6}
 body.light .cult-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
@@ -510,6 +512,17 @@ body.light .cal-today{border-color:#D4AF5A55}
 <!-- CAL TAB -->
 <div class="tab-content" id="content-cal">
 
+  <!-- 並び替えモード切替 -->
+  <div class="toggle-row" style="margin:14px 14px 0;">
+    <div class="toggle-info">
+      <div class="toggle-lbl">並び替えモード</div>
+      <div class="toggle-sub">ONにすると各日の指標を▲▼で並び替えできます</div>
+    </div>
+    <div class="toggle-btn" id="sort-toggle-btn" onclick="toggleSortMode()">
+      <span class="toggle-txt" id="sort-toggle-txt">OFF</span>
+    </div>
+  </div>
+
   <div id="cal-body" style="padding-bottom:8px;"></div>
 
   <!-- 全データリセット（カレンダー本体の下、独立設置） -->
@@ -654,7 +667,7 @@ body.light .cal-today{border-color:#D4AF5A55}
 </div>
 
 <!-- Cult Event Picker Sheet -->
-<div class="overlay" id="cult-event-overlay" onclick="closeCultEventSheet()"></div>
+<div class="overlay" id="cult-event-overlay" onclick="cancelCultEventSheet()"></div>
 <div class="sheet" id="cult-event-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">指標名を選択</div>
@@ -1411,11 +1424,12 @@ function renderCalendar(){
   for(let i=0;i<6;i++){
     const d=new Date(mon);d.setDate(mon.getDate()+i);
     const dStr=calDateStr(d),isToday=dStr===TODAY,md=(d.getMonth()+1)+'/'+d.getDate();
+    // 並び替え済みの保存順をそのまま尊重（自動での時間順ソートは行わない）
     const events=(calData[i]||[]).map(e=>({
       time:e.time,cur:e.cur,event:e.event||'',
       dot:e.cat==='red'?'🔴':e.cat==='orange'?'🟠':'🟢',
       src:e.cat==='green'?'カルト':'FF'
-    })).sort((a,b)=>a.time.localeCompare(b.time));
+    }));
     const hasRed=events.some(e=>e.dot==='🔴'),hasOrange=events.some(e=>e.dot==='🟠');
     const badge=events.length===0?'<span class="cal-day-badge free">FREE</span>':
       hasRed?'<span class="cal-day-badge danger">要回避</span>':
@@ -1426,13 +1440,41 @@ function renderCalendar(){
       html+=`<div class="cal-events">`;
       events.forEach((e,j)=>{
         const eventName=`<span class="cal-event-name">${e.event||''}</span>`;
-        html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
+        if(_sortMode){
+          const upDisabled=j===0?' disabled':'';
+          const downDisabled=j===events.length-1?' disabled':'';
+          html+=`<div class="cal-event sort-mode"><span class="cal-drag-handle">☰</span><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-sort-btn" onclick="moveCultItem(${i},${j},-1)"${upDisabled}>▲</button><button class="cal-sort-btn" onclick="moveCultItem(${i},${j},1)"${downDisabled}>▼</button></div>`;
+        }else{
+          html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
+        }
       });
       html+=`</div>`;
     }
     html+=`</div>`;
   }
   document.getElementById('cal-body').innerHTML=html;
+}
+
+// ===== 並び替えモード =====
+let _sortMode=false;
+function toggleSortMode(){
+  _sortMode=!_sortMode;
+  const btn=document.getElementById('sort-toggle-btn');
+  const txt=document.getElementById('sort-toggle-txt');
+  btn.classList.toggle('on',_sortMode);
+  txt.textContent=_sortMode?'ON':'OFF';
+  playClick(_sortMode);
+  renderCalendar();
+}
+function moveCultItem(dayIdx,idx,dir){
+  const data=loadCultData();
+  const arr=data[dayIdx];
+  const target=idx+dir;
+  if(target<0||target>=arr.length)return;
+  [arr[idx],arr[target]]=[arr[target],arr[idx]];
+  saveCultData(data);
+  playClick(true);
+  renderCalendar();
 }
 
 // ===== CULT DRUM PICKERS =====
