@@ -74,6 +74,24 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .r-val{font-size:17px;font-weight:700;color:#E8E0D0}
 .r-val.blue{color:#D4AF5A}
 .r-val.green{color:#D4AF5A}
+.sizer-hist-card{margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
+.sizer-hist-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase;border-bottom:1px solid #D4AF5A22;display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-hist-arr{font-size:11px;color:#D4AF5A;transition:transform 0.2s}
+.sizer-hist-arr.open{transform:rotate(180deg)}
+.sizer-hist-body{display:none;padding:4px 16px 14px}
+.sizer-hist-body.open{display:block}
+.sizer-hist-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid #D4AF5A08;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-hist-row:last-child{border-bottom:none}
+.sizer-hist-row:active{background:#D4AF5A08}
+.sizer-hist-main{display:flex;align-items:center;gap:10px}
+.sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
+.sizer-hist-pips{font-size:12px;color:#888;flex:1}
+.sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
+.sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
+.sizer-hist-del:active{color:#EF4444}
+.sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
+.sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
+.sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .tab-btn{flex:1;padding:11px 4px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none}
 .tab-btn.active{color:#D4AF5A;background:#D4AF5A18;border-bottom:2px solid #D4AF5A}
@@ -182,7 +200,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cal-event-edit:active{color:#D4AF5A}
 .cal-event-name{font-size:11px;font-weight:600;color:#D4AF5A;flex:1;letter-spacing:0.3px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-event.sort-mode{background:#D4AF5A08}
-.cal-drag-handle{font-size:13px;color:#D4AF5A66;flex-shrink:0;width:16px;text-align:center;letter-spacing:-1px}
 .cal-sort-btn{background:transparent;border:1px solid #D4AF5A44;border-radius:5px;color:#D4AF5A;font-size:11px;cursor:pointer;padding:4px 7px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-sort-btn:active{background:#D4AF5A18}
 .cal-sort-btn:disabled{opacity:0.2;pointer-events:none}
@@ -247,6 +264,10 @@ body.light .copy-btn{border-color:#D4AF5A44;color:#D4AF5A88}
 body.light .result-row{border-bottom-color:#D4AF5A11}
 body.light .r-lbl{color:#888}
 body.light .r-val{color:#1A1A1A}
+body.light .sizer-hist-card{background:#FFFFFF;border-color:#D4AF5A22}
+body.light .sizer-hist-hdr{background:#F0EDE6}
+body.light .sizer-hist-pair{color:#1A1A1A}
+body.light .sizer-hist-row:active{background:#D4AF5A0A}
 body.light .lbl{color:#D4AF5A}
 body.light .disclaimer{color:#AAA}
 body.light .tab-nav{background:#F0EDE6;border-color:#D4AF5A22}
@@ -390,6 +411,18 @@ body.light .cal-today{border-color:#D4AF5A55}
     <div class="result-row"><span class="r-lbl">1pip 値</span><span class="r-val" id="res-pip">—</span></div>
     <div class="result-row"><span class="r-lbl">取引手数料</span><span class="r-val" id="res-fee">—</span></div>
     <div class="result-row"><span class="r-lbl">実質 SL 損失額</span><span class="r-val green" id="res-sl">—</span></div>
+  </div>
+</div>
+
+<!-- 計算履歴 -->
+<div class="sizer-hist-card">
+  <div class="sizer-hist-hdr" onclick="toggleSizerHistory()">
+    <span id="sizer-hist-title">計算履歴</span>
+    <span class="sizer-hist-arr" id="sizer-hist-arr">▼</span>
+  </div>
+  <div class="sizer-hist-body" id="sizer-hist-body">
+    <div id="sizer-hist-list"></div>
+    <button class="sizer-hist-clear-btn" id="sizer-hist-clear-btn" onclick="clearSizerHistoryConfirm()">履歴をクリア</button>
   </div>
 </div>
 </div>
@@ -611,7 +644,6 @@ body.light .cal-today{border-color:#D4AF5A55}
     </div>
   </div>
 </div>
-</div>
 
 <div class="disclaimer">This tool is unofficial and not affiliated with or endorsed by Exness.</div>
 
@@ -821,6 +853,101 @@ function calc(animate=false){
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('on',+b.textContent===pips));
 }
 
+// ===== SIZER 計算履歴 =====
+const SIZER_HIST_KEY='ps_sizer_history';
+function loadSizerHistory(){
+  try{return JSON.parse(localStorage.getItem(SIZER_HIST_KEY))||[];}catch(e){return [];}
+}
+function saveSizerHistoryArr(arr){localStorage.setItem(SIZER_HIST_KEY,JSON.stringify(arr));}
+
+function maybeSaveSizerHistory(){
+  const pName=document.getElementById('pair').value;
+  const pips=+document.getElementById('pips').value||0;
+  const lotText=document.getElementById('res-lot').textContent;
+  const lot=parseFloat(lotText);
+  if(!pName||!pips||!lot||lot<=0||isNaN(lot))return; // 有効な組み合わせが揃っていなければ記録しない
+  const hist=loadSizerHistory();
+  const last=hist[0];
+  // 直前の記録と完全一致する場合は重複記録しない
+  if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return;
+  hist.unshift({pair:pName,pips,lot,ts:Date.now()});
+  if(hist.length>20)hist.length=20; // 直近20件まで
+  saveSizerHistoryArr(hist);
+  renderSizerHistory();
+}
+
+function fmtSizerHistTime(ts){
+  // GMT+9(JST)で固定表示
+  const d=new Date(ts+9*60*60*1000);
+  const md=(d.getUTCMonth()+1)+'/'+d.getUTCDate();
+  const hm=String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
+  return md+' '+hm;
+}
+
+function renderSizerHistory(){
+  const hist=loadSizerHistory();
+  const list=document.getElementById('sizer-hist-list');
+  if(!list)return;
+  if(hist.length===0){
+    list.innerHTML='<div class="sizer-hist-empty">まだ記録がありません</div>';
+  }else{
+    list.innerHTML=hist.map((h,i)=>
+      '<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
+      +'<div class="sizer-hist-main">'
+      +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+      +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+      +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+      +'<button class="sizer-hist-del" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">×</button>'
+      +'</div>'
+      +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+      +'</div>'
+    ).join('');
+  }
+  const title=document.getElementById('sizer-hist-title');
+  if(title)title.textContent=hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴';
+}
+
+function deleteSizerHistoryItem(idx){
+  const hist=loadSizerHistory();
+  hist.splice(idx,1);
+  saveSizerHistoryArr(hist);
+  renderSizerHistory();
+  playClick(false);
+}
+
+function toggleSizerHistory(){
+  const body=document.getElementById('sizer-hist-body');
+  const arr=document.getElementById('sizer-hist-arr');
+  const open=body.classList.toggle('open');
+  arr.classList.toggle('open',open);
+  playClick(open);
+}
+
+function restoreSizerHistory(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  document.getElementById('pair').value=h.pair;
+  const pairBtn=document.getElementById('pair-btn');
+  pairBtn.textContent=h.pair;pairBtn.classList.add('sel');
+  localStorage.setItem('ps_pair',h.pair);
+  document.getElementById('pips').value=h.pips;
+  calc(true);
+  playClick(true);
+}
+
+function clearSizerHistoryConfirm(){
+  const btn=document.getElementById('sizer-hist-clear-btn');
+  if(btn.dataset.c==='1'){
+    saveSizerHistoryArr([]);
+    btn.textContent='履歴をクリア';btn.style.color='';btn.dataset.c='0';
+    renderSizerHistory();playClick(false);
+  }else{
+    btn.textContent='もう一度タップで実行';btn.style.color='#EF4444';btn.dataset.c='1';
+    setTimeout(()=>{btn.textContent='履歴をクリア';btn.style.color='';btn.dataset.c='0';},3000);
+  }
+}
+
 function countUp(el,target){
   const duration=400,start=performance.now(),startVal=0;
   function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
@@ -878,6 +1005,7 @@ function setPips(v){
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
   else{el.value=v;}
   calc(true);
+  maybeSaveSizerHistory();
 }
 
 let curGroup=0;
@@ -947,6 +1075,7 @@ function pickPair(v,close=true){
   }else{
     document.getElementById('pair').value=v;const btn=document.getElementById('pair-btn');btn.textContent=v;btn.classList.add('sel');
     localStorage.setItem('ps_pair',v);if(close)closeSheet();calc(true);
+    maybeSaveSizerHistory();
   }
 }
 
@@ -964,6 +1093,7 @@ document.getElementById('equity').addEventListener('change',()=>{
   localStorage.setItem(key,document.getElementById('equity').value);
 });
 document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
+document.getElementById('pips').addEventListener('change',()=>maybeSaveSizerHistory());
 
 const savedTheme=localStorage.getItem('ps_theme');
 if(savedTheme==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='LIGHT';}
@@ -1443,7 +1573,7 @@ function renderCalendar(){
         if(_sortMode){
           const upDisabled=j===0?' disabled':'';
           const downDisabled=j===events.length-1?' disabled':'';
-          html+=`<div class="cal-event sort-mode"><span class="cal-drag-handle">☰</span><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-sort-btn" onclick="moveCultItem(${i},${j},-1)"${upDisabled}>▲</button><button class="cal-sort-btn" onclick="moveCultItem(${i},${j},1)"${downDisabled}>▼</button></div>`;
+          html+=`<div class="cal-event sort-mode"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-sort-btn" onclick="moveCultItem(${i},${j},-1)"${upDisabled}>▲</button><button class="cal-sort-btn" onclick="moveCultItem(${i},${j},1)"${downDisabled}>▼</button></div>`;
         }else{
           html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
         }
@@ -1937,6 +2067,7 @@ migrateCultData();
 renderCalendar();
 renderPreviewList();
 applyImgTabState();
+renderSizerHistory();
 </script>
 </body>
 </html>
