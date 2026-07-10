@@ -404,7 +404,10 @@ body.light .cal-today{border-color:#D4AF5A55}
     <div class="result-top-lbl">推奨 Lot 数</div>
     <div class="result-lot" id="res-lot">—</div>
     <div class="result-unit" id="res-unit">ペアとpips数を入力</div>
-    <button class="copy-btn" id="copy-btn" onclick="copyLot()">📋 タップしてlotをコピー</button>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+      <button class="copy-btn" id="copy-btn" onclick="copyLot()" style="margin-top:0;">📋 lotをコピー</button>
+      <button class="copy-btn" id="save-hist-btn" onclick="saveSizerHistoryManual()" style="margin-top:0;">📌 履歴に保存</button>
+    </div>
   </div>
   <div class="result-rows">
     <div class="result-row"><span class="r-lbl">許容損失額</span><span class="r-val blue" id="res-loss">—</span></div>
@@ -865,15 +868,31 @@ function maybeSaveSizerHistory(){
   const pips=+document.getElementById('pips').value||0;
   const lotText=document.getElementById('res-lot').textContent;
   const lot=parseFloat(lotText);
-  if(!pName||!pips||!lot||lot<=0||isNaN(lot))return; // 有効な組み合わせが揃っていなければ記録しない
+  if(!pName||!pips||!lot||lot<=0||isNaN(lot))return false; // 有効な組み合わせが揃っていなければ記録しない
   const hist=loadSizerHistory();
   const last=hist[0];
   // 直前の記録と完全一致する場合は重複記録しない
-  if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return;
+  if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return false;
   hist.unshift({pair:pName,pips,lot,ts:Date.now()});
   if(hist.length>20)hist.length=20; // 直近20件まで
   saveSizerHistoryArr(hist);
   renderSizerHistory();
+  return true;
+}
+
+// 「履歴に保存」ボタン専用：明示的なタップ時のみ保存を実行
+function saveSizerHistoryManual(){
+  const btn=document.getElementById('save-hist-btn');
+  const saved=maybeSaveSizerHistory();
+  const original='📌 履歴に保存';
+  if(saved){
+    btn.textContent='✅ 保存しました';
+    playClick(true);
+  }else{
+    btn.textContent='⚠ 保存できません';
+    playClick(false);
+  }
+  setTimeout(()=>{btn.textContent=original;},1800);
 }
 
 function fmtSizerHistTime(ts){
@@ -995,7 +1014,7 @@ function playClick(on){
 function copyLot(){
   const v=document.getElementById('res-lot').textContent;if(v==='—')return;
   const btn=document.getElementById('copy-btn');
-  const done=()=>{btn.textContent='✅ コピーしました！';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 タップしてlotをコピー';btn.classList.remove('done');},2000);};
+  const done=()=>{btn.textContent='✅ コピー済み';btn.classList.add('done');setTimeout(()=>{btn.textContent='📋 lotをコピー';btn.classList.remove('done');},2000);};
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 function fbCopy(v,cb){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb();}
@@ -1005,7 +1024,6 @@ function setPips(v){
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
   else{el.value=v;}
   calc(true);
-  maybeSaveSizerHistory();
 }
 
 let curGroup=0;
@@ -1075,7 +1093,6 @@ function pickPair(v,close=true){
   }else{
     document.getElementById('pair').value=v;const btn=document.getElementById('pair-btn');btn.textContent=v;btn.classList.add('sel');
     localStorage.setItem('ps_pair',v);if(close)closeSheet();calc(true);
-    maybeSaveSizerHistory();
   }
 }
 
@@ -1093,7 +1110,6 @@ document.getElementById('equity').addEventListener('change',()=>{
   localStorage.setItem(key,document.getElementById('equity').value);
 });
 document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
-document.getElementById('pips').addEventListener('change',()=>maybeSaveSizerHistory());
 
 const savedTheme=localStorage.getItem('ps_theme');
 if(savedTheme==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='LIGHT';}
