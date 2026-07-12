@@ -634,6 +634,18 @@ body.light .cal-today{border-color:#D4AF5A55}
       <div id="img-ocr-result-wrap" style="display:none;margin-top:14px;">
         <div class="lbl" style="margin-bottom:6px;">読み取り結果（テキスト）</div>
         <textarea id="img-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+        <div class="field" style="margin-top:10px;">
+          <span class="lbl">対象曜日（画像内に曜日見出しが無い場合に使用）</span>
+          <select id="img-fallback-day" class="cult-input" style="width:100%;">
+            <option value="">自動判定（見出しがあればそちらを優先）</option>
+            <option value="0">月</option>
+            <option value="1">火</option>
+            <option value="2">水</option>
+            <option value="3">木</option>
+            <option value="4">金</option>
+            <option value="5">土</option>
+          </select>
+        </div>
         <button class="img-upload-btn" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
       </div>
       <div id="img-parse-wrap" style="display:none;margin-top:14px;">
@@ -1393,9 +1405,12 @@ function learnKey(cur,title){return cur+'|'+title.toLowerCase().trim();}
 function parseImgResult(){
   const text=document.getElementById('img-ocr-result').value;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
-  let curDay=null;
+  // 画像内に曜日見出しが無い場合（2枚目以降の続き画像など）のフォールバック
+  const fallbackDayVal=document.getElementById('img-fallback-day').value;
+  let curDay=fallbackDayVal!==''?parseInt(fallbackDayVal):null;
   const found=[];
   const learned=loadLearnedCat();
+  let lastSeenTime=''; // 直前に確定した時刻（同時刻の表示省略行に引き継ぐ用）
 
   const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
   // 時間パターン: 9:40am / 10:00pm / 12:00am など
@@ -1408,6 +1423,7 @@ function parseImgResult(){
       key.charAt(0).toUpperCase();
       const norm=key.charAt(0).toUpperCase()+key.slice(1,3).toLowerCase();
       if(IMG_DAY_MAP[norm]!==undefined)curDay=IMG_DAY_MAP[norm];
+      lastSeenTime=''; // 新しい曜日に切り替わったら時刻の引き継ぎをリセット
       return; // 日付行自体は指標行として扱わない
     }
     if(curDay===null||curDay===-1)return; // 曜日未特定 or 日曜はスキップ
@@ -1426,6 +1442,12 @@ function parseImgResult(){
       if(ampm==='pm'&&h!==12)h+=12;
       if(ampm==='am'&&h===12)h=0;
       time=String(h).padStart(2,'0')+':'+min;
+      lastSeenTime=time;
+    }else if(/\btentative\b/i.test(line)){
+      time=''; // 本当に未定（FF側もTentative表記）はそのまま空
+    }else{
+      // 時刻表記が無い行は「直前の項目と同時刻」の表示省略とみなし、直前の確定時刻を引き継ぐ
+      time=lastSeenTime;
     }
 
     // 指標名候補：行から時間・通貨・記号類を除いた残り
