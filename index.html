@@ -1209,6 +1209,58 @@ function clearImgResult(){
   playClick(false);
 }
 
+// 行テキスト(trim済み) → 画像から実際に読み取った色 のマップ（ダブルチェック用）
+let _imgLineColorMap={};
+
+// サンプリングした色をFF/カルトの4色系統に分類（色相ベース、圧縮ノイズに強い）
+function classifyPixelColor(r,g,b){
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  const l=(max+min)/2/255;
+  const s=max===min?0:(max-min)/(255-Math.abs(max+min-255));
+  if(s<0.28||l<0.15||l>0.92)return null; // 彩度不足・背景色/文字色とみなし対象外
+  let h;
+  if(max===min)h=0;
+  else if(max===r)h=60*(((g-b)/(max-min))%6);
+  else if(max===g)h=60*((b-r)/(max-min)+2);
+  else h=60*((r-g)/(max-min)+4);
+  if(h<0)h+=360;
+  if(h<=18||h>=345)return 'red';
+  if(h>18&&h<=48)return 'orange';
+  if(h>48&&h<=72)return 'yellow';
+  if(h>72&&h<170)return 'green';
+  return null;
+}
+
+// Tesseractの行データ(bbox付き)から、各行の左側アイコン部分の色を実画像からサンプリングする
+function detectLineColors(canvas,lines){
+  const map={};
+  try{
+    const ctx=canvas.getContext('2d');
+    lines.forEach(line=>{
+      if(!line.bbox||!line.text||!line.text.trim())return;
+      const {x0,y0,y1}=line.bbox;
+      if(x0<4)return; // アイコン領域がない（画像左端に張り付いている行はスキップ）
+      const cy=Math.round((y0+y1)/2);
+      const scanWidth=Math.min(x0,40); // アイコンは行頭の直近40pxの範囲を想定
+      const votes={red:0,orange:0,yellow:0,green:0};
+      for(let x=Math.max(0,x0-scanWidth);x<x0;x+=2){
+        for(let dy=-3;dy<=3;dy+=3){
+          const y=cy+dy;
+          if(y<0||y>=canvas.height)continue;
+          const px=ctx.getImageData(x,y,1,1).data;
+          const cls=classifyPixelColor(px[0],px[1],px[2]);
+          if(cls)votes[cls]++;
+        }
+      }
+      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+      if(best&&best[1]>=3){ // 一定数以上の一致がある場合のみ採用（誤検出防止）
+        map[line.text.trim()]=best[0]==='yellow'?'skip':best[0]; // yellowは対象外指標として明示
+      }
+    });
+  }catch(e){/* サンプリング失敗時は無視してキーワード判定にフォールバック */}
+  return map;
+}
+
 async function handleImgFile(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -1217,7 +1269,9 @@ async function handleImgFile(event){
   const previewWrap=document.getElementById('img-preview-wrap');
   const preview=document.getElementById('img-preview');
   const reader=new FileReader();
-  reader.onload=e=>{preview.src=e.target.result;previewWrap.style.display='block';};
+  const imgDataUrlPromise=new Promise(resolve=>{
+    reader.onload=e=>{preview.src=e.target.result;previewWrap.style.display='block';resolve(e.target.result);};
+  });
   reader.readAsDataURL(file);
 
   const statusEl=document.getElementById('img-ocr-status');
@@ -1226,6 +1280,7 @@ async function handleImgFile(event){
   statusEl.style.display='block';
   resultWrap.style.display='none';
   statusEl.textContent='読み込み準備中...';
+  _imgLineColorMap={};
 
   try{
     const result=await Tesseract.recognize(file,'jpn+eng',{
@@ -1240,6 +1295,19 @@ async function handleImgFile(event){
     statusEl.textContent='✅ 解析完了';
     resultEl.value=result.data.text;
     resultWrap.style.display='block';
+
+    // 画像から実際の色を読み取る（ダブルチェック用、失敗しても致命的ではない）
+    try{
+      const dataUrl=await imgDataUrlPromise;
+      const img=new Image();
+      await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+      const canvas=document.createElement('canvas');
+      canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+      canvas.getContext('2d').drawImage(img,0,0);
+      const lines=(result.data.lines||[]);
+      _imgLineColorMap=detectLineColors(canvas,lines);
+    }catch(e){_imgLineColorMap={};}
+
     playClick(true);
   }catch(e){
     statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
@@ -1283,7 +1351,7 @@ const IMG_RED_RULES=[
   {cur:'USD', re:/\bgdp\b/i},
   {cur:'USD', re:/core pce|pce price index/i},
   {cur:'USD', re:/employment change|unemployment rate|average hourly earnings/i},
-  {cur:'USD', re:/powell|press conference|testimony/i},
+  {cur:'USD', re:/powell|press conference|testif\w*/i},
   {cur:'EUR', re:/\bcpi\b/i, excludeRe:/german|french|italian|spanish|\bfinal\b/i}, // ユーロ圏全体のCPIのみ赤。国別Final CPIはFFでも黄色のため除外
   {cur:'EUR', re:/\bgdp\b/i},
   {cur:'EUR', re:/interest rate|rate decision|refinancing/i},
@@ -1302,8 +1370,9 @@ const IMG_RED_RULES=[
 ];
 // オレンジ（medium）判定は実績確認済みのものだけをホワイトリスト方式で追加
 const IMG_ORANGE_RULES=[
-  {cur:'GBP', re:/bailey.*speaks|gov bailey speaks/i}, // BOE総裁発言
   {cur:'CAD', re:/ivey pmi/i}, // Ivey PMI
+  // 注: 要人発言(Speaks)系は発言内容・タイミングで重要度が変動するため、
+  // 固定のホワイトリストには含めず未判定のまま人間の判断に委ねる
 ];
 function guessImgCategory(title,cur){
   const redHit=IMG_RED_RULES.find(r=>r.cur===cur&&r.re.test(title)&&!(r.excludeRe&&r.excludeRe.test(title)));
@@ -1370,7 +1439,10 @@ function parseImgResult(){
     if(!title)title='（指標名不明）';
 
     const catAuto=guessImgCategory(title,curMatch);
-    const cat=learned[learnKey(curMatch,title)]||catAuto;
+    const imgColor=_imgLineColorMap[line]; // 画像から実際に読み取った色（ダブルチェック）
+    const imgCat=imgColor==='skip'?null:(imgColor||null); // 黄色検出時は対象外として未判定扱い
+    // 優先順位: ①学習データ（自分で修正した実績） ②画像から読み取った実際の色 ③キーワード推測
+    const cat=learned[learnKey(curMatch,title)]||imgCat||catAuto;
     found.push({day:curDay,time,cur:curMatch,title,cat});
   });
 
