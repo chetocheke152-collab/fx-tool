@@ -52,6 +52,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .qbtn{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:9px 0;font-size:13px;font-weight:700;color:#666;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all 0.15s}
 .qbtn.on{background:#D4AF5A18;border-color:#D4AF5A;color:#D4AF5A}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#1A1A1A;border-radius:8px;border:1px solid #D4AF5A33}
+.debug-disabled-notice{margin:14px;padding:30px 16px;text-align:center;font-size:13px;color:#666;background:#141414;border:1px dashed #EF444444;border-radius:12px;letter-spacing:0.3px}
 .toggle-info{flex:1}
 .toggle-lbl{font-size:14px;font-weight:600;color:#E8E0D0}
 .toggle-sub{font-size:11px;color:#666;margin-top:2px}
@@ -320,6 +321,11 @@ body.light .cal-today{border-color:#D4AF5A55}
   <div class="hdr-sub">Exness Zero · Lot Calculator</div>
   <div class="hdr-title">Position <span>Sizer</span></div>
   <button id="theme-btn" onclick="toggleTheme()" style="position:absolute;top:20px;right:16px;background:transparent;border:1px solid #D4AF5A66;border-radius:6px;padding:5px 10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;">DARK</button>
+  <!-- 3回タップでデバッグボタンを呼び出す隠し領域（見た目は何もないただの余白） -->
+  <div id="debug-tap-area" style="position:absolute;top:50px;right:16px;width:36px;height:20px;-webkit-tap-highlight-color:transparent;"
+       onclick="handleDebugTripleTap()"></div>
+  <button id="debug-toggle-btn" onclick="toggleDebugMode()" style="display:none;position:absolute;top:50px;right:16px;background:transparent;border:1px solid #EF444480;border-radius:6px;padding:5px 8px;color:#EF4444;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;z-index:5;">🧪</button>
+  <div id="debug-badge" style="display:none;position:absolute;top:-1px;left:0;right:0;background:#EF4444;color:#fff;text-align:center;font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 0;">🧪 DEBUG MODE（検証用データを使用中）</div>
 </div>
 
 <div class="tab-nav">
@@ -332,6 +338,7 @@ body.light .cal-today{border-color:#D4AF5A55}
 
 <!-- SIZER TAB -->
 <div class="tab-content active" id="content-sizer">
+<div class="debug-disabled-notice" id="debug-notice-sizer" style="display:none;">🧪 デバッグモード中はSIZERタブは使用できません</div>
 <div class="card">
   <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
     <span>Account</span>
@@ -432,6 +439,7 @@ body.light .cal-today{border-color:#D4AF5A55}
 
 <!-- FEE TAB -->
 <div class="tab-content" id="content-fee">
+<div class="debug-disabled-notice" id="debug-notice-fee" style="display:none;">🧪 デバッグモード中はFEEタブは使用できません</div>
   <div class="card" style="margin-top:14px;">
     <div class="card-hdr">Fee Calculator</div>
     <div class="card-body">
@@ -470,6 +478,7 @@ body.light .cal-today{border-color:#D4AF5A55}
 
 <!-- ENTRY TAB -->
 <div class="tab-content" id="content-entry">
+<div class="debug-disabled-notice" id="debug-notice-entry" style="display:none;">🧪 デバッグモード中はENTRYタブは使用できません</div>
 
   <!-- 画像登録タブ ON/OFF 入り口（実験的機能） -->
   <div class="img-toggle-row" id="img-toggle-row">
@@ -547,6 +556,12 @@ body.light .cal-today{border-color:#D4AF5A55}
 
 <!-- CAL TAB -->
 <div class="tab-content" id="content-cal">
+
+  <!-- デバッグモード中のみ表示 -->
+  <div id="debug-notice-cal" style="display:none;margin:14px 14px 0;padding:8px 12px;background:#EF444418;border:1px solid #EF444444;border-radius:8px;font-size:11px;color:#EF4444;display:flex;align-items:center;justify-content:space-between;">
+    <span>🧪 検証用データを表示中（本番CALには影響しません）</span>
+    <button onclick="clearDebugCalData()" style="background:transparent;border:1px solid #EF444466;border-radius:5px;color:#EF4444;font-size:10px;padding:3px 8px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;margin-left:8px;">クリア</button>
+  </div>
 
   <!-- 並び替えモード切替 -->
   <div class="toggle-row" style="margin:14px 14px 0;">
@@ -738,6 +753,10 @@ body.light .cal-today{border-color:#D4AF5A55}
 </div>
 
 <script>
+// ===== デバッグモード（検証用データ切替。リロードのたびに必ずOFFから開始） =====
+let _debugMode=false;
+function isDebugMode(){return _debugMode;}
+
 const PAIRS=[
   {pair:'USD/JPY',fee:3.5,type:'JPY'},{pair:'EUR/JPY',fee:5.0,type:'JPY'},
   {pair:'GBP/JPY',fee:7.5,type:'JPY'},{pair:'AUD/JPY',fee:4.5,type:'JPY'},
@@ -1140,6 +1159,8 @@ function toggleTheme(){
 }
 
 function switchTab(tab){
+  // デバッグモード中はCAL・IMG以外への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img')return;
   playClick(tab==='fee');
   ['sizer','fee','entry','cal','img'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
@@ -1147,6 +1168,70 @@ function switchTab(tab){
   });
   if(tab==='cal')renderCalendar();
   if(tab==='entry')updateCloseCheck();
+}
+
+// ===== 隠しデバッグボタン（3回タップで出現） =====
+let _debugTapCount=0;
+let _debugTapResetTimer=null;
+function handleDebugTripleTap(){
+  _debugTapCount++;
+  clearTimeout(_debugTapResetTimer);
+  // 1.2秒以内に3回タップされなければカウントをリセット
+  _debugTapResetTimer=setTimeout(()=>{_debugTapCount=0;},1200);
+  if(_debugTapCount>=3){
+    _debugTapCount=0;
+    clearTimeout(_debugTapResetTimer);
+    const btn=document.getElementById('debug-toggle-btn');
+    btn.style.display='block';
+    playClick(true);
+    // 出現後8秒操作がなければ再び隠す（誤って表示されたままにならないように）
+    clearTimeout(window._debugBtnHideTimer);
+    window._debugBtnHideTimer=setTimeout(()=>{
+      if(!_debugMode)btn.style.display='none';
+    },8000);
+  }
+}
+
+// ===== デバッグモード 切替処理 =====
+function toggleDebugMode(){
+  _debugMode=!_debugMode;
+  const btn=document.getElementById('debug-toggle-btn');
+  const badge=document.getElementById('debug-badge');
+  btn.style.color=_debugMode?'#EF4444':'#666';
+  btn.style.borderColor=_debugMode?'#EF4444':'#66666680';
+  badge.style.display=_debugMode?'block':'none';
+  ['sizer','fee','entry'].forEach(t=>{
+    document.getElementById('debug-notice-'+t).style.display=_debugMode?'block':'none';
+  });
+  document.getElementById('debug-notice-cal').style.display=_debugMode?'flex':'none';
+
+  // データソース切替に伴い、プレビュー・カレンダー表示を再読込
+  _previewItems=loadPreviewItems();
+  renderPreviewList();
+
+  // 無効化タブが選択中だった場合はCALタブへ強制切替
+  const activeTab=document.querySelector('.tab-content.active').id.replace('content-','');
+  if(['sizer','fee','entry'].includes(activeTab)){
+    switchTab('cal');
+  }else if(activeTab==='cal'){
+    renderCalendar();
+  }
+  playClick(_debugMode);
+  if(!_debugMode){
+    // OFFにした場合、少し余韻を持たせてからボタンを再び隠す
+    clearTimeout(window._debugBtnHideTimer);
+    window._debugBtnHideTimer=setTimeout(()=>{btn.style.display='none';},1500);
+  }
+}
+
+function clearDebugCalData(){
+  if(!confirm('検証用のCALデータ・プレビューをクリアします。よろしいですか？'))return;
+  localStorage.removeItem(CAL_KEY_DEBUG);
+  localStorage.removeItem(PREVIEW_KEY_DEBUG);
+  _previewItems=[];
+  renderPreviewList();
+  renderCalendar();
+  playClick(false);
 }
 
 // ===== 画像登録タブ ON/OFF（実験的機能） =====
@@ -1669,17 +1754,19 @@ function calDateStr(date){
 }
 
 // ===== CAL DATA (FF+Cult unified) =====
-const CAL_KEY='ps_cal_v3';
+const CAL_KEY_PROD='ps_cal_v3';
+const CAL_KEY_DEBUG='ps_cal_v3_debug';
+function getCalKey(){return isDebugMode()?CAL_KEY_DEBUG:CAL_KEY_PROD;}
 let _selectedCat='';
 
 function loadCultData(){
   try{
-    const data=JSON.parse(localStorage.getItem(CAL_KEY))||[];
+    const data=JSON.parse(localStorage.getItem(getCalKey()))||[];
     while(data.length<6)data.push([]); // 6日分（月〜土）を確保
     return data;
   }catch(e){return [[],[],[],[],[],[]];}
 }
-function saveCultData(data){localStorage.setItem(CAL_KEY,JSON.stringify(data));}
+function saveCultData(data){localStorage.setItem(getCalKey(),JSON.stringify(data));}
 
 // 日曜日を迎えたら、その日1回だけカレンダーを自動リセット
 const SUNDAY_RESET_KEY='ps_cal_last_sunday_reset';
@@ -2080,10 +2167,12 @@ function confirmCultEvent(){
 document.getElementById('cult-event-scroll').addEventListener('scroll',updateCultEventCenter,{passive:true});
 
 // ===== プレビュー（一括追加） =====
-const PREVIEW_KEY='ps_cal_preview';
-function savePreviewItems(){localStorage.setItem(PREVIEW_KEY,JSON.stringify(_previewItems));}
+const PREVIEW_KEY_PROD='ps_cal_preview';
+const PREVIEW_KEY_DEBUG='ps_cal_preview_debug';
+function getPreviewKey(){return isDebugMode()?PREVIEW_KEY_DEBUG:PREVIEW_KEY_PROD;}
+function savePreviewItems(){localStorage.setItem(getPreviewKey(),JSON.stringify(_previewItems));}
 function loadPreviewItems(){
-  try{return JSON.parse(localStorage.getItem(PREVIEW_KEY))||[];}catch(e){return [];}
+  try{return JSON.parse(localStorage.getItem(getPreviewKey()))||[];}catch(e){return [];}
 }
 let _previewItems=loadPreviewItems();
 
@@ -2197,9 +2286,9 @@ function cultResetConfirm(){
   }
 }
 
-// データマイグレーション: ps_cult_v2 → ps_cal_v3
+// データマイグレーション: ps_cult_v2 → ps_cal_v3（常に本番データのみ対象）
 function migrateCultData(){
-  const v3=localStorage.getItem(CAL_KEY);
+  const v3=localStorage.getItem(CAL_KEY_PROD);
   if(v3)return; // v3が既にあればスキップ
   const v2=localStorage.getItem('ps_cult_v2');
   if(!v2)return; // 旧データもなければ何もしない
@@ -2211,7 +2300,7 @@ function migrateCultData(){
       Array.isArray(dayItems)?dayItems.map(item=>({time:item.time,cur:item.cur,cat:item.cat||'green'})):[]
     );
     while(migrated.length<6)migrated.push([]); // 土曜分を補完
-    localStorage.setItem(CAL_KEY,JSON.stringify(migrated));
+    localStorage.setItem(CAL_KEY_PROD,JSON.stringify(migrated));
   }catch(e){}
 }
 
