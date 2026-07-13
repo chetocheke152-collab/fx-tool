@@ -654,7 +654,13 @@ body.light .cal-today{border-color:#D4AF5A55}
         <div style="font-size:10px;color:#333;margin-top:8px;letter-spacing:0.3px;">
           ※ タップで色を選択・変更できます（未判定のままの項目はCALに送られません）
         </div>
-        <button class="cult-confirm-btn" style="margin-top:12px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px;">
+          <span style="font-size:11px;color:#666;letter-spacing:0.3px;">直接登録モード（プレビューを経ずに即登録）</span>
+          <div class="toggle-btn" id="img-direct-toggle-btn" onclick="toggleImgDirectMode()" style="width:56px;height:28px;">
+            <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:13px;">OFF</span>
+          </div>
+        </div>
+        <button class="cult-confirm-btn" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
       </div>
     </div>
   </div>
@@ -1502,7 +1508,27 @@ function renderImgParseList(items){
   playClick(items.length>0);
 }
 
-// IMGの解析結果をCALのプレビューに送信＋学習データを保存
+// ===== 直接登録モード（プレビューを経ずにCALへ即登録） =====
+const IMG_DIRECT_KEY='ps_img_direct_mode';
+function applyImgDirectModeUI(){
+  const enabled=localStorage.getItem(IMG_DIRECT_KEY)==='1';
+  const btn=document.getElementById('img-direct-toggle-btn');
+  const txt=document.getElementById('img-direct-toggle-txt');
+  const sendBtn=document.getElementById('img-send-btn');
+  if(btn){btn.classList.toggle('on',enabled);}
+  if(txt){txt.textContent=enabled?'ON':'OFF';}
+  if(sendBtn){sendBtn.textContent=enabled?'CALに直接登録する':'CALのプレビューに送る';}
+}
+function toggleImgDirectMode(){
+  const enabled=localStorage.getItem(IMG_DIRECT_KEY)==='1';
+  localStorage.setItem(IMG_DIRECT_KEY,enabled?'0':'1');
+  applyImgDirectModeUI();
+  playClick(!enabled);
+}
+
+// IMGの解析結果をCALへ送信＋学習データを保存
+// 直接登録モードOFF時: プレビューへ合流（従来通り、確認を挟む）
+// 直接登録モードON時: 重複チェックのみ行い、CALデータへ即時保存
 function sendImgItemsToCal(){
   const withCat=_imgParsedItems.filter(it=>it.cat!==null);
   if(withCat.length===0){
@@ -1513,6 +1539,26 @@ function sendImgItemsToCal(){
   const learned=loadLearnedCat();
   withCat.forEach(it=>{learned[learnKey(it.cur,it.title)]=it.cat;});
   saveLearnedCat(learned);
+
+  const directMode=localStorage.getItem(IMG_DIRECT_KEY)==='1';
+
+  if(directMode){
+    // ダブルチェックの意味も込めて、重複判定は既存CALデータのみと照合
+    const data=loadCultData();
+    let addedCount=0;
+    withCat.forEach(it=>{
+      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat);
+      if(dup)return;
+      data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
+      addedCount++;
+    });
+    data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
+    saveCultData(data);
+    renderCalendar();
+    playTheme(true);
+    alert(addedCount+'件をCALに直接登録しました（重複分はスキップ）。');
+    return;
+  }
 
   // CALのプレビュー（_previewItems）に合流。重複（曜日・時間・通貨・カテゴリ完全一致）はスキップ
   let addedCount=0;
@@ -2177,6 +2223,7 @@ migrateCultData();
 renderCalendar();
 renderPreviewList();
 applyImgTabState();
+applyImgDirectModeUI();
 renderSizerHistory();
 </script>
 </body>
