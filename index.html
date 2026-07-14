@@ -1140,6 +1140,13 @@ function copySizerHistPrice(idx,key){
 
 function deleteSizerHistoryItem(idx){
   const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const hasPrice=h.dir||h.in||h.sl||h.tp;
+  const msg=hasPrice
+    ?'この履歴にはIN/SL/TPの記録があります。削除すると元に戻せません。本当に削除しますか？'
+    :'この履歴を削除します。よろしいですか？';
+  if(!confirm(msg))return;
   hist.splice(idx,1);
   saveSizerHistoryArr(hist);
   delete _sizerHistExpanded[idx];
