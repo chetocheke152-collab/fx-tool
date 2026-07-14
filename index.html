@@ -90,6 +90,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
+.sizer-hist-del.mode-del{border:1px solid #EF444466;border-radius:6px;color:#EF4444;font-size:13px;padding:5px 9px}
 .sizer-hist-del:active{color:#EF4444}
 .sizer-hist-del.pending{color:#EF4444;border:1px solid #EF4444;border-radius:5px;font-size:10px;font-weight:700;padding:3px 7px;letter-spacing:0.3px}
 .sizer-hist-expand-btn{background:transparent;border:1px solid #333;border-radius:5px;color:#444;font-size:9px;cursor:pointer;padding:3px 6px;-webkit-appearance:none;flex-shrink:0;line-height:1}
@@ -463,11 +464,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div class="sizer-hist-body" id="sizer-hist-body">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
-        <div class="toggle-lbl" style="font-size:12px;">並び替えモード</div>
-        <div class="toggle-sub" style="font-size:10px;">ONにすると▲▼で順番を入れ替えできます</div>
+        <div class="toggle-lbl" style="font-size:12px;">操作モード</div>
+        <div class="toggle-sub" id="sizer-hist-mode-sub" style="font-size:10px;">タップで通常・並び替え・削除を切替</div>
       </div>
-      <div class="toggle-btn" id="sizer-hist-sort-toggle-btn" onclick="toggleSizerHistSortMode()">
-        <span class="toggle-txt" id="sizer-hist-sort-toggle-txt">OFF</span>
+      <div class="toggle-btn" id="sizer-hist-mode-btn" onclick="cycleSizerHistMode()" style="width:84px;">
+        <span class="toggle-txt" id="sizer-hist-mode-txt" style="font-size:12px;">通常</span>
       </div>
     </div>
     <div id="sizer-hist-list"></div>
@@ -1103,7 +1104,7 @@ function renderSizerHistory(){
       const hasPrice=h.dir||h.in||h.sl||h.tp;
       const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
 
-      if(_sizerHistSortMode){
+      if(_sizerHistMode==='sort'){
         const upDisabled=i===0?' disabled':'';
         const downDisabled=i===hist.length-1?' disabled':'';
         return '<div class="sizer-hist-row-wrap">'
@@ -1122,6 +1123,24 @@ function renderSizerHistory(){
         +'</div>';
       }
 
+      if(_sizerHistMode==='delete'){
+        return '<div class="sizer-hist-row-wrap">'
+        +'<div class="sizer-hist-row sort-mode">'
+        +'<div class="sizer-hist-main">'
+        +'<span class="sizer-hist-num">'+(i+1)+'</span>'
+        +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+        +dirBadge
+        +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+        +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+        +(_sizerDelPendingIdx===i
+          ?'<button class="sizer-hist-del pending" onclick="deleteSizerHistoryItem('+i+')">確認</button>'
+          :'<button class="sizer-hist-del mode-del" onclick="deleteSizerHistoryItem('+i+')">×</button>')
+        +'</div>'
+        +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+        +'</div>'
+        +'</div>';
+      }
+
       return '<div class="sizer-hist-row-wrap">'
       +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
       +'<div class="sizer-hist-main">'
@@ -1131,9 +1150,6 @@ function renderSizerHistory(){
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
       +'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">'+(expanded?'▲':'▼')+'</button>'
-      +(_sizerDelPendingIdx===i
-        ?'<button class="sizer-hist-del pending" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">確認</button>'
-        :'<button class="sizer-hist-del" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">×</button>')
       +'</div>'
       +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
       +'</div>'
@@ -1145,15 +1161,25 @@ function renderSizerHistory(){
   if(title)title.textContent=hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴';
 }
 
-// ===== 計算履歴 並び替えモード =====
-let _sizerHistSortMode=false;
-function toggleSizerHistSortMode(){
-  _sizerHistSortMode=!_sizerHistSortMode;
-  const btn=document.getElementById('sizer-hist-sort-toggle-btn');
-  const txt=document.getElementById('sizer-hist-sort-toggle-txt');
-  btn.classList.toggle('on',_sizerHistSortMode);
-  txt.textContent=_sizerHistSortMode?'ON':'OFF';
-  playClick(_sizerHistSortMode);
+// ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
+let _sizerHistMode='normal';
+const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',delete:'削除'};
+const SIZER_HIST_MODE_SUBS={
+  normal:'タップで通常・並び替え・削除を切替',
+  sort:'▲▼で順番を入れ替えできます',
+  delete:'×タップで削除（2段階確認）'
+};
+function cycleSizerHistMode(){
+  const order=['normal','sort','delete'];
+  const idx=order.indexOf(_sizerHistMode);
+  _sizerHistMode=order[(idx+1)%order.length];
+  const btn=document.getElementById('sizer-hist-mode-btn');
+  const txt=document.getElementById('sizer-hist-mode-txt');
+  const sub=document.getElementById('sizer-hist-mode-sub');
+  btn.classList.toggle('on',_sizerHistMode!=='normal');
+  txt.textContent=SIZER_HIST_MODE_LABELS[_sizerHistMode];
+  sub.textContent=SIZER_HIST_MODE_SUBS[_sizerHistMode];
+  playClick(_sizerHistMode!=='normal');
   renderSizerHistory();
 }
 function moveSizerHistItem(idx,dir){
