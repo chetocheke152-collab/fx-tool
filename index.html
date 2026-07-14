@@ -90,6 +90,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
 .sizer-hist-del:active{color:#EF4444}
+.sizer-hist-expand-btn{background:transparent;border:1px solid #333;border-radius:5px;color:#444;font-size:9px;cursor:pointer;padding:3px 6px;-webkit-appearance:none;flex-shrink:0;line-height:1}
+.sizer-hist-expand-btn.has-price{border-color:#D4AF5A66;color:#D4AF5A}
+.sizer-hist-expand-btn:active{border-color:#D4AF5A;color:#D4AF5A}
+.sizer-hist-row-wrap{border-bottom:1px solid #D4AF5A08}
+.sizer-hist-row-wrap:last-child{border-bottom:none}
+.sizer-hist-row-wrap .sizer-hist-row{border-bottom:none}
+.sizer-hist-price-area{padding:4px 0 10px;display:flex;flex-direction:column;gap:6px}
+.sizer-hist-price-row{display:flex;align-items:center;gap:8px}
+.sizer-hist-price-lbl{font-size:10px;font-weight:700;color:#D4AF5A88;width:22px;flex-shrink:0}
+.sizer-hist-price-input{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:6px;padding:7px 10px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;min-width:0;}
+.sizer-hist-price-input:focus{border-color:#D4AF5A}
+.sizer-hist-price-copy{background:transparent;border:1px solid #D4AF5A33;border-radius:6px;color:#D4AF5A;font-size:13px;cursor:pointer;padding:6px 9px;-webkit-appearance:none;flex-shrink:0}
 .sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -269,6 +281,9 @@ body.light .sizer-hist-card{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .sizer-hist-hdr{background:#F0EDE6}
 body.light .sizer-hist-pair{color:#1A1A1A}
 body.light .sizer-hist-row:active{background:#D4AF5A0A}
+body.light .sizer-hist-price-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
+body.light .sizer-hist-expand-btn{border-color:#D4AF5A33;color:#AAA}
+body.light .sizer-hist-expand-btn.has-price{border-color:#D4AF5A;color:#D4AF5A}
 body.light .lbl{color:#D4AF5A}
 body.light .disclaimer{color:#AAA}
 body.light .tab-nav{background:#F0EDE6;border-color:#D4AF5A22}
@@ -339,7 +354,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 
 <!-- SIZER TAB -->
 <div class="tab-content active" id="content-sizer">
-<div class="debug-disabled-notice" id="debug-notice-sizer" style="display:none;">🧪 デバッグモード中はSIZERタブは使用できません</div>
 <div class="card">
   <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
     <span>Account</span>
@@ -427,6 +441,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 
 <!-- 計算履歴 -->
 <div class="sizer-hist-card">
+  <!-- デバッグモード中のみ表示 -->
+  <div id="debug-notice-sizer-hist" style="display:none;margin:12px 12px 0;padding:8px 12px;background:#EF444418;border:1px solid #EF444444;border-radius:8px;font-size:11px;color:#EF4444;align-items:center;justify-content:space-between;">
+    <span>🧪 検証用の履歴データを表示中（本番履歴には影響しません）</span>
+    <button onclick="clearDebugSizerHistory()" style="background:transparent;border:1px solid #EF444466;border-radius:5px;color:#EF4444;font-size:10px;padding:3px 8px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;margin-left:8px;">クリア</button>
+  </div>
   <div class="sizer-hist-hdr" onclick="toggleSizerHistory()">
     <span id="sizer-hist-title">計算履歴</span>
     <span class="sizer-hist-arr" id="sizer-hist-arr">▼</span>
@@ -753,6 +772,29 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button onclick="confirmCultEvent()" style="margin:10px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定</button>
 </div>
 
+<!-- SIZER履歴 IN/SL/TP 入力モーダル -->
+<div class="overlay" id="sizer-price-overlay" onclick="closeSizerPriceModal()"></div>
+<div class="sheet" id="sizer-price-modal">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">注文レートを入力</div>
+  <div style="padding:4px 16px 0;font-size:12px;color:#888;" id="sizer-price-pair"></div>
+  <div style="padding:14px 16px;">
+    <div class="field">
+      <span class="lbl">IN（エントリー希望価格）</span>
+      <input id="sizer-price-in" type="text" inputmode="decimal" placeholder="例: 155.320">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <span class="lbl">SL</span>
+      <input id="sizer-price-sl" type="text" inputmode="decimal" placeholder="例: 155.120">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <span class="lbl">TP</span>
+      <input id="sizer-price-tp" type="text" inputmode="decimal" placeholder="例: 155.720">
+    </div>
+  </div>
+  <button onclick="confirmSizerPriceModal()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定（未入力のままでも保存できます）</button>
+</div>
+
 <script>
 // ===== デバッグモード（検証用データ切替。リロードのたびに必ずOFFから開始） =====
 let _debugMode=false;
@@ -895,11 +937,13 @@ function calc(animate=false){
 }
 
 // ===== SIZER 計算履歴 =====
-const SIZER_HIST_KEY='ps_sizer_history';
+const SIZER_HIST_KEY_PROD='ps_sizer_history';
+const SIZER_HIST_KEY_DEBUG='ps_sizer_history_debug';
+function getSizerHistKey(){return isDebugMode()?SIZER_HIST_KEY_DEBUG:SIZER_HIST_KEY_PROD;}
 function loadSizerHistory(){
-  try{return JSON.parse(localStorage.getItem(SIZER_HIST_KEY))||[];}catch(e){return [];}
+  try{return JSON.parse(localStorage.getItem(getSizerHistKey()))||[];}catch(e){return [];}
 }
-function saveSizerHistoryArr(arr){localStorage.setItem(SIZER_HIST_KEY,JSON.stringify(arr));}
+function saveSizerHistoryArr(arr){localStorage.setItem(getSizerHistKey(),JSON.stringify(arr));}
 
 function maybeSaveSizerHistory(){
   const pName=document.getElementById('pair').value;
@@ -911,14 +955,14 @@ function maybeSaveSizerHistory(){
   const last=hist[0];
   // 直前の記録と完全一致する場合は重複記録しない
   if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return false;
-  hist.unshift({pair:pName,pips,lot,ts:Date.now()});
+  hist.unshift({pair:pName,pips,lot,in:'',sl:'',tp:'',ts:Date.now()});
   if(hist.length>20)hist.length=20; // 直近20件まで
   saveSizerHistoryArr(hist);
   renderSizerHistory();
   return true;
 }
 
-// 「履歴に保存」ボタン専用：明示的なタップ時のみ保存を実行
+// 「履歴に保存」ボタン専用：明示的なタップ時のみ保存を実行、保存後にIN/SL/TP入力モーダルを開く
 function saveSizerHistoryManual(){
   const btn=document.getElementById('save-hist-btn');
   const saved=maybeSaveSizerHistory();
@@ -926,11 +970,46 @@ function saveSizerHistoryManual(){
   if(saved){
     btn.textContent='✅ 保存しました';
     playClick(true);
+    openSizerPriceModal(0); // 先頭（今保存した項目）を対象に開く
   }else{
     btn.textContent='⚠ 保存できません';
     playClick(false);
   }
   setTimeout(()=>{btn.textContent=original;},1800);
+}
+
+// ===== IN/SL/TP 入力モーダル =====
+let _sizerPriceModalIdx=null;
+function openSizerPriceModal(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  _sizerPriceModalIdx=idx;
+  document.getElementById('sizer-price-pair').textContent=h.pair+' ・ '+h.pips+'pips ・ '+h.lot.toFixed(2)+'lot';
+  document.getElementById('sizer-price-in').value=h.in||'';
+  document.getElementById('sizer-price-sl').value=h.sl||'';
+  document.getElementById('sizer-price-tp').value=h.tp||'';
+  document.getElementById('sizer-price-overlay').classList.add('open');
+  document.getElementById('sizer-price-modal').classList.add('open');
+}
+function closeSizerPriceModal(){
+  document.getElementById('sizer-price-overlay').classList.remove('open');
+  document.getElementById('sizer-price-modal').classList.remove('open');
+  _sizerPriceModalIdx=null;
+}
+function confirmSizerPriceModal(){
+  if(_sizerPriceModalIdx===null)return;
+  const hist=loadSizerHistory();
+  const h=hist[_sizerPriceModalIdx];
+  if(h){
+    h.in=document.getElementById('sizer-price-in').value.trim();
+    h.sl=document.getElementById('sizer-price-sl').value.trim();
+    h.tp=document.getElementById('sizer-price-tp').value.trim();
+    saveSizerHistoryArr(hist);
+    renderSizerHistory();
+  }
+  playClick(true);
+  closeSizerPriceModal();
 }
 
 function fmtSizerHistTime(ts){
@@ -941,6 +1020,8 @@ function fmtSizerHistTime(ts){
   return md+' '+hm;
 }
 
+let _sizerHistExpanded={}; // idx -> true/false（展開状態を記憶）
+
 function renderSizerHistory(){
   const hist=loadSizerHistory();
   const list=document.getElementById('sizer-hist-list');
@@ -948,26 +1029,73 @@ function renderSizerHistory(){
   if(hist.length===0){
     list.innerHTML='<div class="sizer-hist-empty">まだ記録がありません</div>';
   }else{
-    list.innerHTML=hist.map((h,i)=>
-      '<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
+    list.innerHTML=hist.map((h,i)=>{
+      const expanded=!!_sizerHistExpanded[i];
+      const hasPrice=h.in||h.sl||h.tp;
+      return '<div class="sizer-hist-row-wrap">'
+      +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
       +'<div class="sizer-hist-main">'
       +'<span class="sizer-hist-pair">'+h.pair+'</span>'
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+      +'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">'+(expanded?'▲':'▼')+'</button>'
       +'<button class="sizer-hist-del" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">×</button>'
       +'</div>'
       +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
       +'</div>'
-    ).join('');
+      +(expanded?renderSizerHistPriceArea(i,h):'')
+      +'</div>';
+    }).join('');
   }
   const title=document.getElementById('sizer-hist-title');
   if(title)title.textContent=hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴';
+}
+
+function renderSizerHistPriceArea(idx,h){
+  const rows=[
+    {key:'in',lbl:'IN',val:h.in||''},
+    {key:'sl',lbl:'SL',val:h.sl||''},
+    {key:'tp',lbl:'TP',val:h.tp||''}
+  ];
+  return '<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
+    +rows.map(r=>
+      '<div class="sizer-hist-price-row">'
+      +'<span class="sizer-hist-price-lbl">'+r.lbl+'</span>'
+      +'<input type="text" inputmode="decimal" class="sizer-hist-price-input" id="sizer-hist-price-'+r.key+'-'+idx+'" value="'+r.val+'" placeholder="未入力" onchange="updateSizerHistPrice('+idx+',\''+r.key+'\')">'
+      +'<button class="sizer-hist-price-copy" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
+      +'</div>'
+    ).join('')
+    +'</div>';
+}
+
+function toggleSizerHistExpand(idx){
+  _sizerHistExpanded[idx]=!_sizerHistExpanded[idx];
+  playClick(_sizerHistExpanded[idx]);
+  renderSizerHistory();
+}
+
+function updateSizerHistPrice(idx,key){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  h[key]=document.getElementById('sizer-hist-price-'+key+'-'+idx).value.trim();
+  saveSizerHistoryArr(hist);
+}
+
+function copySizerHistPrice(idx,key){
+  const input=document.getElementById('sizer-hist-price-'+key+'-'+idx);
+  const v=input.value;
+  if(!v)return;
+  const btn=event.currentTarget;
+  const done=()=>{const orig=btn.textContent;btn.textContent='✅';setTimeout(()=>{btn.textContent=orig;},1200);};
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 
 function deleteSizerHistoryItem(idx){
   const hist=loadSizerHistory();
   hist.splice(idx,1);
   saveSizerHistoryArr(hist);
+  delete _sizerHistExpanded[idx];
   renderSizerHistory();
   playClick(false);
 }
@@ -1160,8 +1288,8 @@ function toggleTheme(){
 }
 
 function switchTab(tab){
-  // デバッグモード中はCAL・IMG以外への切り替えを禁止
-  if(_debugMode&&tab!=='cal'&&tab!=='img')return;
+  // デバッグモード中はCAL・IMG・SIZER以外（FEE・ENTRY）への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer')return;
   playClick(tab==='fee');
   ['sizer','fee','entry','cal','img'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
@@ -1169,6 +1297,7 @@ function switchTab(tab){
   });
   if(tab==='cal')renderCalendar();
   if(tab==='entry')updateCloseCheck();
+  if(tab==='sizer')renderSizerHistory();
 }
 
 // ===== 隠しデバッグボタン（3回タップで出現） =====
@@ -1201,18 +1330,21 @@ function toggleDebugMode(){
   btn.style.color=_debugMode?'#EF4444':'#666';
   btn.style.borderColor=_debugMode?'#EF4444':'#66666680';
   badge.style.display=_debugMode?'block':'none';
-  ['sizer','fee','entry'].forEach(t=>{
+  // SIZERはデバッグモード中も使用可能（履歴データのみ検証用に切替）なので無効化通知は出さない
+  ['fee','entry'].forEach(t=>{
     document.getElementById('debug-notice-'+t).style.display=_debugMode?'block':'none';
   });
   document.getElementById('debug-notice-cal').style.display=_debugMode?'flex':'none';
+  document.getElementById('debug-notice-sizer-hist').style.display=_debugMode?'flex':'none';
 
-  // データソース切替に伴い、プレビュー・カレンダー表示を再読込
+  // データソース切替に伴い、プレビュー・カレンダー・SIZER履歴表示を再読込
   _previewItems=loadPreviewItems();
   renderPreviewList();
+  renderSizerHistory();
 
-  // 無効化タブが選択中だった場合はCALタブへ強制切替
+  // 無効化タブ（FEE・ENTRY）が選択中だった場合はCALタブへ強制切替
   const activeTab=document.querySelector('.tab-content.active').id.replace('content-','');
-  if(['sizer','fee','entry'].includes(activeTab)){
+  if(['fee','entry'].includes(activeTab)){
     switchTab('cal');
   }else if(activeTab==='cal'){
     renderCalendar();
@@ -1232,6 +1364,13 @@ function clearDebugCalData(){
   _previewItems=[];
   renderPreviewList();
   renderCalendar();
+  playClick(false);
+}
+
+function clearDebugSizerHistory(){
+  if(!confirm('検証用のSIZER履歴データをクリアします。よろしいですか？'))return;
+  localStorage.removeItem(SIZER_HIST_KEY_DEBUG);
+  renderSizerHistory();
   playClick(false);
 }
 
