@@ -102,6 +102,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-price-input{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:6px;padding:7px 10px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;min-width:0;}
 .sizer-hist-price-input:focus{border-color:#D4AF5A}
 .sizer-hist-price-copy{background:transparent;border:1px solid #D4AF5A33;border-radius:6px;color:#D4AF5A;font-size:13px;cursor:pointer;padding:6px 9px;-webkit-appearance:none;flex-shrink:0}
+.sizer-price-dir-btn{flex:1;padding:12px 0;background:#1A1A1A;border:2px solid #333;border-radius:8px;color:#666;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
+.sizer-price-dir-btn.sel-buy{background:#22C55E18;border-color:#22C55E;color:#22C55E}
+.sizer-price-dir-btn.sel-sell{background:#EF444418;border-color:#EF4444;color:#EF4444}
+.sizer-hist-dir-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;letter-spacing:0.5px}
+.sizer-hist-dir-badge.buy{background:#22C55E18;color:#22C55E}
+.sizer-hist-dir-badge.sell{background:#EF444418;color:#EF4444}
 .sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -778,6 +784,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div class="sheet-handle"></div>
   <div class="sheet-title">注文レートを入力</div>
   <div style="padding:4px 16px 0;font-size:12px;color:#888;" id="sizer-price-pair"></div>
+  <div style="padding:14px 16px 0;">
+    <div class="field">
+      <span class="lbl">売買方向</span>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="sizer-price-dir-btn" id="sizer-price-dir-buy" onclick="setSizerPriceDir('buy')">BUY（買い）</button>
+        <button type="button" class="sizer-price-dir-btn" id="sizer-price-dir-sell" onclick="setSizerPriceDir('sell')">SELL（売り）</button>
+      </div>
+    </div>
+  </div>
   <div style="padding:14px 16px;">
     <div class="field">
       <span class="lbl">IN（エントリー希望価格）</span>
@@ -955,7 +970,7 @@ function maybeSaveSizerHistory(){
   const last=hist[0];
   // 直前の記録と完全一致する場合は重複記録しない
   if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return false;
-  hist.unshift({pair:pName,pips,lot,in:'',sl:'',tp:'',ts:Date.now()});
+  hist.unshift({pair:pName,pips,lot,dir:'',in:'',sl:'',tp:'',ts:Date.now()});
   if(hist.length>20)hist.length=20; // 直近20件まで
   saveSizerHistoryArr(hist);
   renderSizerHistory();
@@ -980,15 +995,27 @@ function saveSizerHistoryManual(){
 
 // ===== IN/SL/TP 入力モーダル =====
 let _sizerPriceModalIdx=null;
+let _sizerPriceDir=''; // 'buy' or 'sell'
+function setSizerPriceDir(dir){
+  _sizerPriceDir=dir;
+  const buyBtn=document.getElementById('sizer-price-dir-buy');
+  const sellBtn=document.getElementById('sizer-price-dir-sell');
+  buyBtn.classList.toggle('sel-buy',dir==='buy');
+  sellBtn.classList.toggle('sel-sell',dir==='sell');
+  playClick(dir==='buy');
+}
 function openSizerPriceModal(idx){
   const hist=loadSizerHistory();
   const h=hist[idx];
   if(!h)return;
   _sizerPriceModalIdx=idx;
+  _sizerPriceDir=h.dir||'';
   document.getElementById('sizer-price-pair').textContent=h.pair+' ・ '+h.pips+'pips ・ '+h.lot.toFixed(2)+'lot';
   document.getElementById('sizer-price-in').value=h.in||'';
   document.getElementById('sizer-price-sl').value=h.sl||'';
   document.getElementById('sizer-price-tp').value=h.tp||'';
+  document.getElementById('sizer-price-dir-buy').classList.toggle('sel-buy',_sizerPriceDir==='buy');
+  document.getElementById('sizer-price-dir-sell').classList.toggle('sel-sell',_sizerPriceDir==='sell');
   document.getElementById('sizer-price-overlay').classList.add('open');
   document.getElementById('sizer-price-modal').classList.add('open');
 }
@@ -1002,6 +1029,7 @@ function confirmSizerPriceModal(){
   const hist=loadSizerHistory();
   const h=hist[_sizerPriceModalIdx];
   if(h){
+    h.dir=_sizerPriceDir||'';
     h.in=document.getElementById('sizer-price-in').value.trim();
     h.sl=document.getElementById('sizer-price-sl').value.trim();
     h.tp=document.getElementById('sizer-price-tp').value.trim();
@@ -1031,11 +1059,13 @@ function renderSizerHistory(){
   }else{
     list.innerHTML=hist.map((h,i)=>{
       const expanded=!!_sizerHistExpanded[i];
-      const hasPrice=h.in||h.sl||h.tp;
+      const hasPrice=h.dir||h.in||h.sl||h.tp;
+      const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
       return '<div class="sizer-hist-row-wrap">'
       +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
       +'<div class="sizer-hist-main">'
       +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+      +dirBadge
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
       +'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">'+(expanded?'▲':'▼')+'</button>'
@@ -1058,6 +1088,13 @@ function renderSizerHistPriceArea(idx,h){
     {key:'tp',lbl:'TP',val:h.tp||''}
   ];
   return '<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
+    +'<div class="sizer-hist-price-row">'
+    +'<span class="sizer-hist-price-lbl">方向</span>'
+    +'<div style="display:flex;gap:6px;flex:1;">'
+    +'<button class="sizer-price-dir-btn'+(h.dir==='buy'?' sel-buy':'')+'" style="padding:7px 0;font-size:12px;" onclick="setSizerHistDir('+idx+',\'buy\')">BUY</button>'
+    +'<button class="sizer-price-dir-btn'+(h.dir==='sell'?' sel-sell':'')+'" style="padding:7px 0;font-size:12px;" onclick="setSizerHistDir('+idx+',\'sell\')">SELL</button>'
+    +'</div>'
+    +'</div>'
     +rows.map(r=>
       '<div class="sizer-hist-price-row">'
       +'<span class="sizer-hist-price-lbl">'+r.lbl+'</span>'
@@ -1066,6 +1103,16 @@ function renderSizerHistPriceArea(idx,h){
       +'</div>'
     ).join('')
     +'</div>';
+}
+
+function setSizerHistDir(idx,dir){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  h.dir=(h.dir===dir)?'':dir; // 同じ方向を再タップで解除
+  saveSizerHistoryArr(hist);
+  playClick(h.dir==='buy');
+  renderSizerHistory();
 }
 
 function toggleSizerHistExpand(idx){
