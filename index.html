@@ -90,6 +90,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
 .sizer-hist-del:active{color:#EF4444}
+.sizer-hist-del.pending{color:#EF4444;border:1px solid #EF4444;border-radius:5px;font-size:10px;font-weight:700;padding:3px 7px;letter-spacing:0.3px}
 .sizer-hist-expand-btn{background:transparent;border:1px solid #333;border-radius:5px;color:#444;font-size:9px;cursor:pointer;padding:3px 6px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .sizer-hist-expand-btn.has-price{border-color:#D4AF5A66;color:#D4AF5A}
 .sizer-hist-expand-btn:active{border-color:#D4AF5A;color:#D4AF5A}
@@ -1069,7 +1070,9 @@ function renderSizerHistory(){
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
       +'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">'+(expanded?'▲':'▼')+'</button>'
-      +'<button class="sizer-hist-del" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">×</button>'
+      +(_sizerDelPendingIdx===i
+        ?'<button class="sizer-hist-del pending" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">確認</button>'
+        :'<button class="sizer-hist-del" onclick="event.stopPropagation();deleteSizerHistoryItem('+i+')">×</button>')
       +'</div>'
       +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
       +'</div>'
@@ -1138,20 +1141,30 @@ function copySizerHistPrice(idx,key){
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 
+let _sizerDelPendingIdx=null;
+let _sizerDelPendingTimer=null;
 function deleteSizerHistoryItem(idx){
-  const hist=loadSizerHistory();
-  const h=hist[idx];
-  if(!h)return;
-  const hasPrice=h.dir||h.in||h.sl||h.tp;
-  const msg=hasPrice
-    ?'この履歴にはIN/SL/TPの記録があります。削除すると元に戻せません。本当に削除しますか？'
-    :'この履歴を削除します。よろしいですか？';
-  if(!confirm(msg))return;
-  hist.splice(idx,1);
-  saveSizerHistoryArr(hist);
-  delete _sizerHistExpanded[idx];
-  renderSizerHistory();
-  playClick(false);
+  if(_sizerDelPendingIdx===idx){
+    // 2回目のタップ：確定して削除
+    clearTimeout(_sizerDelPendingTimer);
+    _sizerDelPendingIdx=null;
+    const hist=loadSizerHistory();
+    hist.splice(idx,1);
+    saveSizerHistoryArr(hist);
+    delete _sizerHistExpanded[idx];
+    renderSizerHistory();
+    playClick(false);
+  }else{
+    // 1回目のタップ：警告状態にして、3秒以内の再タップを待つ
+    _sizerDelPendingIdx=idx;
+    playClick(false);
+    renderSizerHistory();
+    clearTimeout(_sizerDelPendingTimer);
+    _sizerDelPendingTimer=setTimeout(()=>{
+      _sizerDelPendingIdx=null;
+      renderSizerHistory();
+    },3000);
+  }
 }
 
 function toggleSizerHistory(){
