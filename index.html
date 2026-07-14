@@ -85,6 +85,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-row:last-child{border-bottom:none}
 .sizer-hist-row:active{background:#D4AF5A08}
 .sizer-hist-main{display:flex;align-items:center;gap:10px}
+.sizer-hist-num{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#D4AF5A88;flex-shrink:0;min-width:18px;text-align:center}
 .sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
@@ -286,6 +287,7 @@ body.light .r-lbl{color:#888}
 body.light .r-val{color:#1A1A1A}
 body.light .sizer-hist-card{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .sizer-hist-hdr{background:#F0EDE6}
+body.light .sizer-hist-num{color:#D4AF5A}
 body.light .sizer-hist-pair{color:#1A1A1A}
 body.light .sizer-hist-row:active{background:#D4AF5A0A}
 body.light .sizer-hist-price-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
@@ -1067,6 +1069,7 @@ function renderSizerHistory(){
       return '<div class="sizer-hist-row-wrap">'
       +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
       +'<div class="sizer-hist-main">'
+      +'<span class="sizer-hist-num">'+(i+1)+'</span>'
       +'<span class="sizer-hist-pair">'+h.pair+'</span>'
       +dirBadge
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
