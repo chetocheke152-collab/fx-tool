@@ -797,15 +797,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div style="padding:14px 16px;">
     <div class="field">
       <span class="lbl">IN（エントリー希望価格）</span>
-      <input id="sizer-price-in" type="text" inputmode="decimal" placeholder="例: 155.320">
+      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">SL</span>
-      <input id="sizer-price-sl" type="text" inputmode="decimal" placeholder="例: 155.120">
+      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">TP</span>
-      <input id="sizer-price-tp" type="text" inputmode="decimal" placeholder="例: 155.720">
+      <input id="sizer-price-tp" type="text" inputmode="decimal" enterkeyhint="done" placeholder="例: 155.720" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').blur();}">
     </div>
   </div>
   <button onclick="confirmSizerPriceModal()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定（未入力のままでも保存できます）</button>
@@ -1004,6 +1004,8 @@ function setSizerPriceDir(dir){
   buyBtn.classList.toggle('sel-buy',dir==='buy');
   sellBtn.classList.toggle('sel-sell',dir==='sell');
   playClick(dir==='buy');
+  // 方向選択後、自動でIN欄にフォーカスしてキーボードを表示
+  setTimeout(()=>{document.getElementById('sizer-price-in').focus();},150);
 }
 function openSizerPriceModal(idx){
   const hist=loadSizerHistory();
