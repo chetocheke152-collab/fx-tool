@@ -98,6 +98,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-row-wrap{border-bottom:1px solid #D4AF5A08}
 .sizer-hist-row-wrap:last-child{border-bottom:none}
 .sizer-hist-row-wrap .sizer-hist-row{border-bottom:none}
+.sizer-hist-row.sort-mode{background:#D4AF5A08;cursor:default}
 .sizer-hist-price-area{padding:4px 0 10px;display:flex;flex-direction:column;gap:6px}
 .sizer-hist-price-row{display:flex;align-items:center;gap:8px}
 .sizer-hist-price-lbl{font-size:10px;font-weight:700;color:#D4AF5A88;width:22px;flex-shrink:0}
@@ -460,6 +461,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <span class="sizer-hist-arr" id="sizer-hist-arr">▼</span>
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
+    <div class="toggle-row" style="margin-bottom:10px;">
+      <div class="toggle-info">
+        <div class="toggle-lbl" style="font-size:12px;">並び替えモード</div>
+        <div class="toggle-sub" style="font-size:10px;">ONにすると▲▼で順番を入れ替えできます</div>
+      </div>
+      <div class="toggle-btn" id="sizer-hist-sort-toggle-btn" onclick="toggleSizerHistSortMode()">
+        <span class="toggle-txt" id="sizer-hist-sort-toggle-txt">OFF</span>
+      </div>
+    </div>
     <div id="sizer-hist-list"></div>
     <button class="sizer-hist-clear-btn" id="sizer-hist-clear-btn" onclick="clearSizerHistoryConfirm()">履歴をクリア</button>
   </div>
@@ -915,7 +925,10 @@ function toggleCurrency(){
 
 // pips入力欄の桁数制限（整数部4桁・小数点以下1桁まで。文字数ではなく実際の数値構造で判定）
 function sanitizePipsInput(el){
-  let v=el.value;
+  const original=el.value;
+  let cursorPos=null;
+  try{cursorPos=el.selectionStart;}catch(e){}
+  let v=original;
   const parts=v.split('.');
   if(parts.length>2){
     v=parts[0]+'.'+parts.slice(1).join('');
@@ -924,7 +937,16 @@ function sanitizePipsInput(el){
   let intPart=dotParts[0].slice(0,4);
   let decPart=dotParts.length>1?dotParts[1].slice(0,1):undefined;
   v=decPart!==undefined?intPart+'.'+decPart:intPart;
+  if(v===original)return; // 変化がなければ再代入せずカーソル位置も維持
   el.value=v;
+  // 値の変化分だけカーソル位置を補正して復元（対応していない環境では何もしない）
+  if(cursorPos!==null){
+    try{
+      const diff=v.length-original.length;
+      const newPos=Math.max(0,Math.min(v.length,cursorPos+diff));
+      el.setSelectionRange(newPos,newPos);
+    }catch(e){}
+  }
 }
 
 function calc(animate=false){
@@ -1080,6 +1102,26 @@ function renderSizerHistory(){
       const expanded=!!_sizerHistExpanded[i];
       const hasPrice=h.dir||h.in||h.sl||h.tp;
       const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+
+      if(_sizerHistSortMode){
+        const upDisabled=i===0?' disabled':'';
+        const downDisabled=i===hist.length-1?' disabled':'';
+        return '<div class="sizer-hist-row-wrap">'
+        +'<div class="sizer-hist-row sort-mode">'
+        +'<div class="sizer-hist-main">'
+        +'<span class="sizer-hist-num">'+(i+1)+'</span>'
+        +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+        +dirBadge
+        +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+        +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+        +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',-1)"'+upDisabled+'>▲</button>'
+        +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',1)"'+downDisabled+'>▼</button>'
+        +'</div>'
+        +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+        +'</div>'
+        +'</div>';
+      }
+
       return '<div class="sizer-hist-row-wrap">'
       +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
       +'<div class="sizer-hist-main">'
@@ -1101,6 +1143,27 @@ function renderSizerHistory(){
   }
   const title=document.getElementById('sizer-hist-title');
   if(title)title.textContent=hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴';
+}
+
+// ===== 計算履歴 並び替えモード =====
+let _sizerHistSortMode=false;
+function toggleSizerHistSortMode(){
+  _sizerHistSortMode=!_sizerHistSortMode;
+  const btn=document.getElementById('sizer-hist-sort-toggle-btn');
+  const txt=document.getElementById('sizer-hist-sort-toggle-txt');
+  btn.classList.toggle('on',_sizerHistSortMode);
+  txt.textContent=_sizerHistSortMode?'ON':'OFF';
+  playClick(_sizerHistSortMode);
+  renderSizerHistory();
+}
+function moveSizerHistItem(idx,dir){
+  const hist=loadSizerHistory();
+  const target=idx+dir;
+  if(target<0||target>=hist.length)return;
+  [hist[idx],hist[target]]=[hist[target],hist[idx]];
+  saveSizerHistoryArr(hist);
+  playClick(true);
+  renderSizerHistory();
 }
 
 function renderSizerHistPriceArea(idx,h){
