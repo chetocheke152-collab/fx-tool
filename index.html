@@ -1709,23 +1709,27 @@ function classifyPixelColor(r,g,b){
   return null;
 }
 
-// Tesseractの行データ(bbox付き)から、各行の左側アイコン部分の色を実画像からサンプリングする
+// ★修正版: 通貨コードの単語を特定し、その右側（アイコンの実位置）をスキャンする。
+// 旧実装は「アイコンは行の左端（通貨コードより左）にある」という誤った前提でスキャンしており、
+// 実際のレイアウト（[通貨コード]→[アイコン]→[指標名]）では常に背景色を拾ってしまっていた。
+const CUR_CODE_RE=/^(USD|EUR|GBP|JPY|AUD|CAD|CHF|NZD)$/i;
 function detectLineColors(canvas,lines){
   const map={};
   try{
     const ctx=canvas.getContext('2d');
     lines.forEach(line=>{
-      if(!line.bbox||!line.text||!line.text.trim())return;
-      const {x0,y0,y1}=line.bbox;
-      if(x0<4)return; // アイコン領域がない（画像左端に張り付いている行はスキップ）
-      const cy=Math.round((y0+y1)/2);
+      if(!line.words||!line.words.length||!line.text||!line.text.trim())return;
+      // 行内から通貨コードの単語を探す
+      const curWord=line.words.find(w=>w.text&&CUR_CODE_RE.test(w.text.trim()));
+      if(!curWord||!curWord.bbox)return; // 通貨コードが見つからない行は対象外
+      const {x1,y0,y1}=curWord.bbox; // 通貨コードの右端
       const lineHeight=Math.max(1,y1-y0);
-      // アイコンは行の文字と同程度の高さの正方形と想定し、その直近の範囲だけを狭くスキャンする
-      // （範囲を広げすぎると行の背景ハイライト色まで拾ってしまうため）
-      const scanWidth=Math.min(x0,Math.max(14,Math.round(lineHeight*1.2)));
+      const cy=Math.round((y0+y1)/2);
+      // アイコンは通貨コードのすぐ右にある正方形と想定し、その幅ぶんだけ右側をスキャンする
+      const scanWidth=Math.max(14,Math.round(lineHeight*2.2));
       const votes={red:0,orange:0,yellow:0,green:0};
       let total=0;
-      for(let x=Math.max(0,x0-scanWidth);x<x0;x+=2){
+      for(let x=x1;x<x1+scanWidth&&x<canvas.width;x+=2){
         for(let dy=-Math.round(lineHeight*0.3);dy<=Math.round(lineHeight*0.3);dy+=3){
           const y=cy+dy;
           if(y<0||y>=canvas.height)continue;
@@ -1743,6 +1747,54 @@ function detectLineColors(canvas,lines){
     });
   }catch(e){/* サンプリング失敗時は無視してキーワード判定にフォールバック */}
   return map;
+}
+
+// ★追加: 時刻列だけを切り出して別途OCRし、メイン画像の行とY座標でマッチングして時刻を復元する。
+// 通常のフル画像OCRだと、多カラムのテーブルレイアウトの中でグレーの小さな時刻文字が
+// レイアウト解析の際に見失われ、時刻が丸ごと検出されないことがあるための対策。
+const TIME_LINE_RE=/(\d{1,2}):(\d{2})\s*(am|pm)/i;
+async function extractTimeColumnMerged(img,mainLines){
+  try{
+    const cropCanvas=document.createElement('canvas');
+    const cropW=Math.max(1,Math.round(img.naturalWidth*0.24)); // 左側24%程度が時刻列
+    cropCanvas.width=cropW;cropCanvas.height=img.naturalHeight;
+    cropCanvas.getContext('2d').drawImage(img,0,0,cropW,img.naturalHeight,0,0,cropW,img.naturalHeight);
+    const cropBlob=await new Promise(res=>cropCanvas.toBlob(res,'image/png'));
+    const timeResult=await Tesseract.recognize(cropBlob,'eng',{});
+    const timeLines=(timeResult.data.lines||[]);
+    const timeEntries=[];
+    timeLines.forEach(l=>{
+      if(!l.text)return;
+      const m=l.text.match(TIME_LINE_RE);
+      if(m&&l.bbox){
+        timeEntries.push({cy:(l.bbox.y0+l.bbox.y1)/2, text:m[0]});
+      }
+    });
+    if(timeEntries.length===0)return mainLines.map(l=>l.text); // 時刻列が読めなければ元のまま
+
+    // メイン行それぞれについて、Y座標が最も近い時刻を探して先頭に付与する
+    return mainLines.map(l=>{
+      const text=l.text||'';
+      if(!l.bbox)return text;
+      // 既に時刻・Tentative表記が行内にある場合はそのまま（二重付与防止）
+      if(TIME_LINE_RE.test(text)||/\btentative\b/i.test(text))return text;
+      const cy=(l.bbox.y0+l.bbox.y1)/2;
+      const lineHeight=Math.max(1,l.bbox.y1-l.bbox.y0);
+      let best=null,bestDist=Infinity;
+      timeEntries.forEach(te=>{
+        const d=Math.abs(te.cy-cy);
+        if(d<bestDist){bestDist=d;best=te;}
+      });
+      // 同じ行の高さの範囲内に収まる場合のみ採用（無関係な時刻を誤って付けないため）
+      if(best&&bestDist<=lineHeight*0.9){
+        return best.text+' '+text;
+      }
+      return text; // 一致する時刻がない＝直前と同時刻の継続行として、後段のparseImgResult側のフォールバックに委ねる
+    });
+  }catch(e){
+    // 時刻列の抽出に失敗しても致命的ではないため、元のテキストのまま返す
+    return mainLines.map(l=>l.text);
+  }
 }
 
 async function handleImgFile(event){
@@ -1776,20 +1828,39 @@ async function handleImgFile(event){
         }
       }
     });
+
+    const mainLines=(result.data.lines||[]);
+
+    // 画像を読み込んでおく（時刻列の再OCR・色サンプリングの両方で使う）
+    const dataUrl=await imgDataUrlPromise;
+    const img=new Image();
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+
+    // ★時刻列を別途OCRし、メイン行とY座標でマッチングして時刻を補完する
+    statusEl.textContent='解析中... 時刻列を確認しています';
+    const mergedTexts=await extractTimeColumnMerged(img,mainLines);
+    const mergedFullText=mergedTexts.join('\n');
+
     statusEl.textContent='✅ 解析完了';
-    resultEl.value=result.data.text;
+    resultEl.value=mergedFullText;
     resultWrap.style.display='block';
 
     // 画像から実際の色を読み取る（ダブルチェック用、失敗しても致命的ではない）
     try{
-      const dataUrl=await imgDataUrlPromise;
-      const img=new Image();
-      await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
       const canvas=document.createElement('canvas');
       canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
       canvas.getContext('2d').drawImage(img,0,0);
-      const lines=(result.data.lines||[]);
-      _imgLineColorMap=detectLineColors(canvas,lines);
+      const rawColorMap=detectLineColors(canvas,mainLines);
+      // parseImgResult側は「時刻が補完された後のテキスト」を行キーとして参照するため、
+      // 元のline.textをキーにしたマップを、補完後のテキストをキーにしたマップへ付け替える
+      const remapped={};
+      mainLines.forEach((l,i)=>{
+        const origKey=(l.text||'').trim();
+        if(rawColorMap[origKey]!==undefined){
+          remapped[(mergedTexts[i]||'').trim()]=rawColorMap[origKey];
+        }
+      });
+      _imgLineColorMap=remapped;
     }catch(e){_imgLineColorMap={};}
 
     playClick(true);
@@ -1836,6 +1907,7 @@ const IMG_RED_RULES=[
   {cur:'USD', re:/core pce|pce price index/i},
   {cur:'USD', re:/employment change|unemployment rate|average hourly earnings/i},
   {cur:'USD', re:/powell|press conference|testif\w*/i},
+  {cur:'USD', re:/\bppi\b/i},
   {cur:'EUR', re:/\bcpi\b/i, excludeRe:/german|french|italian|spanish|\bfinal\b/i}, // ユーロ圏全体のCPIのみ赤。国別Final CPIはFFでも黄色のため除外
   {cur:'EUR', re:/\bgdp\b/i},
   {cur:'EUR', re:/interest rate|rate decision|refinancing/i},
@@ -1843,12 +1915,13 @@ const IMG_RED_RULES=[
   {cur:'GBP', re:/\bcpi\b/i},
   {cur:'GBP', re:/\bgdp\b/i},
   {cur:'GBP', re:/interest rate|rate decision|bank rate/i},
+  {cur:'GBP', re:/gov bailey speaks/i},
   {cur:'JPY', re:/\bcpi\b/i},
   {cur:'JPY', re:/interest rate|rate decision/i},
   {cur:'AUD', re:/\bcpi\b/i},
   {cur:'AUD', re:/interest rate|rate decision|cash rate/i},
   {cur:'NZD', re:/interest rate|rate decision|official cash rate/i},
-  {cur:'CAD', re:/interest rate|rate decision/i},
+  {cur:'CAD', re:/interest rate|rate decision|overnight rate|boc rate statement|monetary policy report|boc press conference/i},
   {cur:'CAD', re:/employment change|unemployment rate/i},
   {cur:'CHF', re:/interest rate|rate decision/i},
 ];
@@ -1951,6 +2024,7 @@ function parseImgResult(){
     let title=line
       .replace(timeRe,'')
       .replace(buildCurRe(curMatch),'')
+      .replace(/\btentative\b/i,'')
       .replace(/[\[\]|_]/g,'')
       .replace(/\s+/g,' ')
       .trim();
