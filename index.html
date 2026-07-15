@@ -1774,7 +1774,10 @@ function detectLineColors(canvas,lines){
 // ★追加: 時刻列だけを切り出して別途OCRし、メイン画像の行とY座標でマッチングして時刻を復元する。
 // 通常のフル画像OCRだと、多カラムのテーブルレイアウトの中でグレーの小さな時刻文字が
 // レイアウト解析の際に見失われ、時刻が丸ごと検出されないことがあるための対策。
-const TIME_LINE_RE=/(\d{1,2}):(\d{2})\s*(am|pm)/i;
+// ★修正版v2: am/pm表記だけでなく24時間表記(例: 13:40)にも対応。
+// am/pmを必須にしていたため、FF側の表示設定が24時間形式のユーザーでは
+// 時刻が一件も検出されず、常に「時刻列が読めなかった」扱いになっていた。
+const TIME_LINE_RE=/(\d{1,2}):(\d{2})\s*(am|pm)?/i;
 async function extractTimeColumnMerged(img,mainLines){
   try{
     const cropCanvas=document.createElement('canvas');
@@ -1782,16 +1785,24 @@ async function extractTimeColumnMerged(img,mainLines){
     cropCanvas.width=cropW;cropCanvas.height=img.naturalHeight;
     cropCanvas.getContext('2d').drawImage(img,0,0,cropW,img.naturalHeight,0,0,cropW,img.naturalHeight);
     const cropBlob=await new Promise(res=>cropCanvas.toBlob(res,'image/png'));
+    if(!cropBlob){
+      console.warn('[extractTimeColumnMerged] cropBlobの生成に失敗しました');
+      return mainLines.map(l=>l.text);
+    }
     const timeResult=await Tesseract.recognize(cropBlob,'eng',{});
     const timeLines=(timeResult.data.lines||[]);
+    console.log('[extractTimeColumnMerged] 時刻列OCR行数:',timeLines.length,'生テキスト:',timeResult.data.text);
     const timeEntries=[];
     timeLines.forEach(l=>{
       if(!l.text)return;
       const m=l.text.match(TIME_LINE_RE);
-      if(m&&l.bbox){
-        timeEntries.push({cy:(l.bbox.y0+l.bbox.y1)/2, text:m[0]});
+      if(m&&l.bbox&&m[3]){ // am/pmが明示されている場合のみ12時間表記として確定
+        timeEntries.push({cy:(l.bbox.y0+l.bbox.y1)/2, text:m[0].trim()});
+      }else if(m&&l.bbox&&!m[3]){ // am/pm無し(24時間表記の可能性)はそのまま採用
+        timeEntries.push({cy:(l.bbox.y0+l.bbox.y1)/2, text:m[1].padStart(2,'0')+':'+m[2]});
       }
     });
+    console.log('[extractTimeColumnMerged] 抽出できた時刻数:',timeEntries.length,timeEntries.map(t=>t.text));
     if(timeEntries.length===0)return mainLines.map(l=>l.text); // 時刻列が読めなければ元のまま
 
     // メイン行それぞれについて、Y座標が最も近い時刻を探して先頭に付与する
@@ -2005,8 +2016,8 @@ function parseImgResult(){
   let lastSeenTime=''; // 直前に確定した時刻（同時刻の表示省略行に引き継ぐ用）
 
   const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
-  // 時間パターン: 9:40am / 10:00pm / 12:00am など
-  const timeRe=/(\d{1,2}):(\d{2})\s*(am|pm)/i;
+  // 時間パターン: 9:40am / 10:00pm / 12:00am / 13:40（24時間表記）など
+  const timeRe=/(\d{1,2}):(\d{2})\s*(am|pm)?/i;
 
   lines.forEach(line=>{
     const dm=line.match(dayLineRe);
@@ -2030,9 +2041,11 @@ function parseImgResult(){
     if(tm){
       let h=parseInt(tm[1],10);
       const min=tm[2];
-      const ampm=tm[3].toLowerCase();
-      if(ampm==='pm'&&h!==12)h+=12;
-      if(ampm==='am'&&h===12)h=0;
+      const ampm=tm[3]?tm[3].toLowerCase():null;
+      if(ampm){ // 12時間表記(am/pm明示あり)
+        if(ampm==='pm'&&h!==12)h+=12;
+        if(ampm==='am'&&h===12)h=0;
+      } // ampmが無い場合はそのまま24時間表記として扱う
       time=String(h).padStart(2,'0')+':'+min;
       lastSeenTime=time;
     }else if(/\btentative\b/i.test(line)){
