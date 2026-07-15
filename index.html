@@ -1745,6 +1745,23 @@ function detectLineColors(canvas,lines){
   return map;
 }
 
+// OCR実行前にコントラストを強調する処理（発表済み指標の薄いグレー文字対策）
+// ※ 単純な中間値基準のコントラスト伸長だと、白に近い薄いグレーがかえって
+//   明るくなってしまう（逆効果）ため、累乗カーブで中間色を選択的に暗くする方式を採用
+// ※ 色判定（detectLineColors）には使わず、あくまでOCR認識精度向上専用
+function enhanceContrastForOCR(canvas){
+  const ctx=canvas.getContext('2d');
+  const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d=imgData.data;
+  const gamma=2.2; // 大きいほど中間色を強く暗く寄せる
+  for(let i=0;i<d.length;i+=4){
+    d[i]=Math.round(Math.pow(d[i]/255,gamma)*255);
+    d[i+1]=Math.round(Math.pow(d[i+1]/255,gamma)*255);
+    d[i+2]=Math.round(Math.pow(d[i+2]/255,gamma)*255);
+  }
+  ctx.putImageData(imgData,0,0);
+}
+
 async function handleImgFile(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -1763,11 +1780,27 @@ async function handleImgFile(event){
   const resultEl=document.getElementById('img-ocr-result');
   statusEl.style.display='block';
   resultWrap.style.display='none';
-  statusEl.textContent='読み込み準備中...';
+  statusEl.textContent='画像を準備中...';
   _imgLineColorMap={};
 
   try{
-    const result=await Tesseract.recognize(file,'jpn+eng',{
+    const dataUrl=await imgDataUrlPromise;
+    const img=new Image();
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+
+    // 元画像（色検出・見た目の基準用、コントラストは変更しない）
+    const origCanvas=document.createElement('canvas');
+    origCanvas.width=img.naturalWidth;origCanvas.height=img.naturalHeight;
+    origCanvas.getContext('2d').drawImage(img,0,0);
+
+    // OCR専用にコントラストを強調したコピーを別途作成
+    const ocrCanvas=document.createElement('canvas');
+    ocrCanvas.width=img.naturalWidth;ocrCanvas.height=img.naturalHeight;
+    ocrCanvas.getContext('2d').drawImage(img,0,0);
+    enhanceContrastForOCR(ocrCanvas);
+
+    statusEl.textContent='解析中...';
+    const result=await Tesseract.recognize(ocrCanvas,'jpn+eng',{
       logger:m=>{
         if(m.status==='recognizing text'){
           statusEl.textContent='解析中... '+Math.round(m.progress*100)+'%';
@@ -1780,16 +1813,10 @@ async function handleImgFile(event){
     resultEl.value=result.data.text;
     resultWrap.style.display='block';
 
-    // 画像から実際の色を読み取る（ダブルチェック用、失敗しても致命的ではない）
+    // 画像から実際の色を読み取る（ダブルチェック用、コントラスト強調前の元画像で判定。失敗しても致命的ではない）
     try{
-      const dataUrl=await imgDataUrlPromise;
-      const img=new Image();
-      await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
-      const canvas=document.createElement('canvas');
-      canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-      canvas.getContext('2d').drawImage(img,0,0);
       const lines=(result.data.lines||[]);
-      _imgLineColorMap=detectLineColors(canvas,lines);
+      _imgLineColorMap=detectLineColors(origCanvas,lines);
     }catch(e){_imgLineColorMap={};}
 
     playClick(true);
