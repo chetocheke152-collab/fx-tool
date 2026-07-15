@@ -1709,27 +1709,41 @@ function classifyPixelColor(r,g,b){
   return null;
 }
 
-// ★修正版: 通貨コードの単語を特定し、その右側（アイコンの実位置）をスキャンする。
+// ★修正版v2: 通貨コードの単語を特定し、その右側（アイコンの実位置）をスキャンする。
 // 旧実装は「アイコンは行の左端（通貨コードより左）にある」という誤った前提でスキャンしており、
 // 実際のレイアウト（[通貨コード]→[アイコン]→[指標名]）では常に背景色を拾ってしまっていた。
-const CUR_CODE_RE=/^(USD|EUR|GBP|JPY|AUD|CAD|CHF|NZD)$/i;
+// v2: Tesseract.js（jpn+eng混在モード）では通貨コードとアイコンの誤読文字が
+// 1つの単語として結合されるケースがあり、完全一致(^...$)だと通貨コードが
+// 見つからず常に未検出になっていたため、先頭一致＋文字数比での位置推定に変更。
+const CUR_CODES=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD'];
 function detectLineColors(canvas,lines){
   const map={};
   try{
     const ctx=canvas.getContext('2d');
     lines.forEach(line=>{
       if(!line.words||!line.words.length||!line.text||!line.text.trim())return;
-      // 行内から通貨コードの単語を探す
-      const curWord=line.words.find(w=>w.text&&CUR_CODE_RE.test(w.text.trim()));
-      if(!curWord||!curWord.bbox)return; // 通貨コードが見つからない行は対象外
-      const {x1,y0,y1}=curWord.bbox; // 通貨コードの右端
+      // 行内から「通貨コードで始まる」単語を探す（アイコン誤読文字が続いていても可）
+      let curWord=null,curCode=null;
+      for(const w of line.words){
+        if(!w.text||!w.bbox)continue;
+        const t=w.text.trim().toUpperCase();
+        const hit=CUR_CODES.find(c=>t.startsWith(c));
+        if(hit){curWord=w;curCode=hit;break;}
+      }
+      if(!curWord)return; // 通貨コードが見つからない行は対象外
+      const {x0,x1,y0,y1}=curWord.bbox;
       const lineHeight=Math.max(1,y1-y0);
       const cy=Math.round((y0+y1)/2);
+      // 単語が「USD」単体ではなく「USD{|_|」のようにアイコン誤読文字と結合している場合、
+      // 通貨コード部分の文字数比から、単語内での実際の終端位置を推定する
+      const wordLen=Math.max(curWord.text.trim().length,curCode.length);
+      const codeRatio=curCode.length/wordLen;
+      const estX1=x0+Math.round((x1-x0)*codeRatio);
       // アイコンは通貨コードのすぐ右にある正方形と想定し、その幅ぶんだけ右側をスキャンする
-      const scanWidth=Math.max(14,Math.round(lineHeight*2.2));
+      const scanWidth=Math.max(14,Math.round(lineHeight*2.6));
       const votes={red:0,orange:0,yellow:0,green:0};
       let total=0;
-      for(let x=x1;x<x1+scanWidth&&x<canvas.width;x+=2){
+      for(let x=estX1;x<estX1+scanWidth&&x<canvas.width;x+=2){
         for(let dy=-Math.round(lineHeight*0.3);dy<=Math.round(lineHeight*0.3);dy+=3){
           const y=cy+dy;
           if(y<0||y>=canvas.height)continue;
@@ -1746,6 +1760,14 @@ function detectLineColors(canvas,lines){
       }
     });
   }catch(e){/* サンプリング失敗時は無視してキーワード判定にフォールバック */}
+  // ★診断用ログ: もし色判定が機能しない場合、ブラウザの開発者ツール(コンソール)で
+  // この出力を確認することで、通貨コード単語が正しく検出できているか切り分けられる
+  try{
+    console.log('[detectLineColors] 対象行数:',lines.length,'色判定できた行数:',Object.keys(map).length);
+    if(Object.keys(map).length===0&&lines.length>0){
+      console.log('[detectLineColors] サンプル行のwords構造:',JSON.stringify(lines[0].words||'wordsなし'));
+    }
+  }catch(e){}
   return map;
 }
 
