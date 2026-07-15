@@ -2034,11 +2034,11 @@ function sendImgItemsToCal(){
   const directMode=localStorage.getItem(IMG_DIRECT_KEY)==='1';
 
   if(directMode){
-    // 重複判定: 指標名・時刻・通貨の完全一致（色ではなく指標名で判定）
+    // 重複判定: 時刻・通貨・色・指標名の4つ全てが完全一致した場合のみ重複とみなす
     const data=loadCultData();
     let addedCount=0;
     withCat.forEach(it=>{
-      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.event===it.title);
+      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);
       if(dup)return;
       data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
       addedCount++;
@@ -2051,11 +2051,11 @@ function sendImgItemsToCal(){
     return;
   }
 
-  // CALのプレビュー（_previewItems）に合流。重複（指標名・時刻・通貨の完全一致）はスキップ
+  // CALのプレビュー（_previewItems）に合流。重複（時刻・通貨・色・指標名の4つ全て一致）はスキップ
   let addedCount=0;
   withCat.forEach(it=>{
-    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.event===it.title)
-      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.event===it.title);})();
+    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat&&p.event===it.title)
+      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);})();
     if(dup)return;
     _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
     addedCount++;
