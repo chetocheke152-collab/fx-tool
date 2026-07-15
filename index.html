@@ -144,6 +144,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .img-cat-dot{background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 5px;font-size:13px;cursor:pointer;-webkit-appearance:none;opacity:0.3;transition:all 0.15s}
 .img-cat-dot.sel{opacity:1;border-color:#D4AF5A44;background:#D4AF5A0A}
 .img-unmatched-lbl{font-size:9px;font-weight:700;color:#F59E0B;letter-spacing:0.3px;background:#F59E0B18;padding:1px 5px;border-radius:4px;margin-left:2px}
+.learning-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #D4AF5A08}
+.learning-row:last-child{border-bottom:none}
+.learning-cur{font-size:11px;font-weight:700;color:#D4AF5A;flex-shrink:0;min-width:34px}
+.learning-title{font-size:12px;color:#888;flex:1;letter-spacing:0.2px}
+.learning-cat-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;flex-shrink:0}
+.learning-cat-badge.red{background:#EF444418;color:#EF4444}
+.learning-cat-badge.orange{background:#F59E0B18;color:#F59E0B}
+.learning-cat-badge.green{background:#22C55E18;color:#4ADE80}
+.learning-empty{font-size:11px;color:#333;padding:14px 0;text-align:center;letter-spacing:0.3px}
 .close-check-card{margin:14px 14px 0;padding:16px;border-radius:12px;display:flex;align-items:center;gap:14px;background:#141414;border:1px solid #22C55E33;transition:all 0.3s}
 .close-check-card.alert{background:#1A0F0F;border-color:#EF4444;box-shadow:0 0 20px #EF444422}
 .close-check-icon{font-size:28px;flex-shrink:0}
@@ -314,6 +323,7 @@ body.light .img-toggle-btn.on{border-color:#D4AF5A;color:#D4AF5A;background:#D4A
 body.light .img-upload-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#D4AF5A}
 body.light .img-clear-btn{border-color:#D4AF5A33;color:#AAA}
 body.light .img-cat-dot.sel{background:#D4AF5A18;border-color:#D4AF5A44}
+body.light .learning-title{color:#888}
 body.light .close-check-card{background:#FFFFFF;border-color:#22C55E44}
 body.light .close-check-card.alert{background:#FFF5F5;border-color:#EF4444}
 body.light .close-check-title{color:#1A1A1A}
@@ -364,6 +374,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button class="tab-btn" id="tab-entry" onclick="switchTab('entry')">ENTRY</button>
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
   <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
+  <button class="tab-btn" id="tab-learning" onclick="switchTab('learning')" style="display:none;">LEARNING</button>
 </div>
 
 <!-- SIZER TAB -->
@@ -721,6 +732,19 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         </div>
         <button class="cult-confirm-btn" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEARNING TAB（デバッグモード時のみ表示） -->
+<div class="tab-content" id="content-learning">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">学習データ一覧（読み取り専用）</div>
+    <div class="card-body">
+      <div style="font-size:11px;color:#555;line-height:1.7;margin-bottom:12px;">
+        IMGタブでCALに送信した際、通貨＋指標名の組み合わせごとに記憶された色の対応表です。次回同じ指標が出た際、自動でこの色が適用されます。
+      </div>
+      <div id="learning-list"></div>
     </div>
   </div>
 </div>
@@ -1490,16 +1514,19 @@ function toggleTheme(){
 }
 
 function switchTab(tab){
-  // デバッグモード中はCAL・IMG・SIZER以外（FEE・ENTRY）への切り替えを禁止
-  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer')return;
+  // デバッグモード中はCAL・IMG・SIZER・LEARNING以外（FEE・ENTRY）への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning')return;
+  // LEARNINGタブはデバッグモード中以外は選択不可
+  if(!_debugMode&&tab==='learning')return;
   playClick(tab==='fee');
-  ['sizer','fee','entry','cal','img'].forEach(t=>{
+  ['sizer','fee','entry','cal','img','learning'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='cal')renderCalendar();
   if(tab==='entry')updateCloseCheck();
   if(tab==='sizer')renderSizerHistory();
+  if(tab==='learning')renderLearningList();
 }
 
 // ===== 隠しデバッグボタン（3回タップで出現） =====
@@ -1538,18 +1565,22 @@ function toggleDebugMode(){
   });
   document.getElementById('debug-notice-cal').style.display=_debugMode?'flex':'none';
   document.getElementById('debug-notice-sizer-hist').style.display=_debugMode?'flex':'none';
+  // LEARNINGタブはデバッグモード中のみ表示
+  document.getElementById('tab-learning').style.display=_debugMode?'':'none';
 
   // データソース切替に伴い、プレビュー・カレンダー・SIZER履歴表示を再読込
   _previewItems=loadPreviewItems();
   renderPreviewList();
   renderSizerHistory();
 
-  // 無効化タブ（FEE・ENTRY）が選択中だった場合はCALタブへ強制切替
+  // 無効化タブ（FEE・ENTRY）、およびOFFにした場合のLEARNINGタブが選択中だった場合はCALタブへ強制切替
   const activeTab=document.querySelector('.tab-content.active').id.replace('content-','');
-  if(['fee','entry'].includes(activeTab)){
+  if(['fee','entry'].includes(activeTab)||(!_debugMode&&activeTab==='learning')){
     switchTab('cal');
   }else if(activeTab==='cal'){
     renderCalendar();
+  }else if(activeTab==='learning'){
+    renderLearningList();
   }
   playClick(_debugMode);
   if(!_debugMode){
@@ -1843,6 +1874,31 @@ function loadLearnedCat(){
 function saveLearnedCat(map){localStorage.setItem(IMG_LEARN_KEY,JSON.stringify(map));}
 function learnKey(cur,title){return cur+'|'+title.toLowerCase().trim();}
 
+// 学習データ一覧を表示（読み取り専用、LEARNINGタブ用）
+function renderLearningList(){
+  const list=document.getElementById('learning-list');
+  if(!list)return;
+  const learned=loadLearnedCat();
+  const entries=Object.entries(learned);
+  if(entries.length===0){
+    list.innerHTML='<div class="learning-empty">まだ学習データがありません</div>';
+    return;
+  }
+  // 通貨→指標名の順でソートして表示
+  entries.sort((a,b)=>a[0].localeCompare(b[0]));
+  list.innerHTML=entries.map(([key,cat])=>{
+    const sep=key.indexOf('|');
+    const cur=sep>=0?key.slice(0,sep):key;
+    const title=sep>=0?key.slice(sep+1):'';
+    const catLabel=cat==='red'?'🔴 RED':cat==='orange'?'🟠 ORANGE':'🟢 GREEN';
+    return '<div class="learning-row">'
+      +'<span class="learning-cur">'+cur+'</span>'
+      +'<span class="learning-title">'+title+'</span>'
+      +'<span class="learning-cat-badge '+cat+'">'+catLabel+'</span>'
+      +'</div>';
+  }).join('');
+}
+
 function parseImgResult(){
   const text=document.getElementById('img-ocr-result').value;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -1978,11 +2034,11 @@ function sendImgItemsToCal(){
   const directMode=localStorage.getItem(IMG_DIRECT_KEY)==='1';
 
   if(directMode){
-    // ダブルチェックの意味も込めて、重複判定は既存CALデータのみと照合
+    // 重複判定: 指標名・時刻・通貨の完全一致（色ではなく指標名で判定）
     const data=loadCultData();
     let addedCount=0;
     withCat.forEach(it=>{
-      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat);
+      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.event===it.title);
       if(dup)return;
       data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
       addedCount++;
@@ -1995,11 +2051,11 @@ function sendImgItemsToCal(){
     return;
   }
 
-  // CALのプレビュー（_previewItems）に合流。重複（曜日・時間・通貨・カテゴリ完全一致）はスキップ
+  // CALのプレビュー（_previewItems）に合流。重複（指標名・時刻・通貨の完全一致）はスキップ
   let addedCount=0;
   withCat.forEach(it=>{
-    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat)
-      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat);})();
+    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.event===it.title)
+      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.event===it.title);})();
     if(dup)return;
     _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
     addedCount++;
