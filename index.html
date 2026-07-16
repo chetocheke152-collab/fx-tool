@@ -838,15 +838,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div style="padding:14px 16px;">
     <div class="field">
       <span class="lbl">IN（エントリー希望価格）</span>
-      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-sl')">
+      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-sl')" onchange="advanceSizerPriceOnChange(this,'sizer-price-sl')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">SL</span>
-      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-tp')">
+      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-tp')" onchange="advanceSizerPriceOnChange(this,'sizer-price-tp')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">TP</span>
-      <input id="sizer-price-tp" type="text" inputmode="decimal" enterkeyhint="done" placeholder="例: 155.720" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').blur();}" oninput="advanceSizerPriceFocus(this,null)">
+      <input id="sizer-price-tp" type="text" inputmode="decimal" enterkeyhint="done" placeholder="例: 155.720" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').blur();}" oninput="advanceSizerPriceFocus(this,null)" onchange="advanceSizerPriceOnChange(this,null)">
     </div>
   </div>
   <button onclick="confirmSizerPriceModal()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定（未入力のままでも保存できます）</button>
@@ -1092,6 +1092,16 @@ function advanceSizerPriceFocus(el,nextId){
   el.value=el.value.replace(/\n/g,'');
   if(nextId){document.getElementById(nextId).focus();}
   else{el.blur();}
+}
+
+// CALタブの「決定→自動で次のピッカーへ」と同じ考え方：
+// キーボードのEnter検知に頼らず、入力欄からフォーカスが外れる(change)タイミングを
+// 「この欄の入力は完了した」とみなして次の欄へ進める（iOSの数字キーパッドでも確実に発火する）
+function advanceSizerPriceOnChange(el,nextId){
+  if(!el.value.trim())return; // 空のまま外れた場合は自動遷移しない（誤操作対策）
+  if(nextId){
+    setTimeout(()=>{document.getElementById(nextId).focus();},80);
+  }
 }
 
 function setSizerPriceDir(dir){
