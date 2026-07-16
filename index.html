@@ -838,15 +838,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div style="padding:14px 16px;">
     <div class="field">
       <span class="lbl">IN（エントリー希望価格）</span>
-      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}">
+      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-sl')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">SL</span>
-      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}">
+      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-tp')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">TP</span>
-      <input id="sizer-price-tp" type="text" inputmode="decimal" enterkeyhint="done" placeholder="例: 155.720" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').blur();}">
+      <input id="sizer-price-tp" type="text" inputmode="decimal" enterkeyhint="done" placeholder="例: 155.720" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').blur();}" oninput="advanceSizerPriceFocus(this,null)">
     </div>
   </div>
   <button onclick="confirmSizerPriceModal()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定（未入力のままでも保存できます）</button>
@@ -1085,6 +1085,15 @@ function saveSizerHistoryManual(){
 // ===== IN/SL/TP 入力モーダル =====
 let _sizerPriceModalIdx=null;
 let _sizerPriceDir=''; // 'buy' or 'sell'
+// iOSの小数点キーパッドは「次へ/完了」を押してもkeydown(Enter)が発火しないことがあり、
+// 代わりに入力値へ改行文字が挿入されるケースがある。それを検知してフォーカスを進める
+function advanceSizerPriceFocus(el,nextId){
+  if(el.value.indexOf('\n')===-1)return;
+  el.value=el.value.replace(/\n/g,'');
+  if(nextId){document.getElementById(nextId).focus();}
+  else{el.blur();}
+}
+
 function setSizerPriceDir(dir){
   _sizerPriceDir=dir;
   const buyBtn=document.getElementById('sizer-price-dir-buy');
