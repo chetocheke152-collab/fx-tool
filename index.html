@@ -1254,6 +1254,16 @@ function renderSizerHistory(){
       ?'計算履歴（'+matchCount+'/'+hist.length+'件）'
       :(hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴');
   }
+  // 展開中の項目があれば、閉じた状態で描画された直後にopenクラスを付与し、
+  // ブラウザに「変化」として認識させてCSSトランジションを正しく発火させる
+  if(_sizerHistExpanded!==null){
+    const target=list.querySelector('[data-price-idx="'+_sizerHistExpanded+'"]');
+    if(target){
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{target.classList.add('open');});
+      });
+    }
+  }
 }
 
 // ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
@@ -1300,7 +1310,11 @@ function renderSizerHistPriceArea(idx,h,expanded){
     {key:'sl',lbl:'SL',val:h.sl||''},
     {key:'tp',lbl:'TP',val:h.tp||''}
   ];
-  return '<div class="sizer-hist-price-wrap'+(expanded?' open':'')+'">'
+  // ※ ここでは常に閉じた状態(openクラスなし)で生成する。
+  //   openクラスを最初から付けてしまうと、要素が生成された瞬間に既に開いた状態になり、
+  //   ブラウザには「変化前の状態」が存在しないためCSSトランジションが働かない。
+  //   実際のopen付与はrenderSizerHistory側でレンダリング後に行う。
+  return '<div class="sizer-hist-price-wrap" data-price-idx="'+idx+'">'
     +'<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
     +'<div class="sizer-hist-price-row">'
     +'<span class="sizer-hist-price-lbl">方向</span>'
@@ -1332,9 +1346,24 @@ function setSizerHistDir(idx,dir){
 
 function toggleSizerHistExpand(idx){
   // アコーディオン方式：他の項目が開いていれば自動的に閉じ、同時に開けるのは1件のみ
-  _sizerHistExpanded=(_sizerHistExpanded===idx)?null:idx;
-  playClick(_sizerHistExpanded===idx);
-  renderSizerHistory();
+  const prevExpanded=_sizerHistExpanded;
+  const closing=(prevExpanded===idx); // 同じ行を再タップ → 閉じる
+  const newExpanded=closing?null:idx;
+
+  // 既に展開中の要素があれば、再描画で消す前にopenクラスを外して
+  // 閉じるアニメーションを実際のDOM上で再生させる
+  let delay=0;
+  if(prevExpanded!==null){
+    const prevEl=document.querySelector('[data-price-idx="'+prevExpanded+'"]');
+    if(prevEl){
+      prevEl.classList.remove('open');
+      delay=360; // CSSのトランジション時間（0.35s）に合わせて再描画を遅らせる
+    }
+  }
+  playClick(!closing);
+  _sizerHistExpanded=newExpanded;
+  if(delay>0){setTimeout(()=>{renderSizerHistory();},delay);}
+  else{renderSizerHistory();}
 }
 
 function updateSizerHistPrice(idx,key){
