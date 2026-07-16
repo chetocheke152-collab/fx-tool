@@ -952,20 +952,25 @@ function applyCurrencyUI(){
     btn.textContent='$ USD';
     lbl.textContent='証拠金（ドル）';
     eqInput.step='10';
-    eqInput.value=localStorage.getItem('ps_equity_usd')||'1300';
   }else{
     btn.textContent='¥ JPY';
     lbl.textContent='証拠金（円）';
     eqInput.step='1000';
-    eqInput.value=localStorage.getItem('ps_equity_jpy')||'200000';
   }
 }
 
 function toggleCurrency(){
-  // 切替前の値を現在通貨のキーに保存
+  // 現在の入力値をレートで換算し、切替後の通貨欄にそのままセットする
   const eqInput=document.getElementById('equity');
-  if(_currency==='USD'){localStorage.setItem('ps_equity_usd',eqInput.value);}
-  else{localStorage.setItem('ps_equity_jpy',eqInput.value);}
+  const rate=+document.getElementById('rate').value||RATE.USD||1;
+  const current=+eqInput.value||0;
+  if(_currency==='JPY'){
+    // 円 → ドル
+    eqInput.value=(current/rate).toFixed(2);
+  }else{
+    // ドル → 円
+    eqInput.value=Math.round(current*rate);
+  }
   _currency=_currency==='JPY'?'USD':'JPY';
   localStorage.setItem('ps_currency',_currency);
   applyCurrencyUI();
@@ -1531,17 +1536,21 @@ function pickPair(v,close=true){
 }
 
 (function(){
-  // 旧キー ps_equity → ps_equity_jpy に移行
-  const oldEq=localStorage.getItem('ps_equity');
-  if(oldEq&&!localStorage.getItem('ps_equity_jpy')){localStorage.setItem('ps_equity_jpy',oldEq);}
-  const rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
+  // 旧方式（円・ドル別々のキー）からの移行: 現在の通貨設定に対応する方の値を採用する
+  const oldJpy=localStorage.getItem('ps_equity_jpy');
+  const oldUsd=localStorage.getItem('ps_equity_usd');
+  if(!localStorage.getItem('ps_equity')){
+    if(_currency==='USD'&&oldUsd)localStorage.setItem('ps_equity',oldUsd);
+    else if(oldJpy)localStorage.setItem('ps_equity',oldJpy);
+  }
+  const eq=localStorage.getItem('ps_equity'),rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
+  if(eq)document.getElementById('equity').value=eq;
   if(rk)document.getElementById('risk').value=rk;
   if(pr){document.getElementById('pair').value=pr;const btn=document.getElementById('pair-btn');btn.textContent=pr;btn.classList.add('sel');}
   applyCurrencyUI();
 })();
 document.getElementById('equity').addEventListener('change',()=>{
-  const key=_currency==='USD'?'ps_equity_usd':'ps_equity_jpy';
-  localStorage.setItem(key,document.getElementById('equity').value);
+  localStorage.setItem('ps_equity',document.getElementById('equity').value);
 });
 document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
 
