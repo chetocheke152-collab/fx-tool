@@ -102,6 +102,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-row-wrap:last-child{border-bottom:none}
 .sizer-hist-row-wrap .sizer-hist-row{border-bottom:none}
 .sizer-hist-row.sort-mode{background:#D4AF5A08;cursor:default}
+.sizer-hist-price-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease}
+.sizer-hist-price-wrap.open{max-height:320px;opacity:1}
 .sizer-hist-price-area{padding:4px 0 10px;display:flex;flex-direction:column;gap:6px}
 .sizer-hist-price-row{display:flex;align-items:center;gap:8px}
 .sizer-hist-price-lbl{font-size:10px;font-weight:700;color:#D4AF5A88;width:22px;flex-shrink:0}
@@ -199,8 +201,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cond-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cond-arr{font-size:11px;color:#D4AF5A;margin-left:8px;transition:transform 0.2s;flex-shrink:0}
 .cond-arr.open{transform:rotate(180deg)}
-.cond-body{display:none;padding:4px 16px 16px}
-.cond-body.open{display:block}
+.cond-body{max-height:0;overflow:hidden;padding:0 16px;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
+.cond-body.open{max-height:600px;padding:4px 16px 16px;opacity:1}
 .cond-group{margin-bottom:14px}
 .cond-group:last-child{margin-bottom:0}
 .cond-g-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}
@@ -244,8 +246,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 /* Cult input */
 .cult-section{margin:12px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .cult-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase;border-bottom:1px solid #D4AF5A22;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.cult-body{display:none;padding:14px 16px}
-.cult-body.open{display:block}
+.cult-body{max-height:0;overflow:hidden;padding:0 16px;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
+.cult-body.open{max-height:900px;padding:14px 16px;opacity:1}
 .cult-arr{font-size:11px;color:#D4AF5A;transition:transform 0.2s}
 .cult-arr.open{transform:rotate(180deg)}
 .cult-form-row{display:flex;gap:8px;margin-bottom:10px;align-items:flex-end}
@@ -1237,11 +1239,11 @@ function renderSizerHistory(){
       +dirBadge
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
-      +'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">'+(expanded?'▲':'▼')+'</button>'
+      +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
       +'</div>'
       +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
       +'</div>'
-      +(expanded?renderSizerHistPriceArea(i,h):'')
+      +renderSizerHistPriceArea(i,h,expanded)
       +'</div>';
     }).join('');
 
@@ -1292,13 +1294,14 @@ function moveSizerHistItem(idx,dir){
   renderSizerHistory();
 }
 
-function renderSizerHistPriceArea(idx,h){
+function renderSizerHistPriceArea(idx,h,expanded){
   const rows=[
     {key:'in',lbl:'IN',val:h.in||''},
     {key:'sl',lbl:'SL',val:h.sl||''},
     {key:'tp',lbl:'TP',val:h.tp||''}
   ];
-  return '<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
+  return '<div class="sizer-hist-price-wrap'+(expanded?' open':'')+'">'
+    +'<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
     +'<div class="sizer-hist-price-row">'
     +'<span class="sizer-hist-price-lbl">方向</span>'
     +'<div style="display:flex;gap:6px;flex:1;">'
@@ -1313,6 +1316,7 @@ function renderSizerHistPriceArea(idx,h){
       +'<button class="sizer-hist-price-copy" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
       +'</div>'
     ).join('')
+    +'</div>'
     +'</div>';
 }
 
