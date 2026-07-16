@@ -1167,7 +1167,7 @@ function fmtSizerHistTime(ts){
   return md+' '+hm;
 }
 
-let _sizerHistExpanded={}; // idx -> true/false（展開状態を記憶）
+let _sizerHistExpanded=null; // 現在展開中の行のインデックス（アコーディオン方式、同時に1件のみ）
 
 function renderSizerHistory(){
   const hist=loadSizerHistory();
@@ -1188,7 +1188,7 @@ function renderSizerHistory(){
       const matches=!query||h.pair.toUpperCase().includes(query);
       if(!matches)return ''; // 検索キーワードに一致しない行は描画しない（インデックスiは元配列のまま維持）
       matchCount++;
-      const expanded=!!_sizerHistExpanded[i];
+      const expanded=(_sizerHistExpanded===i);
       const hasPrice=h.dir||h.in||h.sl||h.tp;
       const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
 
@@ -1327,8 +1327,9 @@ function setSizerHistDir(idx,dir){
 }
 
 function toggleSizerHistExpand(idx){
-  _sizerHistExpanded[idx]=!_sizerHistExpanded[idx];
-  playClick(_sizerHistExpanded[idx]);
+  // アコーディオン方式：他の項目が開いていれば自動的に閉じ、同時に開けるのは1件のみ
+  _sizerHistExpanded=(_sizerHistExpanded===idx)?null:idx;
+  playClick(_sizerHistExpanded===idx);
   renderSizerHistory();
 }
 
@@ -1359,7 +1360,7 @@ function deleteSizerHistoryItem(idx){
     const hist=loadSizerHistory();
     hist.splice(idx,1);
     saveSizerHistoryArr(hist);
-    delete _sizerHistExpanded[idx];
+    _sizerHistExpanded=null; // 削除後はインデックスがズレるため展開状態をリセット
     renderSizerHistory();
     playClick(false);
   }else{
