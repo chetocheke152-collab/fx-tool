@@ -838,11 +838,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div style="padding:14px 16px;">
     <div class="field">
       <span class="lbl">IN（エントリー希望価格）</span>
-      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-sl')" onchange="advanceSizerPriceOnChange(this,'sizer-price-sl')">
+      <input id="sizer-price-in" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.320" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-sl').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-sl')" onchange="advanceSizerPriceOnChange(this,'sizer-price-sl')" onfocusout="advanceSizerPriceOnChange(this,'sizer-price-sl')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">SL</span>
-      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-tp')" onchange="advanceSizerPriceOnChange(this,'sizer-price-tp')">
+      <input id="sizer-price-sl" type="text" inputmode="decimal" enterkeyhint="next" placeholder="例: 155.120" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sizer-price-tp').focus();}" oninput="advanceSizerPriceFocus(this,'sizer-price-tp')" onchange="advanceSizerPriceOnChange(this,'sizer-price-tp')" onfocusout="advanceSizerPriceOnChange(this,'sizer-price-tp')">
     </div>
     <div class="field" style="margin-top:12px;">
       <span class="lbl">TP</span>
@@ -1097,10 +1097,12 @@ function advanceSizerPriceFocus(el,nextId){
 // CALタブの「決定→自動で次のピッカーへ」と同じ考え方：
 // キーボードのEnter検知に頼らず、入力欄からフォーカスが外れる(change)タイミングを
 // 「この欄の入力は完了した」とみなして次の欄へ進める（iOSの数字キーパッドでも確実に発火する）
+// ※ setTimeoutで遅延させるとユーザー操作から時間が空き、iOSがキーボードの
+//   自動再表示を抑制してしまうため、遅延を挟まず同期的にfocus()を呼ぶ
 function advanceSizerPriceOnChange(el,nextId){
   if(!el.value.trim())return; // 空のまま外れた場合は自動遷移しない（誤操作対策）
   if(nextId){
-    setTimeout(()=>{document.getElementById(nextId).focus();},80);
+    document.getElementById(nextId).focus();
   }
 }
 
