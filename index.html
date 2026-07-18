@@ -757,7 +757,10 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       </div>
       <div id="img-ocr-status" style="display:none;margin-top:12px;text-align:center;font-size:12px;color:#D4AF5A;letter-spacing:0.5px;"></div>
       <div id="img-ocr-result-wrap" style="display:none;margin-top:14px;">
-        <div class="lbl" style="margin-bottom:6px;">読み取り結果（テキスト）</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span class="lbl">読み取り結果（テキスト）</span>
+          <button id="img-ocr-copy-btn" onclick="copyImgOcrResult()" style="background:transparent;border:1px solid #D4AF5A55;border-radius:5px;color:#D4AF5A;font-size:10px;padding:4px 9px;cursor:pointer;-webkit-appearance:none;">📋 コピー</button>
+        </div>
         <textarea id="img-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
         <div class="field" style="margin-top:10px;">
           <span class="lbl">対象曜日（画像内に曜日見出しが無い場合に使用）</span>
@@ -1573,6 +1576,15 @@ function copyLot(){
 }
 function fbCopy(v,cb){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb();}
 
+function copyImgOcrResult(){
+  const v=document.getElementById('img-ocr-result').value;
+  if(!v)return;
+  const btn=document.getElementById('img-ocr-copy-btn');
+  const original='📋 コピー';
+  const done=()=>{btn.textContent='✅ コピー済み';setTimeout(()=>{btn.textContent=original;},2000);};
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
+}
+
 function setPips(v){
   const el=document.getElementById('pips');
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
@@ -2040,7 +2052,7 @@ function cleanTitleNoise(title){
 // それ以外は全て未判定(null)にして、人間の判断に委ねる（誤判定を避けるため保守的に運用）
 const IMG_RED_RULES=[
   {cur:'USD', re:/non.?farm|\bnfp\b/i},
-  {cur:'USD', re:/\bcpi\b/i},
+  {cur:'USD', re:/\bcp[il]/i}, // ※末尾境界を外し、OCRのI→l誤読（例:CPla/q）も吸収
   {cur:'USD', re:/\bfomc\b/i, excludeRe:/member|minutes/i}, // FOMC本体のみ（メンバー発言・議事録は除外→未判定）
   {cur:'USD', re:/interest rate|rate decision|federal funds/i},
   {cur:'USD', re:/ism (manufacturing|services) pmi/i},
@@ -2049,21 +2061,22 @@ const IMG_RED_RULES=[
   {cur:'USD', re:/core pce|pce price index/i},
   {cur:'USD', re:/employment change|unemployment rate|average hourly earnings/i},
   {cur:'USD', re:/powell|press conference|testif\w*/i},
-  {cur:'EUR', re:/\bcpi\b/i, excludeRe:/german|french|italian|spanish|\bfinal\b/i}, // ユーロ圏全体のCPIのみ赤。国別Final CPIはFFでも黄色のため除外
+  {cur:'EUR', re:/\bcp[il]/i, excludeRe:/german|french|italian|spanish|\bfinal\b/i}, // ユーロ圏全体のCPIのみ赤。国別Final CPIはFFでも黄色のため除外
   {cur:'EUR', re:/\bgdp\b/i},
   {cur:'EUR', re:/interest rate|rate decision|refinancing/i},
   {cur:'EUR', re:/lagarde/i},
-  {cur:'GBP', re:/\bcpi\b/i},
+  {cur:'GBP', re:/\bcp[il]/i},
   {cur:'GBP', re:/\bgdp\b/i},
   {cur:'GBP', re:/interest rate|rate decision|bank rate/i},
-  {cur:'JPY', re:/\bcpi\b/i},
+  {cur:'JPY', re:/\bcp[il]/i},
   {cur:'JPY', re:/interest rate|rate decision/i},
-  {cur:'AUD', re:/\bcpi\b/i},
+  {cur:'AUD', re:/\bcp[il]/i},
   {cur:'AUD', re:/interest rate|rate decision|cash rate/i},
+  {cur:'NZD', re:/\bcp[il]/i}, // NZD CPI（四半期発表）
   {cur:'NZD', re:/interest rate|rate decision|official cash rate/i},
   {cur:'CAD', re:/interest rate|rate decision/i},
   {cur:'CAD', re:/employment change|unemployment rate/i},
-  {cur:'CAD', re:/\bcpi\b|median cpi|trimmed cpi/i, excludeRe:/common cpi|core cpi/i}, // CPI本体・Median・Trimmedは赤。Common CPIは橙、Core CPIはFFで黄のため除外
+  {cur:'CAD', re:/\bcp[il]|median cp[il]|trimmed cp[il]/i, excludeRe:/common cp[il]|core cp[il]/i}, // CPI本体・Median・Trimmedは赤。Common CPIは橙、Core CPIはFFで黄のため除外
   {cur:'CHF', re:/interest rate|rate decision/i},
 ];
 // オレンジ（medium）判定は実績確認済みのものだけをホワイトリスト方式で追加
