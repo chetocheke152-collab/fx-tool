@@ -2139,7 +2139,9 @@ function parseImgResult(){
 
   const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
   // 時間パターン: 9:40am / 10:00pm / 12:00am など
-  const timeRe=/(\d{1,2}):(\d{2})\s*(am|pm)/i;
+  // ※ 「pm」の間にOCRが余分な文字（数字等）を誤挿入するケース（例: 3:00p0m）にも対応するため、
+  //    a/pの直後は「mまでの間に最大2文字の任意の混入」を許容する
+  const timeRe=/(\d{1,2}):(\d{2})\s*([ap]).{0,2}m/i;
 
   lines.forEach(line=>{
     const dm=line.match(dayLineRe);
@@ -2166,9 +2168,9 @@ function parseImgResult(){
     if(tm){
       let h=parseInt(tm[1],10);
       const min=tm[2];
-      const ampm=tm[3].toLowerCase();
-      if(ampm==='pm'&&h!==12)h+=12;
-      if(ampm==='am'&&h===12)h=0;
+      const ampm=tm[3].toLowerCase(); // 'a' または 'p'（誤読混入があっても最初の1文字だけで判定）
+      if(ampm==='p'&&h!==12)h+=12;
+      if(ampm==='a'&&h===12)h=0;
       time=String(h).padStart(2,'0')+':'+min;
       lastSeenTime=time;
     }else if(/\btentative\b/i.test(line)){
