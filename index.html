@@ -2063,11 +2063,13 @@ const IMG_RED_RULES=[
   {cur:'NZD', re:/interest rate|rate decision|official cash rate/i},
   {cur:'CAD', re:/interest rate|rate decision/i},
   {cur:'CAD', re:/employment change|unemployment rate/i},
+  {cur:'CAD', re:/\bcpi\b|median cpi|trimmed cpi/i, excludeRe:/common cpi|core cpi/i}, // CPI本体・Median・Trimmedは赤。Common CPIは橙、Core CPIはFFで黄のため除外
   {cur:'CHF', re:/interest rate|rate decision/i},
 ];
 // オレンジ（medium）判定は実績確認済みのものだけをホワイトリスト方式で追加
 const IMG_ORANGE_RULES=[
   {cur:'CAD', re:/ivey pmi/i}, // Ivey PMI
+  {cur:'CAD', re:/common cpi/i}, // Common CPI（Median/Trimmed/CPI本体は赤、Common CPIのみ橙）
   // 注: 要人発言(Speaks)系は発言内容・タイミングで重要度が変動するため、
   // 固定のホワイトリストには含めず未判定のまま人間の判断に委ねる
 ];
