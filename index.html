@@ -129,6 +129,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sizer-hist-price-input{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:6px;padding:7px 10px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;min-width:0;}
 .sizer-hist-price-input:focus{border-color:#D4AF5A}
 .sizer-hist-price-copy{background:transparent;border:1px solid #D4AF5A33;border-radius:6px;color:#D4AF5A;font-size:13px;cursor:pointer;padding:6px 9px;-webkit-appearance:none;flex-shrink:0}
+/* IN/SL/TP 取り違え防止：ラベル・コピーボタン・入力欄枠を色分け（IN=青, SL=赤, TP=緑） */
+.sizer-price-lbl-in{color:#5B9EE8}
+.sizer-price-copy-in{border-color:#5B9EE855;color:#5B9EE8}
+.sizer-price-row-in .sizer-hist-price-input{border-color:#5B9EE833}
+.sizer-price-lbl-sl{color:#EF4444}
+.sizer-price-copy-sl{border-color:#EF444455;color:#EF4444}
+.sizer-price-row-sl .sizer-hist-price-input{border-color:#EF444433}
+.sizer-price-lbl-tp{color:#4ADE80}
+.sizer-price-copy-tp{border-color:#4ADE8055;color:#4ADE80}
+.sizer-price-row-tp .sizer-hist-price-input{border-color:#4ADE8033}
+.sizer-hist-price-input.locked{border-color:transparent;background:transparent;color:#888;cursor:default}
+.sizer-price-unlock-zone{-webkit-tap-highlight-color:transparent}
 .sizer-price-dir-btn{flex:1;padding:12px 0;background:#1A1A1A;border:2px solid #333;border-radius:8px;color:#666;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
 .sizer-price-dir-btn.sel-buy{background:#22C55E18;border-color:#22C55E;color:#22C55E}
 .sizer-price-dir-btn.sel-sell{background:#EF444418;border-color:#EF4444;color:#EF4444}
@@ -1345,6 +1357,7 @@ function renderSizerHistory(){
         requestAnimationFrame(()=>{target.classList.add('open');});
       });
     }
+    scheduleSizerPriceLock(_sizerHistExpanded); // 開いた時点から3秒後にロックを予約
   }
 }
 
@@ -1405,13 +1418,15 @@ function renderSizerHistPriceArea(idx,h,expanded){
     +'<button class="sizer-price-dir-btn'+(h.dir==='sell'?' sel-sell':'')+'" style="padding:7px 0;font-size:12px;" onclick="setSizerHistDir('+idx+',\'sell\')">SELL</button>'
     +'</div>'
     +'</div>'
+    +'<div class="sizer-price-unlock-zone" onpointerdown="startSizerUnlockPress('+idx+')" onpointerup="cancelSizerUnlockPress()" onpointerleave="cancelSizerUnlockPress()" onpointercancel="cancelSizerUnlockPress()">'
     +rows.map(r=>
-      '<div class="sizer-hist-price-row">'
-      +'<span class="sizer-hist-price-lbl">'+r.lbl+'</span>'
+      '<div class="sizer-hist-price-row sizer-price-row-'+r.key+'" id="sizer-hist-row-'+r.key+'-'+idx+'">'
+      +'<span class="sizer-hist-price-lbl sizer-price-lbl-'+r.key+'">'+r.lbl+'</span>'
       +'<input type="text" inputmode="decimal" class="sizer-hist-price-input" id="sizer-hist-price-'+r.key+'-'+idx+'" value="'+r.val+'" placeholder="未入力" onchange="updateSizerHistPrice('+idx+',\''+r.key+'\')">'
-      +'<button class="sizer-hist-price-copy" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
+      +'<button class="sizer-hist-price-copy sizer-price-copy-'+r.key+'" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
       +'</div>'
     ).join('')
+    +'</div>'
     +'</div>'
     +'</div>';
 }
@@ -1454,6 +1469,37 @@ function updateSizerHistPrice(idx,key){
   if(!h)return;
   h[key]=document.getElementById('sizer-hist-price-'+key+'-'+idx).value.trim();
   saveSizerHistoryArr(hist);
+  scheduleSizerPriceLock(idx);
+}
+
+// ===== IN/SL/TP 誤入力防止：一定時間操作がなければ自動的に編集ロックする =====
+let _sizerPriceLockTimers={}; // idx -> timerId
+function scheduleSizerPriceLock(idx){
+  clearTimeout(_sizerPriceLockTimers[idx]);
+  _sizerPriceLockTimers[idx]=setTimeout(()=>{lockSizerPriceInputs(idx);},3000);
+}
+function lockSizerPriceInputs(idx){
+  ['in','sl','tp'].forEach(key=>{
+    const input=document.getElementById('sizer-hist-price-'+key+'-'+idx);
+    if(input){input.readOnly=true;input.classList.add('locked');}
+  });
+}
+function unlockSizerPriceInputs(idx){
+  ['in','sl','tp'].forEach(key=>{
+    const input=document.getElementById('sizer-hist-price-'+key+'-'+idx);
+    if(input){input.readOnly=false;input.classList.remove('locked');}
+  });
+  playClick(true);
+  // 解除後も操作がなければ再び自動ロックする
+  scheduleSizerPriceLock(idx);
+}
+// 中央付近（方向ボタンの下あたり）の長押しでロック解除
+let _sizerUnlockPressTimer=null;
+function startSizerUnlockPress(idx){
+  _sizerUnlockPressTimer=setTimeout(()=>{unlockSizerPriceInputs(idx);},500);
+}
+function cancelSizerUnlockPress(){
+  clearTimeout(_sizerUnlockPressTimer);
 }
 
 function copySizerHistPrice(idx,key){
@@ -2030,6 +2076,8 @@ const IMG_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD'];
 
 // OCR特有のノイズ単語（1〜2文字の日本語・記号断片）を除去
 function cleanTitleNoise(title){
+  // 「Tentative」は時刻判定用の別ロジックで使うだけなので、タイトルからは除去する
+  title=title.replace(/\btentative\b/gi,'').replace(/\s+/g,' ').trim();
   const words=title.split(' ').filter(Boolean);
   const cleaned=words.filter(w=>{
     // 単独の英字1文字（p, oなど誤読ノイズ）は除去
