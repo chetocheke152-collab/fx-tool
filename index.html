@@ -2155,8 +2155,11 @@ function parseImgResult(){
 
     const tm=line.match(timeRe);
     // 通貨コードを検出（OCRで文字が重複する誤読(例: NZD→NzZD)にも対応）
+    // ※ アンダースコア等の記号が通貨コードの直前に付くと単語境界(\b)判定が壊れるため、
+    //    検出用には記号を空白に置き換えた版を使う（実際のtitle抽出には影響させない）
+    const lineForCurDetect=line.replace(/[_|]/g,' ');
     const buildCurRe=code=>new RegExp('\\b'+code.split('').map(ch=>ch+'{1,2}').join('')+'\\b','i');
-    const curMatch=IMG_CUR_LIST.find(c=>buildCurRe(c).test(line));
+    const curMatch=IMG_CUR_LIST.find(c=>buildCurRe(c).test(lineForCurDetect));
     if(!curMatch)return; // 通貨が見つからない行は指標行とみなさない
 
     let time='';
@@ -2175,11 +2178,13 @@ function parseImgResult(){
       time=lastSeenTime;
     }
 
-    // 指標名候補：行から時間・通貨・記号類を除いた残り
+    // 指標名候補：先に記号類を除去してから、時間・通貨を除いた残りを取り出す
+    // （記号除去を後回しにすると、通貨コード直前の記号が単語境界を壊し、
+    //  正しく除去できずタイトルに文字が残ってしまうケースがあったため順序を変更）
     let title=line
+      .replace(/[\[\]|_]/g,'')
       .replace(timeRe,'')
       .replace(buildCurRe(curMatch),'')
-      .replace(/[\[\]|_]/g,'')
       .replace(/\s+/g,' ')
       .trim();
     title=cleanTitleNoise(title);
