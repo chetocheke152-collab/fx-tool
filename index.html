@@ -18,6 +18,15 @@ body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,s
 .card{margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .card-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase;border-bottom:1px solid #D4AF5A22}
 .card-body{padding:16px}
+.sizer-fold-hdr{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-fold-arr{font-size:10px;color:#D4AF5A;transition:transform 0.3s ease;flex-shrink:0}
+.sizer-fold-arr:not(.open){transform:rotate(-90deg)}
+.sizer-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
+.sizer-fold-body.open{max-height:600px;opacity:1}
+.sizer-fold-body.card-body{padding:0 16px}
+.sizer-fold-body.card-body.open{padding:16px}
+#sizer-fold-body-result.sizer-fold-body{padding:0}
+#sizer-fold-body-result.sizer-fold-body.open{padding:0}
 .field{display:flex;flex-direction:column;gap:5px}
 .field+.field{margin-top:14px}
 .lbl{font-size:10px;font-weight:700;color:#D4AF5A;letter-spacing:1px;text-transform:uppercase}
@@ -381,12 +390,24 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 
 <!-- SIZER TAB -->
 <div class="tab-content active" id="content-sizer">
-<div class="card">
-  <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-    <span>Account</span>
-    <button id="currency-toggle-btn" onclick="toggleCurrency()" style="background:transparent;border:1px solid #D4AF5A66;border-radius:5px;padding:3px 9px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;">¥ JPY</button>
+<div class="toggle-row" style="margin:14px 14px 0;">
+  <div class="toggle-info">
+    <div class="toggle-lbl">連動して閉じる</div>
+    <div class="toggle-sub">ONで1つ開くと他が自動的に閉じます</div>
   </div>
-  <div class="card-body">
+  <div class="toggle-btn" id="sizer-accordion-toggle-btn" onclick="toggleSizerAccordionMode()">
+    <span class="toggle-txt" id="sizer-accordion-toggle-txt">OFF</span>
+  </div>
+</div>
+<div class="card" style="margin-top:14px;">
+  <div class="card-hdr sizer-fold-hdr" onclick="toggleSizerFold('account')" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Account</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="currency-toggle-btn" onclick="event.stopPropagation();toggleCurrency()" style="background:transparent;border:1px solid #D4AF5A66;border-radius:5px;padding:3px 9px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;">¥ JPY</button>
+      <span class="sizer-fold-arr" id="sizer-fold-arr-account">▼</span>
+    </div>
+  </div>
+  <div class="card-body sizer-fold-body" id="sizer-fold-body-account">
     <div class="field">
       <span class="lbl" id="equity-lbl">証拠金（円）</span>
       <input id="equity" class="input-short" type="number" inputmode="numeric" pattern="[0-9]*" value="200000" step="1000" oninput="calc()">
@@ -414,8 +435,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   </div>
 </div>
 <div class="card">
-  <div class="card-hdr">Trade</div>
-  <div class="card-body">
+  <div class="card-hdr sizer-fold-hdr" onclick="toggleSizerFold('trade')" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Trade</span>
+    <span class="sizer-fold-arr" id="sizer-fold-arr-trade">▼</span>
+  </div>
+  <div class="card-body sizer-fold-body" id="sizer-fold-body-trade">
     <div class="field">
       <span class="lbl">通貨ペア</span>
       <button class="pair-btn" id="pair-btn" onclick="openSheet()">選択してください</button>
@@ -450,7 +474,12 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     </div>
   </div>
 </div>
-<div class="result-card"><div class="card-hdr">Result</div>
+<div class="result-card">
+  <div class="card-hdr sizer-fold-hdr" onclick="toggleSizerFold('result')" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Result</span>
+    <span class="sizer-fold-arr" id="sizer-fold-arr-result">▼</span>
+  </div>
+  <div class="sizer-fold-body" id="sizer-fold-body-result">
   <div class="result-top">
     <div class="result-top-lbl">推奨 Lot 数</div>
     <div class="result-lot" id="res-lot">—</div>
@@ -465,6 +494,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <div class="result-row"><span class="r-lbl">1pip 値</span><span class="r-val" id="res-pip">—</span></div>
     <div class="result-row"><span class="r-lbl">取引手数料</span><span class="r-val" id="res-fee">—</span></div>
     <div class="result-row"><span class="r-lbl">実質 SL 損失額</span><span class="r-val green" id="res-sl">—</span></div>
+  </div>
   </div>
 </div>
 
@@ -946,6 +976,34 @@ function fmtCur(jpyAmount){
     return '$'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
   return '¥'+Math.round(jpyAmount).toLocaleString();
+}
+
+// ===== SIZER Account/Trade/Result 折りたたみ =====
+const SIZER_FOLD_SECTIONS=['account','trade','result'];
+let _sizerAccordionMode=false; // OFF: 個別に開閉／ON: 1つ開くと他は自動的に閉じる
+function toggleSizerAccordionMode(){
+  _sizerAccordionMode=!_sizerAccordionMode;
+  const btn=document.getElementById('sizer-accordion-toggle-btn');
+  const txt=document.getElementById('sizer-accordion-toggle-txt');
+  btn.classList.toggle('on',_sizerAccordionMode);
+  txt.textContent=_sizerAccordionMode?'ON':'OFF';
+  playClick(_sizerAccordionMode);
+}
+function toggleSizerFold(section){
+  const body=document.getElementById('sizer-fold-body-'+section);
+  const arr=document.getElementById('sizer-fold-arr-'+section);
+  const willOpen=!body.classList.contains('open');
+  if(_sizerAccordionMode&&willOpen){
+    // アコーディオンON時：他のセクションを先に閉じる
+    SIZER_FOLD_SECTIONS.forEach(s=>{
+      if(s===section)return;
+      document.getElementById('sizer-fold-body-'+s).classList.remove('open');
+      document.getElementById('sizer-fold-arr-'+s).classList.remove('open');
+    });
+  }
+  body.classList.toggle('open',willOpen);
+  arr.classList.toggle('open',willOpen);
+  playClick(willOpen);
 }
 
 function applyCurrencyUI(){
