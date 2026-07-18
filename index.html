@@ -20,6 +20,16 @@ body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,s
 .card-body{padding:16px}
 .sizer-fold-hdr{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sizer-fold-arr{font-size:10px;color:#D4AF5A;transition:transform 0.3s ease;flex-shrink:0}
+.currency-slide{position:relative;width:76px;height:26px;background:#D4AF5A;border:1px solid #D4AF5A;border-radius:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.currency-slide-lbl{position:absolute;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;color:#8A6E2F;transition:color 0.25s ease;pointer-events:none}
+.currency-slide-lbl.jpy{left:8px}
+.currency-slide-lbl.usd{right:7px}
+.currency-slide-knob{position:absolute;top:2px;left:2px;width:36px;height:20px;background:#1A1A1A;border-radius:10px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.currency-slide.usd-active .currency-slide-knob{transform:translateX(36px)}
+.currency-slide.usd-active .currency-slide-lbl.jpy{color:#8A6E2F}
+.currency-slide.usd-active .currency-slide-lbl.usd{color:#F0EDE6;font-weight:700}
+.currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F0EDE6;font-weight:700}
+.currency-slide:not(.usd-active) .currency-slide-lbl.usd{color:#8A6E2F}
 .sizer-fold-arr:not(.open){transform:rotate(-90deg)}
 .sizer-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
 .sizer-fold-body.open{max-height:600px;opacity:1}
@@ -269,6 +279,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cult-item-text{color:#888;flex:1}
 .cult-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#22C55E33;color:#4ADE80}
 .cult-reset-btn{width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.cult-early-reset-btn{width:100%;margin-top:8px;padding:10px;background:#D4AF5A0F;border:1px solid #D4AF5A55;border-radius:8px;color:#D4AF5A;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .cult-list-hdr{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px}
 .cult-list-hdr span:first-child{font-size:11px;font-weight:700;color:#555;letter-spacing:0.5px}
 .cult-confirm-btn{width:100%;margin-top:12px;padding:13px;background:#D4AF5A18;border:2px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
@@ -298,6 +309,11 @@ body.light .toggle-row{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .toggle-lbl{color:#1A1A1A}
 body.light .toggle-sub{color:#888}
 body.light .toggle-btn{background:#E8E4DC;border-color:#D4AF5A44}
+body.light .currency-slide{background:#D4AF5A;border-color:#D4AF5A}
+body.light .currency-slide-knob{background:#F9F7F2}
+body.light .currency-slide-lbl{color:#B08D3E}
+body.light .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#8A6E2F;font-weight:700}
+body.light .currency-slide.usd-active .currency-slide-lbl.usd{color:#8A6E2F;font-weight:700}
 body.light .result-card{border-color:#D4AF5A33}
 body.light .result-top{background:#FFFFFF;border-bottom:1px solid #D4AF5A22}
 body.light .result-rows{background:#FFFFFF}
@@ -402,8 +418,12 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 <div class="card" style="margin-top:14px;">
   <div class="card-hdr sizer-fold-hdr" onclick="toggleSizerFold('account')" style="display:flex;align-items:center;justify-content:space-between;">
     <span>Account</span>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="currency-toggle-btn" onclick="event.stopPropagation();toggleCurrency()" style="background:transparent;border:1px solid #D4AF5A66;border-radius:5px;padding:3px 9px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;">¥ JPY</button>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="currency-slide" id="currency-toggle-btn" onclick="event.stopPropagation();toggleCurrency()">
+        <span class="currency-slide-lbl jpy">JPY</span>
+        <span class="currency-slide-lbl usd">USD</span>
+        <span class="currency-slide-knob" id="currency-slide-knob"></span>
+      </div>
       <span class="sizer-fold-arr" id="sizer-fold-arr-account">▼</span>
     </div>
   </div>
@@ -668,6 +688,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <!-- 全データリセット（カレンダー本体の下、独立設置） -->
   <div style="margin:0 14px;">
     <button class="cult-reset-btn" id="cult-reset-btn" onclick="cultResetConfirm()">全データをリセット</button>
+    <button class="cult-early-reset-btn" id="cult-early-reset-btn" onclick="cultEarlyResetConfirm()" style="display:none;">🕗 週リセットを早める（土曜12時を待たずに来週へ）</button>
   </div>
 
   <!-- 指標手入力 -->
@@ -1007,15 +1028,15 @@ function toggleSizerFold(section){
 }
 
 function applyCurrencyUI(){
-  const btn=document.getElementById('currency-toggle-btn');
+  const slide=document.getElementById('currency-toggle-btn');
   const lbl=document.getElementById('equity-lbl');
   const eqInput=document.getElementById('equity');
   if(_currency==='USD'){
-    btn.textContent='$ USD';
+    slide.classList.add('usd-active');
     lbl.textContent='証拠金（ドル）';
     eqInput.step='10';
   }else{
-    btn.textContent='¥ JPY';
+    slide.classList.remove('usd-active');
     lbl.textContent='証拠金（円）';
     eqInput.step='1000';
   }
@@ -2339,12 +2360,15 @@ function toggleCond(){
 
 // ===== CALENDAR =====
 function getWeekMonday(){
-  const now=new Date(),day=now.getDay();
-  // 日曜のみ来週表示（土曜は当週に含む）
-  const offset=(day===0)?1:0;
+  const now=new Date(),day=now.getDay(),hour=now.getHours();
+  // 土曜12時以降（土曜午後・日曜）は来週表示に切り替える
+  const isNextWeek=(day===6&&hour>=12)||day===0;
   const mon=new Date(now);
-  const diffToMon=(day===0)?0:(1-day);
-  mon.setDate(now.getDate()+diffToMon+offset);
+  let diffToMon;
+  if(day===0)diffToMon=1; // 日曜 → 翌日(月曜)
+  else if(day===6)diffToMon=isNextWeek?2:(1-day); // 土曜 → 12時以降なら再来週の月曜、それ以外は当週の月曜
+  else diffToMon=1-day;
+  mon.setDate(now.getDate()+diffToMon);
   mon.setHours(0,0,0,0);return mon;
 }
 function calDateStr(date){
@@ -2366,16 +2390,22 @@ function loadCultData(){
 }
 function saveCultData(data){localStorage.setItem(getCalKey(),JSON.stringify(data));}
 
-// 日曜日を迎えたら、その日1回だけカレンダーを自動リセット
-const SUNDAY_RESET_KEY='ps_cal_last_sunday_reset';
+// 土曜12時（取引週の終了目安）を迎えたら、その週1回だけカレンダーを自動リセット
+const WEEK_RESET_KEY='ps_cal_last_week_reset';
 function checkWeekReset(){
-  const now=new Date();
-  if(now.getDay()!==0)return; // 日曜以外は何もしない
-  const todayStr=calDateStr(now);
-  const lastReset=localStorage.getItem(SUNDAY_RESET_KEY);
-  if(lastReset!==todayStr){
+  const now=new Date(),day=now.getDay(),hour=now.getHours();
+  const passedResetPoint=(day===6&&hour>=12)||day===0;
+  if(!passedResetPoint)return; // 土曜12時より前は何もしない
+
+  // リセット基準となる「その週の土曜日」の日付をキーにして、同じ週内での重複リセットを防ぐ
+  const satDate=new Date(now);
+  if(day===0)satDate.setDate(now.getDate()-1); // 日曜なら前日（土曜）を基準にする
+  const satStr=calDateStr(satDate);
+
+  const lastReset=localStorage.getItem(WEEK_RESET_KEY);
+  if(lastReset!==satStr){
     saveCultData([[],[],[],[],[],[]]);
-    localStorage.setItem(SUNDAY_RESET_KEY,todayStr);
+    localStorage.setItem(WEEK_RESET_KEY,satStr);
   }
 }
 
@@ -2387,6 +2417,7 @@ function selectCat(cat){
 
 function renderCalendar(){
   checkWeekReset();
+  updateEarlyResetButtonVisibility();
   const mon=getWeekMonday();
   const DAY_NAMES=['月','火','水','木','金','土'];
   const TODAY=calDateStr(new Date());
@@ -2881,6 +2912,34 @@ function cultResetConfirm(){
     btn.textContent='もう一度タップで実行';
     btn.style.color='#EF4444';btn.dataset.c='1';
     setTimeout(()=>{btn.textContent='全データをリセット';btn.style.color='';btn.dataset.c='0';},3000);
+  }
+}
+
+// 土曜AM8時〜12時の間だけ「週リセットを早める」ボタンを表示する
+// （12時になれば自動リセットされるため、それより前に任意で前倒ししたい場合の機能）
+function updateEarlyResetButtonVisibility(){
+  const btn=document.getElementById('cult-early-reset-btn');
+  if(!btn)return;
+  const now=new Date(),day=now.getDay(),hour=now.getHours();
+  const inWindow=(day===6&&hour>=8&&hour<12);
+  btn.style.display=inWindow?'block':'none';
+}
+
+function cultEarlyResetConfirm(){
+  const btn=document.getElementById('cult-early-reset-btn');
+  const original='🕗 週リセットを早める（土曜12時を待たずに来週へ）';
+  if(btn.dataset.c==='1'){
+    saveCultData([[],[],[],[],[],[]]);
+    // 自動リセット側の記録も更新し、12時になった際に二重リセットされないようにする
+    const satStr=calDateStr(new Date());
+    localStorage.setItem(WEEK_RESET_KEY,satStr);
+    btn.textContent=original;
+    btn.style.color='';btn.style.background='';btn.dataset.c='0';
+    renderCalendar();playTheme(true);
+  }else{
+    btn.textContent='もう一度タップで来週へ切替';
+    btn.style.color='#fff';btn.style.background='#D4AF5A';btn.dataset.c='1';
+    setTimeout(()=>{btn.textContent=original;btn.style.color='';btn.style.background='';btn.dataset.c='0';},3000);
   }
 }
 
