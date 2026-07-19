@@ -249,7 +249,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cat-btn.green{background:#1A1A1A;border-color:#22C55E33;color:#22C55E66}
 .cat-btn.green.sel{background:#22C55E18;border-color:#22C55E;color:#22C55E}
 .cal-day{margin:8px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
-.cal-day-hdr{background:#1A1A1A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #D4AF5A22}
+.cal-day-hdr{background:#1A1A1A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid transparent;transition:border-color 0.3s ease}
+.cal-day-fold-hdr{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cal-day-fold-hdr.hdr-open{border-bottom-color:#D4AF5A22}
+.cal-day-fold-arr{font-size:10px;color:#D4AF5A;transition:transform 0.3s ease;flex-shrink:0}
+.cal-day-fold-arr:not(.open){transform:rotate(-90deg)}
+.cal-day-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease}
+.cal-day-fold-body.open{max-height:1200px;opacity:1}
 .cal-day-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#E8E0D0}
 .cal-day-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.5px}
 .cal-day-badge.free{background:#22C55E18;color:#22C55E}
@@ -2476,6 +2482,8 @@ function checkWeekReset(){
   if(lastReset!==satStr){
     saveCultData([[],[],[],[],[],[]]);
     localStorage.setItem(WEEK_RESET_KEY,satStr);
+    // 週が切り替わったら、パネルの開閉状態も「今日だけ開く」デフォルトに戻す
+    for(const k in _calDayFoldState)delete _calDayFoldState[k];
   }
 }
 
@@ -2506,7 +2514,7 @@ function renderCalendar(){
     const badge=events.length===0?'<span class="cal-day-badge free">FREE</span>':
       hasRed?'<span class="cal-day-badge danger">要回避</span>':
       hasOrange?'<span class="cal-day-badge warn">注意</span>':'<span class="cal-day-badge free">🟢あり</span>';
-    html+=`<div class="cal-day${isToday?' cal-today':''}"><div class="cal-day-hdr"><span class="cal-day-name">${DAY_NAMES[i]} ${md}</span>${badge}</div>`;
+    html+=`<div class="cal-day${isToday?' cal-today':''}" data-cal-day-idx="${i}"><div class="cal-day-hdr cal-day-fold-hdr" onclick="toggleCalDayFold(${i})"><span class="cal-day-name">${DAY_NAMES[i]} ${md}</span><div style="display:flex;align-items:center;gap:10px;">${badge}<span class="cal-day-fold-arr" id="cal-day-fold-arr-${i}">▼</span></div></div><div class="cal-day-fold-body" id="cal-day-fold-body-${i}">`;
     if(events.length===0){html+=`<div class="cal-empty">指標なし</div>`;}
     else{
       html+=`<div class="cal-events">`;
@@ -2522,9 +2530,44 @@ function renderCalendar(){
       });
       html+=`</div>`;
     }
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
   document.getElementById('cal-body').innerHTML=html;
+
+  // 各パネルは常に閉じた状態で描画し、その後で「今日」または既に開いていたパネルにopenを付与する
+  // （SIZER履歴と同じ理由：生成直後にopenクラスを付けるとCSSトランジションが働かないため）
+  const dayEls=document.querySelectorAll('.cal-day-fold-body');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      dayEls.forEach(el=>{
+        const idx=parseInt(el.id.replace('cal-day-fold-body-',''),10);
+        const dCheck=new Date(mon);dCheck.setDate(mon.getDate()+idx);
+        const shouldOpen=_calDayFoldState.hasOwnProperty(idx)?_calDayFoldState[idx]:(calDateStr(dCheck)===TODAY);
+        if(shouldOpen){
+          el.classList.add('open');
+          const arr=document.getElementById('cal-day-fold-arr-'+idx);
+          if(arr)arr.classList.add('open');
+          const hdr=el.previousElementSibling;
+          if(hdr)hdr.classList.add('hdr-open');
+        }
+        _calDayFoldState[idx]=shouldOpen;
+      });
+    });
+  });
+}
+
+// ===== CAL 各曜日パネルの折りたたみ =====
+let _calDayFoldState={}; // dayIdx -> true/false（開閉状態を記憶し、再描画をまたいで維持する）
+function toggleCalDayFold(idx){
+  const body=document.getElementById('cal-day-fold-body-'+idx);
+  const arr=document.getElementById('cal-day-fold-arr-'+idx);
+  const hdr=body.previousElementSibling;
+  const willOpen=!body.classList.contains('open');
+  body.classList.toggle('open',willOpen);
+  arr.classList.toggle('open',willOpen);
+  if(hdr)hdr.classList.toggle('hdr-open',willOpen);
+  _calDayFoldState[idx]=willOpen;
+  playClick(willOpen);
 }
 
 // ===== 並び替えモード =====
