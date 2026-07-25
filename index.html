@@ -2260,7 +2260,10 @@ function parseImgResult(){
   const learned=loadLearnedCat();
   let lastSeenTime=''; // 直前に確定した時刻（同時刻の表示省略行に引き継ぐ用）
 
-  const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d+/i;
+  // 曜日見出し検出: 「Wed Jul 29」のように通常はスペース区切りだが、
+  // OCRがスペースを認識できず「wedjul29」のように連結してしまうケースがあるため、
+  // 空白の有無を問わず「曜日+英字3文字以上+数字1〜2桁」の並びで検出する
+  const dayLineRe=/(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*[A-Za-z]{3,}\s*\d{1,2}/i;
   // 時間パターン: 9:40am / 10:00pm / 12:00am など
   // ※ 「pm」の間にOCRが余分な文字（数字等）を誤挿入するケース（例: 3:00p0m）にも対応するため、
   //    a/pの直後は「mまでの間に最大2文字の任意の混入」を許容する
