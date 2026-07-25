@@ -87,6 +87,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .result-lot{font-family:'Oswald',sans-serif;font-size:58px;font-weight:500;letter-spacing:-2px;color:#333;line-height:1;-webkit-font-smoothing:antialiased}
 .result-lot.ok{color:#D4AF5A;text-shadow:0 0 30px #D4AF5A}
 .result-unit{font-size:12px;font-weight:700;color:#D4AF5A;margin-top:4px;letter-spacing:2px;text-transform:uppercase}
+/* ===== 疑似3Dボタンスタイル（CSSのみ・軽量、既存の色/角丸/パディングはそのまま維持） ===== */
+.btn-3d{position:relative;background-image:linear-gradient(180deg,#D4AF5A22 0%,#D4AF5A08 45%,transparent 46%,#00000022 100%);box-shadow:0 3px 0 #00000055,0 4px 8px rgba(0,0,0,0.35),inset 0 1px 0 #D4AF5A66;transform:translateY(0);transition:transform 0.12s ease,box-shadow 0.12s ease;-webkit-tap-highlight-color:transparent}
+.btn-3d:active{transform:translateY(2px);box-shadow:0 1px 0 #00000055,0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 #D4AF5A44}
+body.light .btn-3d{background-image:linear-gradient(180deg,#FFFFFF88 0%,#FFFFFF22 45%,transparent 46%,#00000011 100%);box-shadow:0 3px 0 #00000022,0 4px 8px rgba(0,0,0,0.12),inset 0 1px 0 #FFFFFFAA}
+body.light .btn-3d:active{box-shadow:0 1px 0 #00000022,0 2px 4px rgba(0,0,0,0.1),inset 0 1px 0 #FFFFFF88}
+.btn-3d:disabled{background-image:none;box-shadow:none;transform:none}
+/* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す（bodyにクラスを付けるだけの軽量な制御） */
+body.btn3d-off .btn-3d{background-image:none;box-shadow:none;transform:none;transition:none}
+body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:none}
+
 .copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:transparent;border:1px solid #D4AF5A;border-radius:6px;padding:7px 18px;color:#D4AF5A;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
 .copy-btn:active,.copy-btn.done{border-color:#D4AF5A;color:#D4AF5A}
 .result-rows{background:#141414}
@@ -436,6 +446,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
   <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
   <button class="tab-btn" id="tab-learning" onclick="switchTab('learning')" style="display:none;">LEARNING</button>
+  <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">SETTINGS</button>
 </div>
 
 <!-- SIZER TAB -->
@@ -540,8 +551,8 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <div class="result-lot" id="res-lot">—</div>
     <div class="result-unit" id="res-unit">ペアとpips数を入力</div>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
-      <button class="copy-btn" id="copy-btn" onclick="copyLot()" style="margin-top:0;">📋 lotをコピー</button>
-      <button class="copy-btn" id="save-hist-btn" onclick="saveSizerHistoryManual()" style="margin-top:0;">📌 履歴に保存</button>
+      <button class="copy-btn btn-3d" id="copy-btn" onclick="copyLot()" style="margin-top:0;">📋 lotをコピー</button>
+      <button class="copy-btn btn-3d" id="save-hist-btn" onclick="saveSizerHistoryManual()" style="margin-top:0;">📌 履歴に保存</button>
     </div>
   </div>
   <div class="result-rows">
@@ -659,8 +670,8 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       <div class="flow-q-auto" id="fq-auto"></div>
     </div>
     <div class="flow-btns">
-      <button class="flow-btn flow-yes" onclick="flowAnswer(true)">YES</button>
-      <button class="flow-btn flow-no" onclick="flowAnswer(false)">NO</button>
+      <button class="flow-btn flow-yes btn-3d" onclick="flowAnswer(true)">YES</button>
+      <button class="flow-btn flow-no btn-3d" onclick="flowAnswer(false)">NO</button>
     </div>
   </div>
   <div id="flow-result-section" style="display:none;margin-top:12px;padding:0 14px;">
@@ -670,7 +681,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       <div class="fr-reason" id="fr-reason"></div>
     </div>
     <div class="fr-path-card" id="fr-path"></div>
-    <button class="fr-reset-btn" onclick="flowReset()">🔄 もう一度チェック</button>
+    <button class="fr-reset-btn btn-3d" onclick="flowReset()">🔄 もう一度チェック</button>
   </div>
   <div class="card" style="margin:12px 14px 14px;">
     <div class="card-hdr cond-hdr" onclick="toggleCond()">
@@ -756,11 +767,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <input type="hidden" id="cult-time" value="">
         <button class="pair-btn cult-picker-btn" id="cult-cur-btn" onclick="openCultCurSheet()" style="flex:1;font-size:14px;padding:10px 12px;">通貨</button>
         <input type="hidden" id="cult-cur" value="">
-        <button class="cult-add-btn" onclick="cultAdd()">追加</button>
+        <button class="cult-add-btn btn-3d" onclick="cultAdd()">追加</button>
       </div>
 
       <!-- 一括登録ボタン -->
-      <button class="cult-confirm-btn" id="cult-confirm-btn" onclick="cultCommit()" disabled>登録する（<span id="preview-count">0</span>件）</button>
+      <button class="cult-confirm-btn btn-3d" id="cult-confirm-btn" onclick="cultCommit()" disabled>登録する（<span id="preview-count">0</span>件）</button>
 
       <!-- プレビュー一覧 -->
       <div class="cult-list-hdr" style="margin-top:10px;">
@@ -784,7 +795,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       </div>
       <input type="file" id="img-file-input" accept="image/*" style="display:none;" onchange="handleImgFile(event)">
       <div style="display:flex;gap:8px;">
-        <button class="img-upload-btn" style="flex:1;" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
+        <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
         <button class="img-clear-btn" onclick="clearImgResult()">クリア</button>
       </div>
       <div id="img-preview-wrap" style="display:none;margin-top:14px;">
@@ -809,7 +820,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
             <option value="5">土</option>
           </select>
         </div>
-        <button class="img-upload-btn" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
+        <button class="img-upload-btn btn-3d" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
       </div>
       <div id="img-parse-wrap" style="display:none;margin-top:14px;">
         <div class="lbl" style="margin-bottom:6px;">抽出候補（曜日・時間・通貨・指標名）</div>
@@ -823,7 +834,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
             <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:13px;">OFF</span>
           </div>
         </div>
-        <button class="cult-confirm-btn" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
+        <button class="cult-confirm-btn btn-3d" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
       </div>
     </div>
   </div>
@@ -838,6 +849,24 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         IMGタブでCALに送信した際、通貨＋指標名の組み合わせごとに記憶された色の対応表です。次回同じ指標が出た際、自動でこの色が適用されます。
       </div>
       <div id="learning-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div class="tab-content" id="content-settings">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">表示設定</div>
+    <div class="card-body">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-lbl">ボタンの3D効果</div>
+          <div class="toggle-sub">ONで主要ボタンに光沢・押し込みアニメーションを付与</div>
+        </div>
+        <div class="toggle-btn on" id="btn3d-toggle-btn" onclick="toggleBtn3d()">
+          <span class="toggle-txt" id="btn3d-toggle-txt">ON</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1812,13 +1841,41 @@ function toggleTheme(){
   playTheme(document.body.classList.contains('light'));
 }
 
+// ===== SETTINGS: ボタンの3D効果 ON/OFF =====
+const savedBtn3d=localStorage.getItem('ps_btn3d');
+if(savedBtn3d==='off'){
+  document.body.classList.add('btn3d-off');
+  // SETTINGSタブのトグル表示も保存済み設定に合わせておく（タブを開いた瞬間から正しい状態で見えるように）
+  const btn3dBtnEl=document.getElementById('btn3d-toggle-btn');
+  const btn3dTxtEl=document.getElementById('btn3d-toggle-txt');
+  if(btn3dBtnEl){btn3dBtnEl.classList.remove('on');}
+  if(btn3dTxtEl){btn3dTxtEl.textContent='OFF';}
+}
+function toggleBtn3d(){
+  const btn=document.getElementById('btn3d-toggle-btn');
+  const txt=document.getElementById('btn3d-toggle-txt');
+  const isOn=!document.body.classList.contains('btn3d-off');
+  if(isOn){
+    document.body.classList.add('btn3d-off');
+    btn.classList.remove('on');
+    txt.textContent='OFF';
+    localStorage.setItem('ps_btn3d','off');
+  }else{
+    document.body.classList.remove('btn3d-off');
+    btn.classList.add('on');
+    txt.textContent='ON';
+    localStorage.setItem('ps_btn3d','on');
+  }
+  playClick(!isOn);
+}
+
 function switchTab(tab){
-  // デバッグモード中はCAL・IMG・SIZER・LEARNING以外（FEE・ENTRY）への切り替えを禁止
-  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning')return;
+  // デバッグモード中はCAL・IMG・SIZER・LEARNING・SETTINGS以外（FEE・ENTRY）への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning'&&tab!=='settings')return;
   // LEARNINGタブはデバッグモード中以外は選択不可
   if(!_debugMode&&tab==='learning')return;
   playClick(tab==='fee');
-  ['sizer','fee','entry','cal','img','learning'].forEach(t=>{
+  ['sizer','fee','entry','cal','img','learning','settings'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
