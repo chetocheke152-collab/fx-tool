@@ -2281,7 +2281,11 @@ function sendImgItemsToCal(){
     alert('色が選択された項目がありません（未判定のままの項目は送れません）');
     return;
   }
-  // 学習データを更新
+  // 同じ曜日・時刻・通貨・重要度（色）の項目は、指標名が違っても1件にまとめる
+  // （トレード判断上は「その時間・その通貨は警戒すべき」という情報が1件あれば十分なため）
+  const mergedItems=mergeImgItemsBySameSlot(withCat);
+
+  // 学習データを更新（統合前の全項目分、それぞれの指標名で記憶しておく）
   const learned=loadLearnedCat();
   withCat.forEach(it=>{learned[learnKey(it.cur,it.title)]=it.cat;});
   saveLearnedCat(learned);
@@ -2292,7 +2296,7 @@ function sendImgItemsToCal(){
     // 重複判定: 時刻・通貨・色・指標名の4つ全てが完全一致した場合のみ重複とみなす
     const data=loadCultData();
     let addedCount=0;
-    withCat.forEach(it=>{
+    mergedItems.forEach(it=>{
       const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);
       if(dup)return;
       data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
@@ -2302,13 +2306,13 @@ function sendImgItemsToCal(){
     saveCultData(data);
     renderCalendar();
     playTheme(true);
-    alert(addedCount+'件をCALに直接登録しました（重複分はスキップ）。');
+    alert(addedCount+'件をCALに直接登録しました（重複・同時刻同通貨同重要度の統合分はスキップ）。');
     return;
   }
 
   // CALのプレビュー（_previewItems）に合流。重複（時刻・通貨・色・指標名の4つ全て一致）はスキップ
   let addedCount=0;
-  withCat.forEach(it=>{
+  mergedItems.forEach(it=>{
     const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat&&p.event===it.title)
       || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);})();
     if(dup)return;
@@ -2319,7 +2323,25 @@ function sendImgItemsToCal(){
   renderPreviewList();
 
   playTheme(true);
-  alert(addedCount+'件をCALのプレビューに追加しました（重複分はスキップ）。CALタブで確認・登録してください。');
+  alert(addedCount+'件をCALのプレビューに追加しました（重複・同時刻同通貨同重要度の統合分はスキップ）。CALタブで確認・登録してください。');
+}
+
+// 曜日・時刻・通貨・重要度（色）が同じ項目を1件にまとめる。
+// 先頭に見つかった項目の指標名を採用し、2件以上あれば「指標名 他」と表示する
+function mergeImgItemsBySameSlot(items){
+  const groups={};
+  const order=[];
+  items.forEach(it=>{
+    const key=it.day+'|'+(it.time||'')+'|'+it.cur+'|'+it.cat;
+    if(!groups[key]){groups[key]=[];order.push(key);}
+    groups[key].push(it);
+  });
+  return order.map(key=>{
+    const group=groups[key];
+    const first=group[0];
+    const title=group.length>1?(first.title+' 他'):first.title;
+    return {day:first.day,time:first.time,cur:first.cur,cat:first.cat,title};
+  });
 }
 
 // ===== CALENDAR =====
