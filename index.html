@@ -374,6 +374,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
   <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
   <button class="tab-btn" id="tab-learning" onclick="switchTab('learning')" style="display:none;">LEARNING</button>
+  <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">STATS</button>
   <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">SET</button>
 </div>
 
@@ -699,6 +700,57 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         IMGタブでCALに送信した際、通貨＋指標名の組み合わせごとに記憶された色の対応表です。次回同じ指標が出た際、自動でこの色が適用されます。
       </div>
       <div id="learning-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS TAB -->
+<div class="tab-content" id="content-stats">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr">MT5取引履歴を読み取る</div>
+    <div class="card-body">
+      <div style="font-size:11px;color:#555;line-height:1.7;margin-bottom:14px;">
+        MT5「履歴」タブ（約定一覧）のスクリーンショットを読み込み、損益・勝率を集計します。<br>
+        ※ ローカルOCR処理のみ・画像は端末外へ送信されません
+      </div>
+      <input type="file" id="stats-file-input" accept="image/*" style="display:none;" onchange="handleStatsFile(event)">
+      <div style="display:flex;gap:8px;">
+        <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('stats-file-input').click()">📷 画像を選択</button>
+        <button class="img-clear-btn" onclick="clearStatsResult()">クリア</button>
+      </div>
+      <div id="stats-preview-wrap" style="display:none;margin-top:14px;">
+        <img id="stats-preview" style="width:100%;border-radius:8px;border:1px solid #D4AF5A22;">
+      </div>
+      <div id="stats-ocr-status" style="display:none;margin-top:12px;text-align:center;font-size:12px;color:#D4AF5A;letter-spacing:0.5px;"></div>
+      <div id="stats-ocr-result-wrap" style="display:none;margin-top:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span class="lbl">読み取り結果（テキスト）</span>
+          <button id="stats-ocr-copy-btn" onclick="copyStatsOcrResult()" style="background:transparent;border:1px solid #D4AF5A55;border-radius:5px;color:#D4AF5A;font-size:10px;padding:4px 9px;cursor:pointer;-webkit-appearance:none;">📋 コピー</button>
+        </div>
+        <textarea id="stats-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+        <button class="img-upload-btn btn-3d" style="margin-top:10px;border-style:solid;" onclick="parseStatsResult()">この内容を解析する</button>
+      </div>
+      <div id="stats-parse-wrap" style="display:none;margin-top:14px;">
+        <div class="lbl" style="margin-bottom:6px;">抽出された決済済みトレード</div>
+        <div id="stats-parse-list"></div>
+        <button class="cult-confirm-btn btn-3d" id="stats-send-btn" style="margin-top:10px;" onclick="sendStatsItemsToHistory()">取引履歴に追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">サマリー</div>
+    <div class="card-body">
+      <div class="fee-result-box" id="stats-summary-box">
+        <div class="fee-result-row"><span class="fee-result-lbl">記録件数</span><span class="fee-result-val" id="stats-total-count">—</span></div>
+        <div class="fee-result-row"><span class="fee-result-lbl">勝率</span><span class="fee-result-val" id="stats-win-rate">—</span></div>
+        <div class="fee-result-row"><span class="fee-result-lbl">合計損益</span><span class="fee-result-val" id="stats-total-pnl">—</span></div>
+        <div class="fee-result-row"><span class="fee-result-lbl">平均損益</span><span class="fee-result-val" id="stats-avg-pnl">—</span></div>
+      </div>
+      <div style="margin-top:14px;">
+        <canvas id="stats-chart-canvas" style="width:100%;height:180px;border-radius:8px;background:#1A1A1A;border:1px solid #D4AF5A22;"></canvas>
+      </div>
+      <button class="cult-reset-btn" id="stats-clear-history-btn" onclick="clearStatsHistoryConfirm()" style="margin-top:14px;">取引履歴データをクリア</button>
     </div>
   </div>
 </div>
@@ -1590,6 +1642,282 @@ function copyImgOcrResult(){
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 
+// ===== STATS タブ：MT5取引履歴OCR（IMGタブと同じ考え方。色検出は不要なぶんシンプル） =====
+async function handleStatsFile(event){
+  const file=event.target.files[0];
+  if(!file)return;
+
+  const previewWrap=document.getElementById('stats-preview-wrap');
+  const preview=document.getElementById('stats-preview');
+  const reader=new FileReader();
+  const imgDataUrlPromise=new Promise(resolve=>{
+    reader.onload=e=>{preview.src=e.target.result;previewWrap.style.display='block';resolve(e.target.result);};
+  });
+  reader.readAsDataURL(file);
+
+  const statusEl=document.getElementById('stats-ocr-status');
+  const resultWrap=document.getElementById('stats-ocr-result-wrap');
+  const resultEl=document.getElementById('stats-ocr-result');
+  statusEl.style.display='block';
+  resultWrap.style.display='none';
+  statusEl.textContent='画像を準備中...';
+
+  try{
+    statusEl.textContent='準備中...';
+    await loadTesseractLazy();
+
+    const dataUrl=await imgDataUrlPromise;
+    const img=new Image();
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+
+    // OCR専用にコントラストを強調（IMGタブと同じ手法を流用）
+    const ocrCanvas=document.createElement('canvas');
+    ocrCanvas.width=img.naturalWidth;ocrCanvas.height=img.naturalHeight;
+    ocrCanvas.getContext('2d').drawImage(img,0,0);
+    enhanceContrastForOCR(ocrCanvas);
+
+    statusEl.textContent='解析中...';
+    const result=await Tesseract.recognize(ocrCanvas,'jpn+eng',{
+      logger:m=>{
+        if(m.status==='recognizing text'){
+          statusEl.textContent='解析中... '+Math.round(m.progress*100)+'%';
+        }else if(m.status){
+          statusEl.textContent=m.status;
+        }
+      }
+    });
+    statusEl.textContent='✅ 解析完了';
+    resultEl.value=result.data.text;
+    resultWrap.style.display='block';
+    playClick(true);
+  }catch(e){
+    statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
+    playClick(false);
+  }
+}
+
+function clearStatsResult(){
+  document.getElementById('stats-preview-wrap').style.display='none';
+  document.getElementById('stats-preview').src='';
+  document.getElementById('stats-ocr-status').style.display='none';
+  document.getElementById('stats-ocr-status').textContent='';
+  document.getElementById('stats-ocr-result-wrap').style.display='none';
+  document.getElementById('stats-ocr-result').value='';
+  document.getElementById('stats-parse-wrap').style.display='none';
+  document.getElementById('stats-parse-list').innerHTML='';
+  _statsParsedItems=[];
+  document.getElementById('stats-file-input').value='';
+  playClick(false);
+}
+
+function copyStatsOcrResult(){
+  const v=document.getElementById('stats-ocr-result').value;
+  if(!v)return;
+  const btn=document.getElementById('stats-ocr-copy-btn');
+  const original='📋 コピー';
+  const done=()=>{btn.textContent='✅ コピー済み';setTimeout(()=>{btn.textContent=original;},2000);};
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
+}
+
+// ===== STATS タブ：MT5「約定」履歴のパース =====
+// 1トレード = in行（エントリー）+ out行（決済、損益あり）のペアとして認識する。
+// 通貨ペア・in/outの検出は、OCRで空白やカンマが失われるケース（例: "NZDCHFsell,in"）にも
+// 対応できるよう、単語末尾の境界チェックを外した緩い正規表現にしている
+const STATS_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD','XAU'];
+function parseStatsResult(){
+  const text=document.getElementById('stats-ocr-result').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const pairRe=new RegExp('\\b('+STATS_CUR_LIST.join('|')+')('+STATS_CUR_LIST.join('|')+')','i');
+  const inOutRe=/(sell|buy)\s*,?\s*(in|out)/i;
+  // 損益パターン: ドル建て(例: -29.57)・円建て(例: 2 080、桁区切りに半角スペース・小数点なし)の両方に対応
+  const pnlRe=/(-?\d[\d\s]*\.\d{2}|-?\d[\d\s]*)\s*$/;
+  const dateRe=/(\d{4}\.\d{2}\.\d{2})\D{0,3}(\d{2}:\d{2}:\d{2})/;
+
+  const trades=[];
+  let pending=null;
+  lines.forEach(line=>{
+    const pairMatch=line.match(pairRe);
+    const ioMatch=line.match(inOutRe);
+    if(pairMatch&&ioMatch){
+      const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
+      const dir=ioMatch[1].toLowerCase();
+      const io=ioMatch[2].toLowerCase();
+      const pnlMatch=line.match(pnlRe);
+      if(io==='in'){
+        pending={pair,dir,pnl:null};
+      }else if(io==='out'&&pending&&pending.pair===pair){
+        // 円建ての桁区切りスペース（例: "2 080"）を除去してから数値化
+        pending.pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):0;
+      }
+      return;
+    }
+    const dateMatch=line.match(dateRe);
+    if(dateMatch&&pending&&pending.pnl!==null){
+      pending.date=dateMatch[1]+' '+dateMatch[2];
+      trades.push(pending);
+      pending=null;
+    }
+  });
+
+  renderStatsParseList(trades);
+}
+
+let _statsParsedItems=[];
+function renderStatsParseList(trades){
+  _statsParsedItems=trades;
+  const wrap=document.getElementById('stats-parse-wrap');
+  const list=document.getElementById('stats-parse-list');
+  if(trades.length===0){
+    list.innerHTML='<div style="font-size:11px;color:#333;padding:8px 0;">決済済みトレードが見つかりませんでした</div>';
+  }else{
+    list.innerHTML=trades.map(t=>{
+      const pnlColor=t.pnl>=0?'#4ADE80':'#EF4444';
+      return '<div class="img-parse-row">'
+        +'<span class="cult-item-text">'+t.date+' '+t.pair+' ('+t.dir+')</span>'
+        +'<span style="font-weight:700;color:'+pnlColor+';">'+(t.pnl>=0?'+':'')+t.pnl.toFixed(2)+'</span>'
+        +'</div>';
+    }).join('');
+  }
+  wrap.style.display='block';
+  playClick(trades.length>0);
+}
+
+// ===== STATS データの保存（直近500件まで、重複は日時・通貨・損益で判定） =====
+const STATS_HISTORY_KEY='ps_stats_history';
+const STATS_HISTORY_LIMIT=500;
+function loadStatsHistory(){
+  try{return JSON.parse(localStorage.getItem(STATS_HISTORY_KEY))||[];}catch(e){return [];}
+}
+function saveStatsHistory(arr){localStorage.setItem(STATS_HISTORY_KEY,JSON.stringify(arr));}
+
+function sendStatsItemsToHistory(){
+  if(_statsParsedItems.length===0)return;
+  const hist=loadStatsHistory();
+  let addedCount=0;
+  _statsParsedItems.forEach(t=>{
+    const dup=hist.some(h=>h.date===t.date&&h.pair===t.pair&&h.pnl===t.pnl);
+    if(dup)return;
+    hist.push({date:t.date,pair:t.pair,dir:t.dir,pnl:t.pnl});
+    addedCount++;
+  });
+  // 日時の古い順に並べ直し、直近500件のみ残す（500件を超えたら古いものから切り捨て）
+  hist.sort((a,b)=>a.date.localeCompare(b.date));
+  if(hist.length>STATS_HISTORY_LIMIT){
+    hist.splice(0,hist.length-STATS_HISTORY_LIMIT);
+  }
+  saveStatsHistory(hist);
+  renderStatsSummary();
+  playTheme(true);
+  alert(addedCount+'件を取引履歴に追加しました（重複分はスキップ）。');
+}
+
+function clearStatsHistoryConfirm(){
+  const btn=document.getElementById('stats-clear-history-btn');
+  if(btn.dataset.c==='1'){
+    saveStatsHistory([]);
+    btn.textContent='取引履歴データをクリア';btn.style.color='';btn.dataset.c='0';
+    renderStatsSummary();playClick(false);
+  }else{
+    btn.textContent='もう一度タップで実行';btn.style.color='#EF4444';btn.dataset.c='1';
+    setTimeout(()=>{btn.textContent='取引履歴データをクリア';btn.style.color='';btn.dataset.c='0';},3000);
+  }
+}
+
+// ===== サマリー表示・折れ線グラフ描画 =====
+function renderStatsSummary(){
+  const hist=loadStatsHistory();
+  const totalCountEl=document.getElementById('stats-total-count');
+  const winRateEl=document.getElementById('stats-win-rate');
+  const totalPnlEl=document.getElementById('stats-total-pnl');
+  const avgPnlEl=document.getElementById('stats-avg-pnl');
+  if(!totalCountEl)return; // STATSタブ未初期化時は何もしない
+
+  if(hist.length===0){
+    totalCountEl.textContent='0件';
+    winRateEl.textContent='—';
+    totalPnlEl.textContent='—';
+    avgPnlEl.textContent='—';
+    drawStatsChart([]);
+    return;
+  }
+
+  const wins=hist.filter(h=>h.pnl>0).length;
+  const winRate=(wins/hist.length*100).toFixed(1);
+  const totalPnl=hist.reduce((sum,h)=>sum+h.pnl,0);
+  const avgPnl=totalPnl/hist.length;
+
+  totalCountEl.textContent=hist.length+'件';
+  winRateEl.textContent=winRate+'%';
+  totalPnlEl.textContent=(totalPnl>=0?'+':'')+totalPnl.toFixed(2);
+  totalPnlEl.style.color=totalPnl>=0?'#4ADE80':'#EF4444';
+  avgPnlEl.textContent=(avgPnl>=0?'+':'')+avgPnl.toFixed(2);
+  avgPnlEl.style.color=avgPnl>=0?'#4ADE80':'#EF4444';
+
+  drawStatsChart(hist);
+}
+
+// 損益の累積推移を、外部ライブラリを使わずcanvasで自前描画する
+function drawStatsChart(hist){
+  const canvas=document.getElementById('stats-chart-canvas');
+  if(!canvas)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  const w=rect.width||canvas.parentElement.clientWidth;
+  const h=180;
+  canvas.width=w*dpr;
+  canvas.height=h*dpr;
+  canvas.style.height=h+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  if(hist.length===0){
+    ctx.fillStyle='#333';
+    ctx.font='12px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('データがありません',w/2,h/2);
+    return;
+  }
+
+  // 累積損益の推移を計算
+  let cum=0;
+  const points=hist.map(h=>{cum+=h.pnl;return cum;});
+  const minV=Math.min(0,...points);
+  const maxV=Math.max(0,...points);
+  const range=(maxV-minV)||1;
+  const padding=16;
+  const chartW=w-padding*2;
+  const chartH=h-padding*2;
+
+  // ゼロライン
+  const zeroY=padding+chartH-((0-minV)/range)*chartH;
+  ctx.strokeStyle='#D4AF5A33';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(padding,zeroY);
+  ctx.lineTo(w-padding,zeroY);
+  ctx.stroke();
+
+  // 折れ線
+  ctx.strokeStyle='#D4AF5A';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  points.forEach((v,i)=>{
+    const x=padding+(points.length===1?0:(i/(points.length-1))*chartW);
+    const y=padding+chartH-((v-minV)/range)*chartH;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // 終点のマーカー
+  const lastX=padding+chartW;
+  const lastY=padding+chartH-((points[points.length-1]-minV)/range)*chartH;
+  ctx.fillStyle=points[points.length-1]>=0?'#4ADE80':'#EF4444';
+  ctx.beginPath();
+  ctx.arc(lastX,lastY,3,0,Math.PI*2);
+  ctx.fill();
+}
+
 function setPips(v){
   const el=document.getElementById('pips');
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
@@ -1725,12 +2053,12 @@ function toggleBtn3d(){
 }
 
 function switchTab(tab){
-  // デバッグモード中はCAL・IMG・SIZER・LEARNING・SETTINGS以外（FEE）への切り替えを禁止
-  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning'&&tab!=='settings')return;
+  // デバッグモード中はCAL・IMG・SIZER・LEARNING・SETTINGS・STATS以外（FEE）への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning'&&tab!=='settings'&&tab!=='stats')return;
   // LEARNINGタブはデバッグモード中以外は選択不可
   if(!_debugMode&&tab==='learning')return;
   playClick(tab==='fee');
-  ['sizer','fee','cal','img','learning','settings'].forEach(t=>{
+  ['sizer','fee','cal','img','learning','settings','stats'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
@@ -1738,6 +2066,7 @@ function switchTab(tab){
   if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();}
   if(tab==='learning')renderLearningList();
   if(tab==='img')loadTesseractLazy(); // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）
+  if(tab==='stats'){loadTesseractLazy();renderStatsSummary();} // STATSタブもOCRを使うため遅延読み込み
 }
 
 // ===== 隠しデバッグボタン（3回タップで出現） =====
@@ -3027,6 +3356,7 @@ applyImgTabState();
 applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
+renderStatsSummary();
 </script>
 </body>
 </html>
