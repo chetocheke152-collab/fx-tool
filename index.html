@@ -163,7 +163,7 @@ body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:no
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
-.tab-btn{flex:1;padding:11px 4px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none}
+.tab-btn{flex:1;min-width:0;padding:11px 2px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tab-btn.active{color:#D4AF5A;background:#D4AF5A18;border-bottom:2px solid #D4AF5A}
 .tab-content{display:none}
 .tab-content.active{display:block}
@@ -446,7 +446,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
   <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
   <button class="tab-btn" id="tab-learning" onclick="switchTab('learning')" style="display:none;">LEARNING</button>
-  <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">SETTINGS</button>
+  <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">SET</button>
 </div>
 
 <!-- SIZER TAB -->
