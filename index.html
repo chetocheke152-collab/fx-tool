@@ -88,14 +88,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .result-lot.ok{color:#D4AF5A;text-shadow:0 0 30px #D4AF5A}
 .result-unit{font-size:12px;font-weight:700;color:#D4AF5A;margin-top:4px;letter-spacing:2px;text-transform:uppercase}
 /* ===== 疑似3Dボタンスタイル（CSSのみ・軽量、既存の色/角丸/パディングはそのまま維持） ===== */
-.btn-3d{position:relative;background-image:linear-gradient(180deg,#D4AF5A22 0%,#D4AF5A08 45%,transparent 46%,#00000022 100%);box-shadow:0 3px 0 #00000055,0 4px 8px rgba(0,0,0,0.35),inset 0 1px 0 #D4AF5A66;transform:translateY(0);transition:transform 0.12s ease,box-shadow 0.12s ease;-webkit-tap-highlight-color:transparent}
-.btn-3d:active{transform:translateY(2px);box-shadow:0 1px 0 #00000055,0 2px 4px rgba(0,0,0,0.3),inset 0 1px 0 #D4AF5A44}
-body.light .btn-3d{background-image:linear-gradient(180deg,#FFFFFF88 0%,#FFFFFF22 45%,transparent 46%,#00000011 100%);box-shadow:0 3px 0 #00000022,0 4px 8px rgba(0,0,0,0.12),inset 0 1px 0 #FFFFFFAA}
-body.light .btn-3d:active{box-shadow:0 1px 0 #00000022,0 2px 4px rgba(0,0,0,0.1),inset 0 1px 0 #FFFFFF88}
+.btn-3d{--btn3d-active-transform:perspective(300px) translateY(5px) rotateX(18deg);position:relative;background-image:linear-gradient(180deg,#D4AF5A55 0%,#D4AF5A18 45%,transparent 46%,#00000044 100%);box-shadow:0 6px 0 #00000077,0 8px 16px rgba(0,0,0,0.5),0 0 10px #D4AF5A33,inset 0 1px 0 #FFE8AA;transform:perspective(300px) translateY(0) rotateX(0deg);transform-origin:center bottom;transition:transform 0.12s ease,box-shadow 0.15s ease;-webkit-tap-highlight-color:transparent}
+.btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000077,0 1px 3px rgba(0,0,0,0.4),0 0 24px #D4AF5ACC,0 0 4px #FFE8AA,inset 0 1px 0 #D4AF5A66;text-shadow:0 0 8px #FFE8AA}
+body.light .btn-3d{background-image:linear-gradient(180deg,#FFFFFFCC 0%,#FFFFFF44 45%,transparent 46%,#00000022 100%);box-shadow:0 6px 0 #00000033,0 8px 16px rgba(0,0,0,0.2),0 0 10px #D4AF5A22,inset 0 1px 0 #FFFFFFEE}
+body.light .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000033,0 1px 3px rgba(0,0,0,0.15),0 0 20px #D4AF5A99,inset 0 1px 0 #FFFFFFCC}
 .btn-3d:disabled{background-image:none;box-shadow:none;transform:none}
+.btn-3d:disabled::after{display:none}
+.btn-3d::after{content:'';position:absolute;left:2px;right:2px;bottom:-6px;height:6px;background:linear-gradient(180deg,#8A6E2F,#3A2E12);border-radius:0 0 6px 6px;z-index:-1;transition:opacity 0.12s ease}
+.btn-3d:active::after{opacity:0}
+body.light .btn-3d::after{background:linear-gradient(180deg,#C9B896,#8A7A5C)}
 /* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す（bodyにクラスを付けるだけの軽量な制御） */
 body.btn3d-off .btn-3d{background-image:none;box-shadow:none;transform:none;transition:none}
 body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:none}
+body.btn3d-off .btn-3d::after{display:none}
 
 .copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:transparent;border:1px solid #D4AF5A;border-radius:6px;padding:7px 18px;color:#D4AF5A;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
 .copy-btn:active,.copy-btn.done{border-color:#D4AF5A;color:#D4AF5A}
