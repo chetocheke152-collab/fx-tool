@@ -1745,9 +1745,16 @@ function parseStatsResult(){
       const pnlMatch=line.match(pnlRe);
       if(io==='in'){
         pending={pair,dir,pnl:null};
-      }else if(io==='out'&&pending&&pending.pair===pair){
+      }else if(io==='out'){
         // 円建ての桁区切りスペース（例: "2 080"）を除去してから数値化
-        pending.pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):0;
+        const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):0;
+        if(pending&&pending.pair===pair){
+          // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
+          pending.pnl=pnl;
+        }else{
+          // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
+          pending={pair,dir,pnl};
+        }
       }
       return;
     }
@@ -1791,7 +1798,10 @@ function loadStatsHistory(){
 function saveStatsHistory(arr){localStorage.setItem(STATS_HISTORY_KEY,JSON.stringify(arr));}
 
 function sendStatsItemsToHistory(){
-  if(_statsParsedItems.length===0)return;
+  if(_statsParsedItems.length===0){
+    alert('追加できるトレードがありません。先に「この内容を解析する」を実行してください。');
+    return;
+  }
   const hist=loadStatsHistory();
   let addedCount=0;
   _statsParsedItems.forEach(t=>{
