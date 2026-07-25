@@ -242,6 +242,9 @@ body.btn3d-off .btn-3d::after{display:none}
 .cal-event-edit{background:transparent;border:none;color:#444;font-size:13px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-event-edit:active{color:#D4AF5A}
 .cal-event-name{font-size:11px;font-weight:600;color:#D4AF5A;flex:1;letter-spacing:0.3px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-reg-badge{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;font-size:9px;font-weight:700;flex-shrink:0;margin-left:4px}
+.cal-reg-badge.auto{background:#22C55E22;color:#4ADE80;border:1px solid #22C55E55}
+.cal-reg-badge.manual{background:#5B9EE822;color:#5B9EE8;border:1px solid #5B9EE855}
 .cal-event.sort-mode{background:#D4AF5A08}
 .cal-sort-btn{background:transparent;border:1px solid #D4AF5A44;border-radius:5px;color:#D4AF5A;font-size:11px;cursor:pointer;padding:4px 7px;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .cal-sort-btn:active{background:#D4AF5A18}
@@ -655,7 +658,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <button id="img-ocr-copy-btn" onclick="copyImgOcrResult()" style="background:transparent;border:1px solid #D4AF5A55;border-radius:5px;color:#D4AF5A;font-size:10px;padding:4px 9px;cursor:pointer;-webkit-appearance:none;">📋 コピー</button>
         </div>
         <textarea id="img-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
-        <div class="field" style="margin-top:10px;">
+        <div class="field" id="img-fallback-day-wrap" style="margin-top:10px;">
           <span class="lbl">対象曜日（画像内に曜日見出しが無い場合に使用）</span>
           <select id="img-fallback-day" class="cult-input" style="width:100%;">
             <option value="">自動判定（見出しがあればそちらを優先）</option>
@@ -676,9 +679,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           ※ タップで色を選択・変更できます（未判定のままの項目はCALに送られません）
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px;">
-          <span style="font-size:11px;color:#666;letter-spacing:0.3px;">直接登録モード（プレビューを経ずに即登録）</span>
-          <div class="toggle-btn" id="img-direct-toggle-btn" onclick="toggleImgDirectMode()" style="width:56px;height:28px;">
-            <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:13px;">OFF</span>
+          <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
+          <div class="toggle-btn" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
+            <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
           </div>
         </div>
         <button class="cult-confirm-btn btn-3d" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
@@ -1334,8 +1337,8 @@ function renderSizerHistPriceArea(idx,h,expanded){
       +'<input type="text" inputmode="decimal" enterkeyhint="'+enterHint+'" class="sizer-hist-price-input" id="sizer-hist-price-'+r.key+'-'+idx+'" value="'+r.val+'" placeholder="未入力"'
       +' onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(nextId?('document.getElementById(\''+nextId+'\').focus();'):'this.blur();')+'}"'
       +' oninput="advanceSizerPriceFocus(this,'+(nextId?('\''+nextId+'\''):'null')+')"'
-      +' onchange="updateSizerHistPrice('+idx+',\''+r.key+'\');advanceSizerPriceOnChange(this,'+(nextId?('\''+nextId+'\''):'null')+')"'
-      +' onfocusout="handleSizerPriceFocusOut('+idx+')">'
+      +' onchange="updateSizerHistPrice('+idx+',\''+r.key+'\')"'
+      +' onfocusout="advanceSizerPriceOnChange(this,'+(nextId?('\''+nextId+'\''):'null')+');handleSizerPriceFocusOut('+idx+')">'
       +'<button class="sizer-hist-price-copy sizer-price-copy-'+r.key+'" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
       +'</div>';
     }).join('')
@@ -1780,6 +1783,7 @@ function toggleDebugMode(){
   _previewItems=loadPreviewItems();
   renderPreviewList();
   renderSizerHistory();
+  applyImgDirectModeUI(); // デバッグOFF時、自動登録モードが選択されていた場合は表示上も直接登録へ格下げする
 
   // 無効化タブ（FEE）、およびOFFにした場合のLEARNINGタブが選択中だった場合はCALタブへ強制切替
   const activeTab=document.querySelector('.tab-content.active').id.replace('content-','');
@@ -2250,26 +2254,53 @@ function renderImgParseList(items){
 }
 
 // ===== 直接登録モード（プレビューを経ずにCALへ即登録） =====
-const IMG_DIRECT_KEY='ps_img_direct_mode';
+// ===== IMGタブ 登録モード（通常 → 直接登録 → 自動登録 を巡回） =====
+// 「自動登録」は人の確認を一切介さずCALへ登録する強力なモードのため、デバッグモード中のみ選択可能とする
+const IMG_MODE_KEY='ps_img_register_mode'; // 'normal' | 'direct' | 'auto'
+const IMG_MODE_LABELS={normal:'通常',direct:'直接登録',auto:'自動登録'};
+const IMG_MODE_SUB_LABELS={
+  normal:'登録モード（プレビュー経由）',
+  direct:'登録モード（プレビューを経ずに即登録）',
+  auto:'登録モード（判定・確認なしで自動登録・デバッグ専用）'
+};
+function getImgRegisterMode(){
+  const saved=localStorage.getItem(IMG_MODE_KEY)||'normal';
+  // 自動登録はデバッグモード限定。デバッグOFF中に自動登録が保存されていた場合は直接登録まで戻す
+  if(saved==='auto'&&!isDebugMode())return 'direct';
+  return saved;
+}
 function applyImgDirectModeUI(){
-  const enabled=localStorage.getItem(IMG_DIRECT_KEY)==='1';
+  const mode=getImgRegisterMode();
   const btn=document.getElementById('img-direct-toggle-btn');
   const txt=document.getElementById('img-direct-toggle-txt');
+  const lbl=document.getElementById('img-mode-lbl');
   const sendBtn=document.getElementById('img-send-btn');
-  if(btn){btn.classList.toggle('on',enabled);}
-  if(txt){txt.textContent=enabled?'ON':'OFF';}
-  if(sendBtn){sendBtn.textContent=enabled?'CALに直接登録する':'CALのプレビューに送る';}
+  const fallbackWrap=document.getElementById('img-fallback-day-wrap');
+  const fallbackSelect=document.getElementById('img-fallback-day');
+  if(btn){btn.classList.toggle('on',mode!=='normal');}
+  if(txt){txt.textContent=IMG_MODE_LABELS[mode];}
+  if(lbl){lbl.textContent=IMG_MODE_SUB_LABELS[mode];}
+  if(sendBtn){
+    sendBtn.textContent=mode==='auto'?'CALへ自動登録する':mode==='direct'?'CALに直接登録する':'CALのプレビューに送る';
+  }
+  // 自動登録モード中は「対象曜日」の手動指定は不要（常に自動判定＝見出し優先）なので隠す
+  if(fallbackWrap){fallbackWrap.style.display=(mode==='auto')?'none':'';}
+  if(fallbackSelect&&mode==='auto'){fallbackSelect.value='';} // 自動判定に強制固定
 }
-function toggleImgDirectMode(){
-  const enabled=localStorage.getItem(IMG_DIRECT_KEY)==='1';
-  localStorage.setItem(IMG_DIRECT_KEY,enabled?'0':'1');
+function cycleImgRegisterMode(){
+  const order=isDebugMode()?['normal','direct','auto']:['normal','direct']; // デバッグモード中以外は自動登録を選べない
+  const current=getImgRegisterMode();
+  const idx=order.indexOf(current);
+  const next=order[(idx+1)%order.length];
+  localStorage.setItem(IMG_MODE_KEY,next);
   applyImgDirectModeUI();
-  playClick(!enabled);
+  playClick(next!=='normal');
 }
 
 // IMGの解析結果をCALへ送信＋学習データを保存
-// 直接登録モードOFF時: プレビューへ合流（従来通り、確認を挟む）
-// 直接登録モードON時: 重複チェックのみ行い、CALデータへ即時保存
+// 通常モード: プレビューへ合流（従来通り、CALタブでの確認を挟む）
+// 直接登録モード: 重複チェックのみ行い、CALデータへ即時保存（人が色を確認した上で送信）
+// 自動登録モード（デバッグ専用）: 直接登録と同様に即時保存するが、登録元マークを「自」にする
 function sendImgItemsToCal(){
   const withCat=_imgParsedItems.filter(it=>it.cat!==null);
   if(withCat.length===0){
@@ -2285,23 +2316,26 @@ function sendImgItemsToCal(){
   withCat.forEach(it=>{learned[learnKey(it.cur,it.title)]=it.cat;});
   saveLearnedCat(learned);
 
-  const directMode=localStorage.getItem(IMG_DIRECT_KEY)==='1';
+  const mode=getImgRegisterMode(); // 'normal' | 'direct' | 'auto'
+  // 「自」＝人の確認を介さず自動登録、「手」＝人が直接登録・プレビュー経由のいずれかで送ったもの
+  const src=mode==='auto'?'auto':'manual';
 
-  if(directMode){
+  if(mode==='direct'||mode==='auto'){
     // 重複判定: 時刻・通貨・色・指標名の4つ全てが完全一致した場合のみ重複とみなす
     const data=loadCultData();
     let addedCount=0;
     mergedItems.forEach(it=>{
       const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);
       if(dup)return;
-      data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
+      data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title,src});
       addedCount++;
     });
     data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
     saveCultData(data);
     renderCalendar();
     playTheme(true);
-    alert(addedCount+'件をCALに直接登録しました（重複・同時刻同通貨同重要度の統合分はスキップ）。');
+    const modeLabel=mode==='auto'?'自動登録':'直接登録';
+    alert(addedCount+'件をCALに'+modeLabel+'しました（重複・同時刻同通貨同重要度の統合分はスキップ）。');
     return;
   }
 
@@ -2311,7 +2345,7 @@ function sendImgItemsToCal(){
     const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat&&p.event===it.title)
       || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);})();
     if(dup)return;
-    _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title});
+    _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title,src});
     addedCount++;
   });
   savePreviewItems();
@@ -2413,7 +2447,7 @@ function renderCalendar(){
     const events=(calData[i]||[]).map(e=>({
       time:e.time,cur:e.cur,event:e.event||'',
       dot:e.cat==='red'?'🔴':e.cat==='orange'?'🟠':'🟢',
-      src:e.cat==='green'?'カルト':'FF'
+      regSrc:e.src||'' // IMG経由で登録された場合のみ 'auto' または 'manual'
     }));
     const hasRed=events.some(e=>e.dot==='🔴'),hasOrange=events.some(e=>e.dot==='🟠');
     const badge=events.length===0?'<span class="cal-day-badge free">FREE</span>':
@@ -2424,7 +2458,9 @@ function renderCalendar(){
     else{
       html+=`<div class="cal-events">`;
       events.forEach((e,j)=>{
-        const eventName=`<span class="cal-event-name">${e.event||''}</span>`;
+        // IMG経由で登録された項目のみ「自」（自動登録）「手」（手動確認・直接登録・プレビュー経由）のマークを表示
+        const regBadge=e.regSrc?`<span class="cal-reg-badge ${e.regSrc}">${e.regSrc==='auto'?'自':'手'}</span>`:'';
+        const eventName=`<span class="cal-event-name">${e.event||''}</span>${regBadge}`;
         if(_sortMode){
           const upDisabled=j===0?' disabled':'';
           const downDisabled=j===events.length-1?' disabled':'';
@@ -2895,7 +2931,9 @@ function cultCommit(){
   if(_previewItems.length===0)return;
   const data=loadCultData();
   _previewItems.forEach(item=>{
-    data[item.day].push({time:item.time,cur:item.cur,cat:item.cat,event:item.event||''});
+    const entry={time:item.time,cur:item.cur,cat:item.cat,event:item.event||''};
+    if(item.src)entry.src=item.src; // IMG経由の場合のみ登録元マーク（自/手）を引き継ぐ
+    data[item.day].push(entry);
   });
   data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
   saveCultData(data);
