@@ -88,13 +88,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .result-lot.ok{color:#D4AF5A;text-shadow:0 0 30px #D4AF5A}
 .result-unit{font-size:12px;font-weight:700;color:#D4AF5A;margin-top:4px;letter-spacing:2px;text-transform:uppercase}
 /* ===== 疑似3Dボタンスタイル（CSSのみ・軽量、既存の色/角丸/パディングはそのまま維持） ===== */
-.btn-3d{--btn3d-active-transform:perspective(300px) translateY(8px) rotateX(28deg);position:relative;background-image:linear-gradient(180deg,#D4AF5A40 0%,#D4AF5A15 40%,transparent 46%,#00000055 100%);box-shadow:0 9px 0 #00000099,0 12px 22px rgba(0,0,0,0.6),0 0 16px #D4AF5A55,inset 0 1px 0 #FFF3D0;transform:perspective(300px) translateY(0) rotateX(4deg);transform-origin:center bottom;transition:transform 0.12s ease,box-shadow 0.15s ease;-webkit-tap-highlight-color:transparent}
+.btn-3d{--btn3d-active-transform:perspective(300px) translateY(8px) rotateX(28deg);position:relative;background-image:linear-gradient(180deg,#D4AF5A40 0%,#D4AF5A15 40%,transparent 46%,#00000055 100%);box-shadow:0 9px 0 #00000099,0 14px 28px rgba(0,0,0,0.65),0 0 22px #D4AF5A77,0 0 6px #D4AF5A99,inset 0 1px 0 #FFF3D0;transform:perspective(300px) translateY(0) rotateX(4deg);transform-origin:center bottom;transition:transform 0.12s ease,box-shadow 0.15s ease;-webkit-tap-highlight-color:transparent}
 .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000099,0 1px 3px rgba(0,0,0,0.5),0 0 30px #D4AF5AEE,0 0 6px #FFF3D0,inset 0 1px 0 #D4AF5A88;text-shadow:0 0 10px #FFF3D0}
 body.light .btn-3d{background-image:linear-gradient(180deg,#FFFFFFDD 0%,#FFFFFF55 40%,transparent 46%,#00000022 100%);box-shadow:0 9px 0 #00000044,0 12px 22px rgba(0,0,0,0.25),0 0 16px #D4AF5A44,inset 0 1px 0 #FFFFFF}
 body.light .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000044,0 1px 3px rgba(0,0,0,0.2),0 0 26px #D4AF5ACC,inset 0 1px 0 #FFFFFF}
 .btn-3d:disabled{background-image:none;box-shadow:none;transform:none}
 .btn-3d:disabled::after{display:none}
-.btn-3d::after{content:'';position:absolute;left:1px;right:1px;bottom:-9px;height:9px;background:linear-gradient(180deg,#7A5E27,#2A2008);border-radius:0 0 8px 8px;z-index:-1;transition:opacity 0.12s ease}
+.btn-3d::after{content:'';position:absolute;left:1px;right:1px;bottom:-9px;height:9px;background:linear-gradient(180deg,#A6813A,#2A2008);border-radius:0 0 8px 8px;z-index:-1;transition:opacity 0.12s ease}
 .btn-3d:active::after{opacity:0}
 body.light .btn-3d::after{background:linear-gradient(180deg,#B8A578,#6B5C3E)}
 /* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す（bodyにクラスを付けるだけの軽量な制御） */
@@ -157,7 +157,6 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-price-copy-tp{background:#4ADE8022;border:1px solid #4ADE80;color:#4ADE80;font-weight:700}
 .sizer-price-row-tp .sizer-hist-price-input{border-color:#4ADE8033}
 .sizer-hist-price-input.locked{border-color:transparent;background:transparent;color:#888;cursor:default}
-.sizer-price-unlock-zone{-webkit-tap-highlight-color:transparent}
 .sizer-price-dir-btn{flex:1;padding:12px 0;background:#1A1A1A;border:2px solid #333;border-radius:8px;color:#666;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
 .sizer-price-dir-btn.sel-buy{background:#22C55E18;border-color:#22C55E;color:#22C55E}
 .sizer-price-dir-btn.sel-sell{background:#EF444418;border-color:#EF4444;color:#EF4444}
@@ -1266,7 +1265,6 @@ function renderSizerHistory(){
         requestAnimationFrame(()=>{target.classList.add('open');});
       });
     }
-    scheduleSizerPriceLock(_sizerHistExpanded); // 開いた時点から3秒後にロックを予約
   }
 }
 
@@ -1327,15 +1325,20 @@ function renderSizerHistPriceArea(idx,h,expanded){
     +'<button class="sizer-price-dir-btn'+(h.dir==='sell'?' sel-sell':'')+'" style="padding:7px 0;font-size:12px;" onclick="setSizerHistDir('+idx+',\'sell\')">SELL</button>'
     +'</div>'
     +'</div>'
-    +'<div class="sizer-price-unlock-zone" onpointerdown="startSizerUnlockPress('+idx+')" onpointerup="cancelSizerUnlockPress()" onpointerleave="cancelSizerUnlockPress()" onpointercancel="cancelSizerUnlockPress()">'
-    +rows.map(r=>
-      '<div class="sizer-hist-price-row sizer-price-row-'+r.key+'" id="sizer-hist-row-'+r.key+'-'+idx+'">'
+    +rows.map((r,ri)=>{
+      const nextKey=ri<rows.length-1?rows[ri+1].key:null;
+      const nextId=nextKey?('sizer-hist-price-'+nextKey+'-'+idx):null;
+      const enterHint=nextId?'next':'done';
+      return '<div class="sizer-hist-price-row sizer-price-row-'+r.key+'" id="sizer-hist-row-'+r.key+'-'+idx+'">'
       +'<span class="sizer-hist-price-lbl sizer-price-lbl-'+r.key+'">'+r.lbl+'</span>'
-      +'<input type="text" inputmode="decimal" class="sizer-hist-price-input" id="sizer-hist-price-'+r.key+'-'+idx+'" value="'+r.val+'" placeholder="未入力" onchange="updateSizerHistPrice('+idx+',\''+r.key+'\')">'
+      +'<input type="text" inputmode="decimal" enterkeyhint="'+enterHint+'" class="sizer-hist-price-input" id="sizer-hist-price-'+r.key+'-'+idx+'" value="'+r.val+'" placeholder="未入力"'
+      +' onkeydown="if(event.key===\'Enter\'){event.preventDefault();'+(nextId?('document.getElementById(\''+nextId+'\').focus();'):'this.blur();')+'}"'
+      +' oninput="advanceSizerPriceFocus(this,'+(nextId?('\''+nextId+'\''):'null')+')"'
+      +' onchange="updateSizerHistPrice('+idx+',\''+r.key+'\');advanceSizerPriceOnChange(this,'+(nextId?('\''+nextId+'\''):'null')+')"'
+      +' onfocusout="handleSizerPriceFocusOut('+idx+')">'
       +'<button class="sizer-hist-price-copy sizer-price-copy-'+r.key+'" onclick="copySizerHistPrice('+idx+',\''+r.key+'\')">📋</button>'
-      +'</div>'
-    ).join('')
-    +'</div>'
+      +'</div>';
+    }).join('')
     +'</div>'
     +'</div>';
 }
@@ -1378,37 +1381,29 @@ function updateSizerHistPrice(idx,key){
   if(!h)return;
   h[key]=document.getElementById('sizer-hist-price-'+key+'-'+idx).value.trim();
   saveSizerHistoryArr(hist);
-  scheduleSizerPriceLock(idx);
 }
 
-// ===== IN/SL/TP 誤入力防止：一定時間操作がなければ自動的に編集ロックする =====
-let _sizerPriceLockTimers={}; // idx -> timerId
-function scheduleSizerPriceLock(idx){
-  clearTimeout(_sizerPriceLockTimers[idx]);
-  _sizerPriceLockTimers[idx]=setTimeout(()=>{lockSizerPriceInputs(idx);},3000);
-}
+// ===== IN/SL/TP 誤入力防止 =====
+// 展開ボタン（🔽）を開いた時点＝編集モード。IN/SL/TPのいずれかからフォーカスが外れた時点で
+// 3項目まとめて即座にロックする。再編集するには展開を一度閉じて開き直す（🔽を再度押す）
 function lockSizerPriceInputs(idx){
   ['in','sl','tp'].forEach(key=>{
     const input=document.getElementById('sizer-hist-price-'+key+'-'+idx);
     if(input){input.readOnly=true;input.classList.add('locked');}
   });
 }
-function unlockSizerPriceInputs(idx){
-  ['in','sl','tp'].forEach(key=>{
-    const input=document.getElementById('sizer-hist-price-'+key+'-'+idx);
-    if(input){input.readOnly=false;input.classList.remove('locked');}
-  });
-  playClick(true);
-  // 解除後も操作がなければ再び自動ロックする
-  scheduleSizerPriceLock(idx);
-}
-// 中央付近（方向ボタンの下あたり）の長押しでロック解除
-let _sizerUnlockPressTimer=null;
-function startSizerUnlockPress(idx){
-  _sizerUnlockPressTimer=setTimeout(()=>{unlockSizerPriceInputs(idx);},500);
-}
-function cancelSizerUnlockPress(){
-  clearTimeout(_sizerUnlockPressTimer);
+function handleSizerPriceFocusOut(idx){
+  // フォーカスが完全に展開エリアの外へ出た場合のみロックする
+  // （IN→SL→TPのように同じ3項目間を移動している最中は誤ってロックしない）
+  setTimeout(()=>{
+    const wrap=document.querySelector('[data-price-idx="'+idx+'"]');
+    if(!wrap)return;
+    const active=document.activeElement;
+    const stillInside=wrap.contains(active);
+    if(!stillInside){
+      lockSizerPriceInputs(idx);
+    }
+  },0);
 }
 
 function copySizerHistPrice(idx,key){
