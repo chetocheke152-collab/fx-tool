@@ -189,6 +189,17 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .learning-cat-badge.green{background:#22C55E18;color:#4ADE80}
 .learning-empty{font-size:11px;color:#333;padding:14px 0;text-align:center;letter-spacing:0.3px}
 .close-check-card{margin:14px 14px 0;padding:16px;border-radius:12px;display:flex;align-items:center;gap:14px;background:#141414;border:1px solid #22C55E33;transition:all 0.3s}
+.sizer-today-card{background:#141414;border-radius:12px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color 0.2s}
+.sizer-today-card.has-red{border:1px solid #EF444455}
+.sizer-today-card.has-orange{border:1px solid #F59E0B55}
+.sizer-today-hdr{display:flex;align-items:center;justify-content:space-between}
+.sizer-today-lbl{font-size:11px;font-weight:700;color:#888;letter-spacing:0.5px}
+.sizer-today-count{font-size:10px;color:#666}
+.sizer-today-list{margin-top:8px;padding-top:8px;border-top:1px solid #D4AF5A11}
+.sizer-today-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.sizer-today-time{font-family:'Oswald',sans-serif;color:#888;min-width:40px}
+.sizer-today-cur{font-weight:700;color:#E8E0D0;min-width:32px}
+.sizer-today-name{color:#D4AF5A;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .close-check-card.alert{background:#1A0F0F;border-color:#EF4444;box-shadow:0 0 20px #EF444422}
 .close-check-icon{font-size:28px;flex-shrink:0}
 .close-check-info{flex:1;min-width:0}
@@ -372,6 +383,9 @@ body.light .img-clear-btn{border-color:#D4AF5A33;color:#AAA}
 body.light .img-cat-dot.sel{background:#D4AF5A18;border-color:#D4AF5A44}
 body.light .learning-title{color:#888}
 body.light .close-check-card{background:#FFFFFF;border-color:#22C55E44}
+body.light .sizer-today-card{background:#FFFFFF}
+body.light .sizer-today-lbl{color:#888}
+body.light .sizer-today-cur{color:#1A1A1A}
 body.light .close-check-card.alert{background:#FFF5F5;border-color:#EF4444}
 body.light .close-check-title{color:#1A1A1A}
 body.light .fs-node{background:#F0EDE6;border-color:#E0DDD6;color:#AAA}
@@ -426,6 +440,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 
 <!-- SIZER TAB -->
 <div class="tab-content active" id="content-sizer">
+<div id="sizer-today-events" style="display:none;margin:14px 14px 0;"></div>
 <div class="toggle-row" style="margin:14px 14px 0;">
   <div class="toggle-info">
     <div class="toggle-lbl">連動して閉じる</div>
@@ -1553,6 +1568,58 @@ function toggleSizerHistory(){
   playClick(open);
 }
 
+// ===== SIZERタブ：今日の重要指標（🔴🟠）ミニ表示 =====
+let _sizerTodayExpanded=false;
+function renderSizerTodayEvents(){
+  const wrap=document.getElementById('sizer-today-events');
+  if(!wrap)return;
+
+  const today=new Date();
+  const mon=getWeekMonday();
+  const todayStr=calDateStr(today);
+  // 表示中の週（月〜土）の中から、今日に一致する曜日インデックスを特定
+  let dayIdx=-1;
+  for(let i=0;i<6;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    if(calDateStr(d)===todayStr){dayIdx=i;break;}
+  }
+  if(dayIdx===-1){wrap.style.display='none';return;} // 今日が表示中の週に含まれない（土曜12時以降の切替直後など）
+
+  const calData=loadCultData();
+  const events=(calData[dayIdx]||[]).filter(e=>e.cat==='red'||e.cat==='orange');
+  if(events.length===0){wrap.style.display='none';return;}
+
+  const hasRed=events.some(e=>e.cat==='red');
+  const hasOrange=events.some(e=>e.cat==='orange');
+  const redCount=events.filter(e=>e.cat==='red').length;
+  const orangeCount=events.filter(e=>e.cat==='orange').length;
+  const countText=[redCount?redCount+'件🔴':'',orangeCount?orangeCount+'件🟠':''].filter(Boolean).join(' ');
+
+  const rowsHtml=events.map(e=>{
+    const dot=e.cat==='red'?'🔴':'🟠';
+    return '<div class="sizer-today-row">'
+      +'<span class="sizer-today-time">'+(e.time||'--:--')+'</span>'
+      +'<span>'+dot+'</span>'
+      +'<span class="sizer-today-cur">'+e.cur+'</span>'
+      +'<span class="sizer-today-name">'+(e.event||'')+'</span>'
+      +'</div>';
+  }).join('');
+
+  wrap.innerHTML='<div class="sizer-today-card'+(hasRed?' has-red':hasOrange?' has-orange':'')+'" onclick="toggleSizerTodayExpand()">'
+    +'<div class="sizer-today-hdr">'
+    +'<span class="sizer-today-lbl">📅 今日の重要指標</span>'
+    +'<span class="sizer-today-count">'+countText+(_sizerTodayExpanded?' ▲':' ▼')+'</span>'
+    +'</div>'
+    +(_sizerTodayExpanded?'<div class="sizer-today-list">'+rowsHtml+'</div>':'')
+    +'</div>';
+  wrap.style.display='block';
+}
+function toggleSizerTodayExpand(){
+  _sizerTodayExpanded=!_sizerTodayExpanded;
+  playClick(_sizerTodayExpanded);
+  renderSizerTodayEvents();
+}
+
 function restoreSizerHistory(idx){
   const hist=loadSizerHistory();
   const h=hist[idx];
@@ -1757,7 +1824,7 @@ function switchTab(tab){
   });
   if(tab==='cal')renderCalendar();
   if(tab==='entry')updateCloseCheck();
-  if(tab==='sizer')renderSizerHistory();
+  if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();}
   if(tab==='learning')renderLearningList();
   if(tab==='img')loadTesseractLazy(); // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）
 }
@@ -3087,6 +3154,7 @@ renderPreviewList();
 applyImgTabState();
 applyImgDirectModeUI();
 renderSizerHistory();
+renderSizerTodayEvents();
 </script>
 </body>
 </html>
