@@ -677,7 +677,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
             <option value="5">土</option>
           </select>
         </div>
-        <button class="img-upload-btn btn-3d" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
+        <button class="img-upload-btn btn-3d" id="img-parse-btn" style="margin-top:10px;border-style:solid;" onclick="parseImgResult()">この内容を解析する</button>
       </div>
       <div id="img-parse-wrap" style="display:none;margin-top:14px;">
         <div class="lbl" style="margin-bottom:6px;">抽出候補（曜日・時間・通貨・指標名）</div>
@@ -1738,33 +1738,35 @@ function parseStatsResult(){
   let pending=null;
   lines.forEach(line=>{
     const pairMatch=line.match(pairRe);
-    if(!pairMatch)return; // 通貨ペアが読み取れない行はそもそも対象外
-    const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
-    const ioMatch=line.match(inOutRe);
-    const pnlMatch=line.match(pnlRe);
-    let dir='',io='';
-    if(ioMatch){
-      dir=/^s/i.test(ioMatch[1])?'sell':'buy';
-      io=/^i/i.test(ioMatch[2])?'in':'out';
-    }
-    if(io==='in'){
-      pending={pair,dir,pnl:null};
-      return;
-    }
-    // out判定できた場合、または売買方向がひどく誤読されて不明でも、
-    // 通貨ペア・損益らしき数値が読み取れていれば「決済行」として扱う（完全な文字化け対策）
-    if(io==='out'||(!io&&pnlMatch)){
-      const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
-      if(pnl===null)return; // 損益すら読み取れない行は無視
-      if(pending&&pending.pair===pair){
-        // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
-        pending.pnl=pnl;
-      }else{
-        // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
-        pending={pair,dir:dir||'unknown',pnl};
+    if(pairMatch){
+      const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
+      const ioMatch=line.match(inOutRe);
+      const pnlMatch=line.match(pnlRe);
+      let dir='',io='';
+      if(ioMatch){
+        dir=/^s/i.test(ioMatch[1])?'sell':'buy';
+        io=/^i/i.test(ioMatch[2])?'in':'out';
+      }
+      if(io==='in'){
+        pending={pair,dir,pnl:null};
+        return;
+      }
+      // out判定できた場合、または売買方向がひどく誤読されて不明でも、
+      // 通貨ペア・損益らしき数値が読み取れていれば「決済行」として扱う（完全な文字化け対策）
+      if(io==='out'||(!io&&pnlMatch)){
+        const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
+        if(pnl===null)return; // 損益すら読み取れない行は無視
+        if(pending&&pending.pair===pair){
+          // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
+          pending.pnl=pnl;
+        }else{
+          // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
+          pending={pair,dir:dir||'unknown',pnl};
+        }
       }
       return;
     }
+    // 通貨ペアを含まない行（レート・日時のみの行）は、日時の検出を試みる
     const dateMatch=line.match(dateRe);
     if(dateMatch&&pending&&pending.pnl!==null){
       pending.date=dateMatch[1]+' '+dateMatch[2];
@@ -2378,6 +2380,13 @@ async function handleImgFile(event){
     }catch(e){_imgLineColorMap={};}
 
     playClick(true);
+
+    // 自動登録モード中は、OCR完了と同時に解析→CAL登録まで人の操作なしで自動的に進める
+    if(getImgRegisterMode()==='auto'){
+      statusEl.textContent='✅ 解析完了 → 自動で登録中...';
+      parseImgResult();
+      sendImgItemsToCal();
+    }
   }catch(e){
     statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
     playClick(false);
@@ -2623,6 +2632,7 @@ function applyImgDirectModeUI(){
   const sendBtn=document.getElementById('img-send-btn');
   const fallbackWrap=document.getElementById('img-fallback-day-wrap');
   const fallbackSelect=document.getElementById('img-fallback-day');
+  const parseBtn=document.getElementById('img-parse-btn');
   if(btn){btn.classList.toggle('on',mode!=='normal');}
   if(txt){txt.textContent=IMG_MODE_LABELS[mode];}
   if(lbl){lbl.textContent=IMG_MODE_SUB_LABELS[mode];}
@@ -2632,6 +2642,8 @@ function applyImgDirectModeUI(){
   // 自動登録モード中は「対象曜日」の手動指定は不要（常に自動判定＝見出し優先）なので隠す
   if(fallbackWrap){fallbackWrap.style.display=(mode==='auto')?'none':'';}
   if(fallbackSelect&&mode==='auto'){fallbackSelect.value='';} // 自動判定に強制固定
+  // 自動登録モード中は「解析する」ボタンも不要（OCR完了と同時に自動で解析・登録まで進むため）
+  if(parseBtn){parseBtn.style.display=(mode==='auto')?'none':'';}
 }
 function cycleImgRegisterMode(){
   const order=isDebugMode()?['normal','direct','auto']:['normal','direct']; // デバッグモード中以外は自動登録を選べない
