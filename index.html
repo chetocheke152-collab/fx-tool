@@ -649,6 +649,12 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
         <button class="img-clear-btn" onclick="clearImgResult()">クリア</button>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 10px;background:#1A1A1A;border-radius:8px;">
+        <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
+        <div class="toggle-btn" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
+          <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
+        </div>
+      </div>
       <div id="img-preview-wrap" style="display:none;margin-top:14px;">
         <img id="img-preview" style="width:100%;border-radius:8px;border:1px solid #D4AF5A22;">
       </div>
@@ -678,12 +684,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <div id="img-parse-list"></div>
         <div style="font-size:10px;color:#333;margin-top:8px;letter-spacing:0.3px;">
           ※ タップで色を選択・変更できます（未判定のままの項目はCALに送られません）
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;background:#1A1A1A;border-radius:8px;">
-          <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
-          <div class="toggle-btn" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
-            <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
-          </div>
         </div>
         <button class="cult-confirm-btn btn-3d" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
       </div>
@@ -1728,7 +1728,8 @@ function parseStatsResult(){
   const text=document.getElementById('stats-ocr-result').value;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const pairRe=new RegExp('\\b('+STATS_CUR_LIST.join('|')+')('+STATS_CUR_LIST.join('|')+')','i');
-  const inOutRe=/(sell|buy)\s*,?\s*(in|out)/i;
+  // sell→sall、in→im、out→ou/oul のようなOCR誤読パターンも吸収できるよう緩和
+  const inOutRe=/(s[ae]ll|buy)\s*,?\s*'?(i[nm]|ou[lt]?)/i;
   // 損益パターン: ドル建て(例: -29.57)・円建て(例: 2 080、桁区切りに半角スペース・小数点なし)の両方に対応
   const pnlRe=/(-?\d[\d\s]*\.\d{2}|-?\d[\d\s]*)\s*$/;
   const dateRe=/(\d{4}\.\d{2}\.\d{2})\D{0,3}(\d{2}:\d{2}:\d{2})/;
@@ -1737,24 +1738,30 @@ function parseStatsResult(){
   let pending=null;
   lines.forEach(line=>{
     const pairMatch=line.match(pairRe);
+    if(!pairMatch)return; // 通貨ペアが読み取れない行はそもそも対象外
+    const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
     const ioMatch=line.match(inOutRe);
-    if(pairMatch&&ioMatch){
-      const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
-      const dir=ioMatch[1].toLowerCase();
-      const io=ioMatch[2].toLowerCase();
-      const pnlMatch=line.match(pnlRe);
-      if(io==='in'){
-        pending={pair,dir,pnl:null};
-      }else if(io==='out'){
-        // 円建ての桁区切りスペース（例: "2 080"）を除去してから数値化
-        const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):0;
-        if(pending&&pending.pair===pair){
-          // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
-          pending.pnl=pnl;
-        }else{
-          // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
-          pending={pair,dir,pnl};
-        }
+    const pnlMatch=line.match(pnlRe);
+    let dir='',io='';
+    if(ioMatch){
+      dir=/^s/i.test(ioMatch[1])?'sell':'buy';
+      io=/^i/i.test(ioMatch[2])?'in':'out';
+    }
+    if(io==='in'){
+      pending={pair,dir,pnl:null};
+      return;
+    }
+    // out判定できた場合、または売買方向がひどく誤読されて不明でも、
+    // 通貨ペア・損益らしき数値が読み取れていれば「決済行」として扱う（完全な文字化け対策）
+    if(io==='out'||(!io&&pnlMatch)){
+      const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
+      if(pnl===null)return; // 損益すら読み取れない行は無視
+      if(pending&&pending.pair===pair){
+        // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
+        pending.pnl=pnl;
+      }else{
+        // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
+        pending={pair,dir:dir||'unknown',pnl};
       }
       return;
     }
