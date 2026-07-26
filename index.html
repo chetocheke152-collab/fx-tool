@@ -1705,11 +1705,12 @@ async function handleStatsFile(event){
     resultEl.value=result.data.text;
     resultWrap.style.display='block';
 
-    // 損益の色（赤=マイナス／青=プラス）を画像から直接読み取る（OCRが「-」記号を読み落とすケースの対策）
+    // 損益の色（赤=マイナス／青=プラス）を画像から直接読み取り、各行オブジェクトに書き込む
+    // （OCRが「-」記号を読み落とすケースの対策。行データ自体をそのまま保持し、後で解析時に使う）
+    _statsOcrLines=result.data.lines||[];
     try{
-      const lines=(result.data.lines||[]);
-      _statsLineColorMap=detectStatsPnlColor(origCanvas,lines);
-    }catch(e){_statsLineColorMap={};}
+      detectStatsPnlColor(origCanvas,_statsOcrLines);
+    }catch(e){}
 
     playClick(true);
   }catch(e){
@@ -1728,7 +1729,7 @@ function clearStatsResult(){
   document.getElementById('stats-parse-wrap').style.display='none';
   document.getElementById('stats-parse-list').innerHTML='';
   _statsParsedItems=[];
-  _statsLineColorMap={};
+  _statsOcrLines=[];
   document.getElementById('stats-file-input').value='';
   playClick(false);
 }
@@ -1748,8 +1749,15 @@ function copyStatsOcrResult(){
 // 対応できるよう、単語末尾の境界チェックを外した緩い正規表現にしている
 const STATS_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD','XAU'];
 function parseStatsResult(){
-  const text=document.getElementById('stats-ocr-result').value;
-  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  // 行データはTesseractの生の行オブジェクト（bbox・_pnlColor付き）を優先して使う。
+  // テキストエリアの値を改行分割して作った「別の文字列」を色検出のキーに使うと、
+  // Tesseract内部のテキストと微妙にズレて参照が外れることがあったため、
+  // パースと色検出を「同じ行オブジェクト」に対して行うことで、そのズレを構造的になくしている
+  const useRawLines=_statsOcrLines.length>0;
+  const lineEntries=useRawLines
+    ?_statsOcrLines.filter(l=>l.text&&l.text.trim()).map(l=>({text:l.text.trim(),pnlColor:l._pnlColor||null}))
+    :document.getElementById('stats-ocr-result').value.split('\n').map(l=>l.trim()).filter(Boolean).map(t=>({text:t,pnlColor:null}));
+
   const pairRe=new RegExp('\\b('+STATS_CUR_LIST.join('|')+')('+STATS_CUR_LIST.join('|')+')','i');
   // sell→sall、in→im、out→ou/oul のようなOCR誤読パターンも吸収できるよう緩和
   const inOutRe=/(s[ae]ll|buy)\s*,?\s*'?(i[nm]|ou[lt]?)/i;
@@ -1759,7 +1767,7 @@ function parseStatsResult(){
 
   const trades=[];
   let pending=null;
-  lines.forEach(line=>{
+  lineEntries.forEach(({text:line,pnlColor})=>{
     const pairMatch=line.match(pairRe);
     if(pairMatch){
       const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
@@ -1781,9 +1789,8 @@ function parseStatsResult(){
         if(pnl===null)return; // 損益すら読み取れない行は無視
         // 画像から実際に読み取った色（赤=マイナス／青=プラス）があれば、
         // テキスト解析の符号より優先して確定させる（OCRが「-」記号を読み落とすケースの対策）
-        const colorSign=_statsLineColorMap[line];
-        if(colorSign==='red')pnl=-Math.abs(pnl);
-        else if(colorSign==='blue')pnl=Math.abs(pnl);
+        if(pnlColor==='red')pnl=-Math.abs(pnl);
+        else if(pnlColor==='blue')pnl=Math.abs(pnl);
         if(pending&&pending.pair===pair){
           // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
           pending.pnl=pnl;
@@ -1807,7 +1814,7 @@ function parseStatsResult(){
 }
 
 let _statsParsedItems=[];
-let _statsLineColorMap={}; // 行テキスト(trim済み) -> 'red'(マイナス)|'blue'(プラス)
+let _statsOcrLines=[]; // Tesseractが検出した行オブジェクト配列（bbox・_pnlColorプロパティ付き）
 function renderStatsParseList(trades){
   _statsParsedItems=trades;
   const wrap=document.getElementById('stats-parse-wrap');
@@ -2371,9 +2378,11 @@ function classifyRedOrBlue(r,g,b){
 
 // Tesseractの行データ(bbox付き)から、損益の数値部分の色をサンプリングする。
 // FF指標のアイコン検出（行の左側）とは異なり、MT5は数値自体が着色されているため、
-// 行の右半分（損益が表示されている領域）を中心にスキャンする
+// 行の右半分（損益が表示されている領域）を中心にスキャンする。
+// ※ 検出結果は辞書のキー参照ではなく、各行オブジェクトに直接プロパティとして書き込む。
+//   テキストエリアの値を改行分割して作った「別の文字列」をキーに突き合わせる方式は、
+//   Tesseractの内部テキストと微妙にズレる場合があり、参照が外れて機能しないリスクがあるため
 function detectStatsPnlColor(canvas,lines){
-  const map={};
   try{
     const ctx=canvas.getContext('2d');
     lines.forEach(line=>{
@@ -2396,11 +2405,10 @@ function detectStatsPnlColor(canvas,lines){
       }
       const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
       if(best&&best[1]>=2&&total>0&&(best[1]/total)>=0.15){
-        map[line.text.trim()]=best[0]; // 'red'（マイナス） または 'blue'（プラス）
+        line._pnlColor=best[0]; // 'red'（マイナス） または 'blue'（プラス）を行オブジェクトに直接記録
       }
     });
   }catch(e){/* サンプリング失敗時はテキスト解析の符号にフォールバック */}
-  return map;
 }
 
 async function handleImgFile(event){
