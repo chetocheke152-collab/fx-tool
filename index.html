@@ -179,6 +179,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
 .img-upload-btn{width:100%;padding:14px;background:#1A1A1A;border:2px dashed #D4AF5A44;border-radius:10px;color:#D4AF5A;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
+.img-mode-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 10px;background:#1A1A1A;border-radius:8px}
 .img-upload-btn:active{border-color:#D4AF5A;background:#D4AF5A0A}
 .img-clear-btn{padding:0 18px;background:transparent;border:1px solid #333;border-radius:10px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s;flex-shrink:0}
 .img-clear-btn:active{border-color:#EF4444;color:#EF4444}
@@ -297,6 +298,7 @@ body.light .picker-item{color:#CCC}
 body.light .picker-item.center{color:#1A1A1A}
 body.light .qbtn{background:#F9F7F2;border-color:#D4AF5A33;color:#AAA}
 body.light .toggle-row{background:#F9F7F2;border-color:#D4AF5A33}
+body.light .cult-list-hdr{background:#F9F7F2}
 body.light .toggle-lbl{color:#1A1A1A}
 body.light .toggle-sub{color:#888}
 body.light .toggle-btn{background:#E8E4DC;border-color:#D4AF5A44}
@@ -335,6 +337,7 @@ body.light .fee-result-row{border-bottom-color:#D4AF5A11}
 body.light .fee-result-lbl{color:#888}
 body.light #pips-result-box{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .img-upload-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#D4AF5A}
+body.light .img-mode-row{background:#F9F7F2}
 body.light .img-clear-btn{border-color:#D4AF5A33;color:#AAA}
 body.light .img-cat-dot.sel{background:#D4AF5A18;border-color:#D4AF5A44}
 body.light .learning-title{color:#888}
@@ -649,7 +652,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
         <button class="img-clear-btn" onclick="clearImgResult()">クリア</button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 10px;background:#1A1A1A;border-radius:8px;">
+      <div class="img-mode-row">
         <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
         <div class="toggle-btn" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
           <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
