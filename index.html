@@ -2379,6 +2379,10 @@ function classifyRedOrBlue(r,g,b){
 // Tesseractの行データ(bbox付き)から、損益の数値部分の色をサンプリングする。
 // FF指標のアイコン検出（行の左側）とは異なり、MT5は数値自体が着色されているため、
 // 行の右半分（損益が表示されている領域）を中心にスキャンする。
+// ※ MT5の画面は取引情報（左寄り）と損益数値（画面右端）の間に大きな余白があり、
+//   Tesseractがこれを同じ行として検出せず、別々の行に分割して検出することがある。
+//   そのため、行自身の狭いbbox幅に頼らず、その行と同じ縦位置（Y座標）における
+//   「画像全体の右端付近」を直接スキャンすることで、行分割のされ方に左右されないようにしている。
 // ※ 検出結果は辞書のキー参照ではなく、各行オブジェクトに直接プロパティとして書き込む。
 //   テキストエリアの値を改行分割して作った「別の文字列」をキーに突き合わせる方式は、
 //   Tesseractの内部テキストと微妙にズレる場合があり、参照が外れて機能しないリスクがあるため
@@ -2387,14 +2391,15 @@ function detectStatsPnlColor(canvas,lines){
     const ctx=canvas.getContext('2d');
     lines.forEach(line=>{
       if(!line.bbox||!line.text||!line.text.trim())return;
-      const {x0,x1,y0,y1}=line.bbox;
+      const {y0,y1}=line.bbox;
       const cy=Math.round((y0+y1)/2);
       const lineHeight=Math.max(1,y1-y0);
-      const sampleStartX=Math.round(x0+(x1-x0)*0.5); // 行の後半（右寄り）を対象にする
+      // 画像全体の右端25%の範囲を対象にする（MT5は損益を常に画面右端に表示するため）
+      const sampleStartX=Math.round(canvas.width*0.75);
       const votes={red:0,blue:0};
       let total=0;
-      for(let x=sampleStartX;x<=x1;x+=2){
-        for(let dy=-Math.round(lineHeight*0.3);dy<=Math.round(lineHeight*0.3);dy+=2){
+      for(let x=sampleStartX;x<canvas.width;x+=2){
+        for(let dy=-Math.round(lineHeight*0.4);dy<=Math.round(lineHeight*0.4);dy+=2){
           const y=cy+dy;
           if(y<0||y>=canvas.height)continue;
           const px=ctx.getImageData(x,y,1,1).data;
