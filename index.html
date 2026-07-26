@@ -365,7 +365,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
        onclick="handleDebugTripleTap()"></div>
   <button id="debug-toggle-btn" onclick="toggleDebugMode()" style="display:none;position:absolute;top:50px;right:16px;background:transparent;border:1px solid #EF444480;border-radius:6px;padding:5px 8px;color:#EF4444;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer;z-index:5;">🧪</button>
   <div id="debug-badge" style="display:none;position:absolute;top:-1px;left:0;right:0;background:#EF4444;color:#fff;text-align:center;font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 0;">🧪 DEBUG MODE（検証用データを使用中）</div>
-  <div style="position:absolute;bottom:6px;left:16px;font-size:9px;letter-spacing:1px;color:#555;">v3.0 · 2026.07.26 09:13 (GMT+9)</div>
+  <div id="header-version-display" style="position:absolute;bottom:6px;left:16px;font-size:9px;letter-spacing:1px;color:#555;"></div>
 </div>
 
 <div class="tab-nav">
@@ -778,6 +778,13 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <span class="toggle-txt" id="img-toggle-txt2">OFF</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">変更履歴</div>
+    <div class="card-body">
+      <div id="changelog-list"></div>
     </div>
   </div>
 </div>
@@ -2105,6 +2112,7 @@ function switchTab(tab){
   if(tab==='learning')renderLearningList();
   if(tab==='img')loadTesseractLazy(); // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）
   if(tab==='stats'){loadTesseractLazy();renderStatsSummary();} // STATSタブもOCRを使うため遅延読み込み
+  if(tab==='settings')renderChangelogList();
 }
 
 // ===== 隠しデバッグボタン（3回タップで出現） =====
@@ -2570,6 +2578,38 @@ function renderLearningList(){
       +'<span class="learning-cat-badge '+cat+'">'+catLabel+'</span>'
       +'</div>';
   }).join('');
+}
+
+// ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
+// 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
+const CHANGELOG=[
+  {version:'v3.1',datetime:'2026.07.26 10:20',note:'IMG色判定を段階的審査フロー化・自動登録モードの完全連鎖化・MT5損益の色判定対応'},
+  {version:'v3.0',datetime:'2026.07.26 09:13',note:'STATSタブ新設（MT5取引履歴OCR）・ENTRYタブ削除・ボタン3D効果'},
+];
+function renderChangelogList(){
+  const list=document.getElementById('changelog-list');
+  if(!list)return;
+  if(CHANGELOG.length===0){
+    list.innerHTML='<div class="learning-empty">変更履歴がありません</div>';
+    return;
+  }
+  list.innerHTML=CHANGELOG.map(c=>
+    '<div class="learning-row" style="align-items:flex-start;">'
+    +'<span class="learning-cur" style="min-width:44px;">'+c.version+'</span>'
+    +'<div style="flex:1;">'
+    +'<div style="font-size:11px;color:#888;">'+c.datetime+'</div>'
+    +'<div style="font-size:12px;color:#ccc;margin-top:2px;line-height:1.5;">'+c.note+'</div>'
+    +'</div>'
+    +'</div>'
+  ).join('');
+}
+// ヘッダー左下のバージョン表示を、変更履歴の最新エントリ（配列の先頭）から自動生成する。
+// これにより「コードは直したがバージョン表示の更新を忘れる」というヒューマンエラーを構造的に防ぐ
+function applyHeaderVersionFromChangelog(){
+  const el=document.getElementById('header-version-display');
+  if(!el||CHANGELOG.length===0)return;
+  const latest=CHANGELOG[0];
+  el.textContent=latest.version+' · '+latest.datetime+' (GMT+9)';
 }
 
 function parseImgResult(){
@@ -3501,6 +3541,7 @@ applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
 renderStatsSummary();
+applyHeaderVersionFromChangelog();
 </script>
 </body>
 </html>
