@@ -1670,6 +1670,11 @@ async function handleStatsFile(event){
     const img=new Image();
     await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
 
+    // 元画像（損益の色検出用、コントラストは変更しない）
+    const origCanvas=document.createElement('canvas');
+    origCanvas.width=img.naturalWidth;origCanvas.height=img.naturalHeight;
+    origCanvas.getContext('2d').drawImage(img,0,0);
+
     // OCR専用にコントラストを強調（IMGタブと同じ手法を流用）
     const ocrCanvas=document.createElement('canvas');
     ocrCanvas.width=img.naturalWidth;ocrCanvas.height=img.naturalHeight;
@@ -1689,6 +1694,13 @@ async function handleStatsFile(event){
     statusEl.textContent='✅ 解析完了';
     resultEl.value=result.data.text;
     resultWrap.style.display='block';
+
+    // 損益の色（赤=マイナス／青=プラス）を画像から直接読み取る（OCRが「-」記号を読み落とすケースの対策）
+    try{
+      const lines=(result.data.lines||[]);
+      _statsLineColorMap=detectStatsPnlColor(origCanvas,lines);
+    }catch(e){_statsLineColorMap={};}
+
     playClick(true);
   }catch(e){
     statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
@@ -1706,6 +1718,7 @@ function clearStatsResult(){
   document.getElementById('stats-parse-wrap').style.display='none';
   document.getElementById('stats-parse-list').innerHTML='';
   _statsParsedItems=[];
+  _statsLineColorMap={};
   document.getElementById('stats-file-input').value='';
   playClick(false);
 }
@@ -1754,8 +1767,13 @@ function parseStatsResult(){
       // out判定できた場合、または売買方向がひどく誤読されて不明でも、
       // 通貨ペア・損益らしき数値が読み取れていれば「決済行」として扱う（完全な文字化け対策）
       if(io==='out'||(!io&&pnlMatch)){
-        const pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
+        let pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
         if(pnl===null)return; // 損益すら読み取れない行は無視
+        // 画像から実際に読み取った色（赤=マイナス／青=プラス）があれば、
+        // テキスト解析の符号より優先して確定させる（OCRが「-」記号を読み落とすケースの対策）
+        const colorSign=_statsLineColorMap[line];
+        if(colorSign==='red')pnl=-Math.abs(pnl);
+        else if(colorSign==='blue')pnl=Math.abs(pnl);
         if(pending&&pending.pair===pair){
           // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
           pending.pnl=pnl;
@@ -1779,6 +1797,7 @@ function parseStatsResult(){
 }
 
 let _statsParsedItems=[];
+let _statsLineColorMap={}; // 行テキスト(trim済み) -> 'red'(マイナス)|'blue'(プラス)
 function renderStatsParseList(trades){
   _statsParsedItems=trades;
   const wrap=document.getElementById('stats-parse-wrap');
@@ -2319,6 +2338,60 @@ function enhanceContrastForOCR(canvas){
   ctx.putImageData(imgData,0,0);
 }
 
+// ===== STATS タブ：MT5損益の符号をテキストではなく色から直接判定 =====
+// OCRは「-」（マイナス記号）のような細い文字を読み落としやすく、テキストだけでは
+// 符号を正しく復元できないケースがあるため、MT5が実際に使っている配色（赤=マイナス、青=プラス）を
+// 画像のピクセルから直接読み取り、テキスト解析の結果より優先して符号を確定させる
+function classifyRedOrBlue(r,g,b){
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  const l=(max+min)/2/255;
+  const s=max===min?0:(max-min)/(255-Math.abs(max+min-255));
+  if(s<0.25||l<0.15||l>0.9)return null; // 彩度・明度が低すぎる（グレー文字・背景等）は対象外
+  let h;
+  if(max===min)h=0;
+  else if(max===r)h=60*(((g-b)/(max-min))%6);
+  else if(max===g)h=60*((b-r)/(max-min)+2);
+  else h=60*((r-g)/(max-min)+4);
+  if(h<0)h+=360;
+  if(h<=20||h>=340)return 'red';
+  if(h>=190&&h<=250)return 'blue';
+  return null;
+}
+
+// Tesseractの行データ(bbox付き)から、損益の数値部分の色をサンプリングする。
+// FF指標のアイコン検出（行の左側）とは異なり、MT5は数値自体が着色されているため、
+// 行の右半分（損益が表示されている領域）を中心にスキャンする
+function detectStatsPnlColor(canvas,lines){
+  const map={};
+  try{
+    const ctx=canvas.getContext('2d');
+    lines.forEach(line=>{
+      if(!line.bbox||!line.text||!line.text.trim())return;
+      const {x0,x1,y0,y1}=line.bbox;
+      const cy=Math.round((y0+y1)/2);
+      const lineHeight=Math.max(1,y1-y0);
+      const sampleStartX=Math.round(x0+(x1-x0)*0.5); // 行の後半（右寄り）を対象にする
+      const votes={red:0,blue:0};
+      let total=0;
+      for(let x=sampleStartX;x<=x1;x+=2){
+        for(let dy=-Math.round(lineHeight*0.3);dy<=Math.round(lineHeight*0.3);dy+=2){
+          const y=cy+dy;
+          if(y<0||y>=canvas.height)continue;
+          const px=ctx.getImageData(x,y,1,1).data;
+          total++;
+          const cls=classifyRedOrBlue(px[0],px[1],px[2]);
+          if(cls)votes[cls]++;
+        }
+      }
+      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+      if(best&&best[1]>=2&&total>0&&(best[1]/total)>=0.15){
+        map[line.text.trim()]=best[0]; // 'red'（マイナス） または 'blue'（プラス）
+      }
+    });
+  }catch(e){/* サンプリング失敗時はテキスト解析の符号にフォールバック */}
+  return map;
+}
+
 async function handleImgFile(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -2395,6 +2468,7 @@ async function handleImgFile(event){
 
 // ===== OCR結果パース（曜日・時間・通貨・指標名を抽出） =====
 const IMG_DAY_MAP={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:-1}; // Sunは対象外(月〜土のみ)
+const CAT_LABELS={red:'🔴 赤（要回避）',orange:'🟠 橙（注意）',green:'🟢 緑（カルト）'};
 const IMG_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD'];
 
 // OCR特有のノイズ単語（1〜2文字の日本語・記号断片）を除去
@@ -2567,11 +2641,30 @@ function parseImgResult(){
     if(!title)title='（指標名不明）';
 
     const catAuto=guessImgCategory(title,curMatch);
-    const imgColor=_imgLineColorMap[line]; // 画像から実際に読み取った色（ダブルチェック）
-    const imgCat=imgColor==='skip'?null:(imgColor||null); // 黄色検出時は対象外として未判定扱い
-    // 優先順位: ①学習データ（自分で修正した実績） ②画像から読み取った実際の色 ③キーワード推測
-    const cat=learned[learnKey(curMatch,title)]||imgCat||catAuto;
-    found.push({day:curDay,time,cur:curMatch,title,cat});
+    const imgColor=_imgLineColorMap[line]; // 画像から実際に読み取った色（'red'|'orange'|'green'|'skip'(黄色確定)|undefined(検出できず)）
+
+    // 段階的な審査フロー：
+    // Lv1: 学習データ（過去に人が確定させた実績） → 候補として採用
+    // Lv2: Lv1が無ければ、指標名からのキーワード推測 → 候補として採用
+    // Lv3: 画像から実際に読み取った色で、Lv1/Lv2の候補を最終検証する関門
+    //      ・画像判定が明確に黄色（未判定）だった場合 → Lv1/Lv2の候補を却下し、未判定にする
+    //      ・画像判定が赤/橙/緑で確定した場合         → その色を最優先で採用する
+    //      ・画像判定が取得できなかった場合           → Lv1/Lv2の候補をそのまま採用する
+    // Lv4: Lv1とLv2が一致（＝確度が高い判定）していたのに、Lv3の最終結果がそれと食い違った場合のみ、
+    //      人の最終確認を挟む（それ以外の食い違いは、OCRの表記ゆれ等による偶発的な不一致の可能性が高いため対象外）
+    const lv1=learned[learnKey(curMatch,title)]||null;
+    const lv2=catAuto||null;
+    const lv1lv2Candidate=lv1||lv2;
+    let cat;
+    if(imgColor==='skip'){
+      cat=null; // Lv3で黄色確定 → 却下
+    }else if(imgColor==='red'||imgColor==='orange'||imgColor==='green'){
+      cat=imgColor; // Lv3で色を確定 → 最優先採用
+    }else{
+      cat=lv1lv2Candidate; // Lv3で判定できず → Lv1/Lv2の候補をそのまま採用
+    }
+    const needsConfirm=(lv1!==null&&lv1===lv2&&cat!==lv1);
+    found.push({day:curDay,time,cur:curMatch,title,cat,lv1lv2Candidate,needsConfirm});
   });
 
   renderImgParseList(found);
@@ -2598,8 +2691,12 @@ function renderImgParseList(items){
         const emoji=c==='red'?'🔴':c==='orange'?'🟠':'🟢';
         return '<button class="img-cat-dot'+(it.cat===c?' sel':'')+'" onclick="setImgItemCat('+i+',\''+c+'\')">'+emoji+'</button>';
       }).join('');
+      // Lv4: 学習データとキーワード推測が一致していたのに、画像判定だけが食い違った場合の警告
+      const confirmLbl=it.needsConfirm
+        ?'<button class="img-unmatched-lbl" style="cursor:pointer;background:#F59E0B18;color:#F59E0B;border:1px solid #F59E0B44;" onclick="resolveImgLv4Conflict('+i+')">⚠️ 学習データと不一致</button>'
+        :'';
       return '<div class="img-parse-row">'
-        +'<span class="cult-item-text">'+DAY_NAMES[it.day]+' '+(it.time||'--:--')+' '+it.cur+' · '+it.title+(unmatched?' <span class="img-unmatched-lbl">未判定</span>':'')+'</span>'
+        +'<span class="cult-item-text">'+DAY_NAMES[it.day]+' '+(it.time||'--:--')+' '+it.cur+' · '+it.title+(unmatched?' <span class="img-unmatched-lbl">未判定</span>':'')+confirmLbl+'</span>'
         +'<div class="img-cat-mini">'+dots+'</div>'
         +'</div>';
     }).join('');
@@ -2608,15 +2705,33 @@ function renderImgParseList(items){
   playClick(items.length>0);
 }
 
+// Lv4: 学習データ・キーワード推測は一致していたが、画像判定と食い違った項目について、
+// どちらを採用するか人に確認させる（タップで簡易確認、割り込みモーダルは出さない）
+function resolveImgLv4Conflict(idx){
+  const it=_imgParsedItems[idx];
+  if(!it)return;
+  const useOld=confirm(
+    '学習データ・指標名の推測では「'+CAT_LABELS[it.lv1lv2Candidate]+'」でしたが、\n'+
+    '今回の画像では「'+(it.cat?CAT_LABELS[it.cat]:'未判定（黄色）')+'」と読み取れました。\n\n'+
+    'OK: 学習データ側（'+CAT_LABELS[it.lv1lv2Candidate]+'）を採用する\n'+
+    'キャンセル: 今回の画像判定（'+(it.cat?CAT_LABELS[it.cat]:'未判定')+'）のままにする'
+  );
+  if(useOld){
+    it.cat=it.lv1lv2Candidate;
+  }
+  it.needsConfirm=false; // 確認済みなので警告は消す
+  renderImgParseList(_imgParsedItems);
+}
+
 // ===== 直接登録モード（プレビューを経ずにCALへ即登録） =====
 // ===== IMGタブ 登録モード（通常 → 直接登録 → 自動登録 を巡回） =====
 // 「自動登録」は人の確認を一切介さずCALへ登録する強力なモードのため、デバッグモード中のみ選択可能とする
 const IMG_MODE_KEY='ps_img_register_mode'; // 'normal' | 'direct' | 'auto'
 const IMG_MODE_LABELS={normal:'通常',direct:'直接登録',auto:'自動登録'};
 const IMG_MODE_SUB_LABELS={
-  normal:'登録モード（プレビュー経由）',
-  direct:'登録モード（プレビューを経ずに即登録）',
-  auto:'登録モード（判定・確認なしで自動登録・デバッグ専用）'
+  normal:'登録モード',
+  direct:'登録モード',
+  auto:'登録モード'
 };
 function getImgRegisterMode(){
   const saved=localStorage.getItem(IMG_MODE_KEY)||'normal';
