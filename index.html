@@ -165,6 +165,12 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-dir-badge.sell{background:#EF444418;color:#EF4444}
 .sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
+.sizer-status-section{margin-bottom:6px}
+.sizer-status-section:last-child{margin-bottom:0}
+.sizer-status-section-hdr{font-size:10px;font-weight:700;color:#D4AF5A88;letter-spacing:1px;padding:8px 0 4px;border-bottom:1px solid #D4AF5A11}
+.sizer-status-advance-btn{background:#D4AF5A18;border:1px solid #D4AF5A55;border-radius:6px;color:#D4AF5A;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
+.sizer-status-advance-btn.pending{background:#F59E0B18;border-color:#F59E0B;color:#F59E0B}
+.sizer-status-revert-btn{background:transparent;border:1px solid #333;border-radius:6px;color:#666;font-size:11px;padding:4px 7px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .tab-btn{flex:1;min-width:0;padding:11px 2px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -321,6 +327,8 @@ body.light .r-val{color:#1A1A1A}
 body.light .sizer-hist-card{background:#FFFFFF;border-color:#D4AF5A22}
 body.light .sizer-hist-hdr{background:#F0EDE6}
 body.light .sizer-hist-num{color:#D4AF5A}
+body.light .sizer-status-section-hdr{border-bottom-color:#D4AF5A22}
+body.light .sizer-status-revert-btn{border-color:#D4AF5A33;color:#999}
 body.light .sizer-hist-pair{color:#1A1A1A}
 body.light .sizer-hist-row:active{background:#D4AF5A0A}
 body.light .sizer-hist-price-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
@@ -377,7 +385,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button class="tab-btn" id="tab-cal" onclick="switchTab('cal')">CAL</button>
   <button class="tab-btn" id="tab-img" onclick="switchTab('img')" style="display:none;">IMG</button>
   <button class="tab-btn" id="tab-learning" onclick="switchTab('learning')" style="display:none;">LEARNING</button>
-  <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">STATS</button>
   <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">SET</button>
 </div>
 
@@ -703,57 +710,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         IMGタブでCALに送信した際、通貨＋指標名の組み合わせごとに記憶された色の対応表です。次回同じ指標が出た際、自動でこの色が適用されます。
       </div>
       <div id="learning-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- STATS TAB -->
-<div class="tab-content" id="content-stats">
-  <div class="card" style="margin-top:14px;">
-    <div class="card-hdr">MT5取引履歴を読み取る</div>
-    <div class="card-body">
-      <div style="font-size:11px;color:#555;line-height:1.7;margin-bottom:14px;">
-        MT5「履歴」タブ（約定一覧）のスクリーンショットを読み込み、損益・勝率を集計します。<br>
-        ※ ローカルOCR処理のみ・画像は端末外へ送信されません
-      </div>
-      <input type="file" id="stats-file-input" accept="image/*" style="display:none;" onchange="handleStatsFile(event)">
-      <div style="display:flex;gap:8px;">
-        <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('stats-file-input').click()">📷 画像を選択</button>
-        <button class="img-clear-btn" onclick="clearStatsResult()">クリア</button>
-      </div>
-      <div id="stats-preview-wrap" style="display:none;margin-top:14px;">
-        <img id="stats-preview" style="width:100%;border-radius:8px;border:1px solid #D4AF5A22;">
-      </div>
-      <div id="stats-ocr-status" style="display:none;margin-top:12px;text-align:center;font-size:12px;color:#D4AF5A;letter-spacing:0.5px;"></div>
-      <div id="stats-ocr-result-wrap" style="display:none;margin-top:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <span class="lbl">読み取り結果（テキスト）</span>
-          <button id="stats-ocr-copy-btn" onclick="copyStatsOcrResult()" style="background:transparent;border:1px solid #D4AF5A55;border-radius:5px;color:#D4AF5A;font-size:10px;padding:4px 9px;cursor:pointer;-webkit-appearance:none;">📋 コピー</button>
-        </div>
-        <textarea id="stats-ocr-result" readonly style="width:100%;min-height:160px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:12px;color:#E8E0D0;font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
-        <button class="img-upload-btn btn-3d" style="margin-top:10px;border-style:solid;" onclick="parseStatsResult()">この内容を解析する</button>
-      </div>
-      <div id="stats-parse-wrap" style="display:none;margin-top:14px;">
-        <div class="lbl" style="margin-bottom:6px;">抽出された決済済みトレード</div>
-        <div id="stats-parse-list"></div>
-        <button class="cult-confirm-btn btn-3d" id="stats-send-btn" style="margin-top:10px;" onclick="sendStatsItemsToHistory()">取引履歴に追加する</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr">サマリー</div>
-    <div class="card-body">
-      <div class="fee-result-box" id="stats-summary-box">
-        <div class="fee-result-row"><span class="fee-result-lbl">記録件数</span><span class="fee-result-val" id="stats-total-count">—</span></div>
-        <div class="fee-result-row"><span class="fee-result-lbl">勝率</span><span class="fee-result-val" id="stats-win-rate">—</span></div>
-        <div class="fee-result-row"><span class="fee-result-lbl">合計損益</span><span class="fee-result-val" id="stats-total-pnl">—</span></div>
-        <div class="fee-result-row"><span class="fee-result-lbl">平均損益</span><span class="fee-result-val" id="stats-avg-pnl">—</span></div>
-      </div>
-      <div style="margin-top:14px;">
-        <canvas id="stats-chart-canvas" style="width:100%;height:180px;border-radius:8px;background:#1A1A1A;border:1px solid #D4AF5A22;"></canvas>
-      </div>
-      <button class="cult-reset-btn" id="stats-clear-history-btn" onclick="clearStatsHistoryConfirm()" style="margin-top:14px;">取引履歴データをクリア</button>
     </div>
   </div>
 </div>
@@ -1252,13 +1208,13 @@ function renderSizerHistory(){
     return;
   }
 
-  let matchCount=0;
-  const rowsHtml=hist.map((h,i)=>{
+  // sort・deleteモードは、状態区分を無視した単一の一覧のまま（既存の挙動を変えない）
+  if(_sizerHistMode==='sort'||_sizerHistMode==='delete'){
+    let matchCount=0;
+    const rowsHtml=hist.map((h,i)=>{
       const matches=!query||h.pair.toUpperCase().includes(query);
-      if(!matches)return ''; // 検索キーワードに一致しない行は描画しない（インデックスiは元配列のまま維持）
+      if(!matches)return '';
       matchCount++;
-      const expanded=(_sizerHistExpanded===i);
-      const hasPrice=h.dir||h.in||h.sl||h.tp;
       const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
 
       if(_sizerHistMode==='sort'){
@@ -1280,47 +1236,56 @@ function renderSizerHistory(){
         +'</div>';
       }
 
-      if(_sizerHistMode==='delete'){
-        return '<div class="sizer-hist-row-wrap">'
-        +'<div class="sizer-hist-row sort-mode">'
-        +'<div class="sizer-hist-main">'
-        +'<span class="sizer-hist-num">'+(i+1)+'</span>'
-        +'<span class="sizer-hist-pair">'+h.pair+'</span>'
-        +dirBadge
-        +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
-        +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
-        +(_sizerDelPendingIdx===i
-          ?'<button class="sizer-hist-del pending" onclick="deleteSizerHistoryItem('+i+')">確認</button>'
-          :'<button class="sizer-hist-del mode-del" onclick="deleteSizerHistoryItem('+i+')">×</button>')
-        +'</div>'
-        +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
-        +'</div>'
-        +'</div>';
-      }
-
+      // delete mode
       return '<div class="sizer-hist-row-wrap">'
-      +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
+      +'<div class="sizer-hist-row sort-mode">'
       +'<div class="sizer-hist-main">'
       +'<span class="sizer-hist-num">'+(i+1)+'</span>'
       +'<span class="sizer-hist-pair">'+h.pair+'</span>'
       +dirBadge
       +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
       +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
-      +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
+      +(_sizerDelPendingIdx===i
+        ?'<button class="sizer-hist-del pending" onclick="deleteSizerHistoryItem('+i+')">確認</button>'
+        :'<button class="sizer-hist-del mode-del" onclick="deleteSizerHistoryItem('+i+')">×</button>')
       +'</div>'
       +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
       +'</div>'
-      +renderSizerHistPriceArea(i,h,expanded)
       +'</div>';
     }).join('');
 
-  list.innerHTML=matchCount>0?rowsHtml:'<div class="sizer-hist-empty">一致する履歴が見つかりません</div>';
-  const title=document.getElementById('sizer-hist-title');
-  if(title){
-    title.textContent=query
-      ?'計算履歴（'+matchCount+'/'+hist.length+'件）'
-      :(hist.length>0?'計算履歴（'+hist.length+'件）':'計算履歴');
+    list.innerHTML=matchCount>0?rowsHtml:'<div class="sizer-hist-empty">一致する履歴が見つかりません</div>';
+    updateSizerHistTitle(query,matchCount,hist.length);
+    return;
   }
+
+  // normal モード：注文の状態（通常／注文待機中／約定中）ごとに3区画に分けて表示
+  let matchCount=0;
+  const sections={normal:[],pending:[],filled:[]};
+  hist.forEach((h,i)=>{
+    const matches=!query||h.pair.toUpperCase().includes(query);
+    if(!matches)return;
+    matchCount++;
+    sections[getSizerHistStatus(h)].push(i);
+  });
+
+  const sectionOrder=[
+    {key:'pending',label:'📝 注文待機中'},
+    {key:'filled',label:'✅ 約定中'},
+    {key:'normal',label:'計算履歴'},
+  ];
+  let html='';
+  sectionOrder.forEach(sec=>{
+    const idxList=sections[sec.key];
+    if(idxList.length===0)return; // 空の区画は表示しない（通常区画が0件になることは通常運用上ほぼ無いが念のため）
+    html+='<div class="sizer-status-section">'
+      +'<div class="sizer-status-section-hdr">'+sec.label+'（'+idxList.length+'件）</div>'
+      +idxList.map(i=>renderSizerHistNormalRow(i,hist[i])).join('')
+      +'</div>';
+  });
+  list.innerHTML=matchCount>0?html:'<div class="sizer-hist-empty">一致する履歴が見つかりません</div>';
+  updateSizerHistTitle(query,matchCount,hist.length);
+
   // 展開中の項目があれば、閉じた状態で描画された直後にopenクラスを付与し、
   // ブラウザに「変化」として認識させてCSSトランジションを正しく発火させる
   if(_sizerHistExpanded!==null){
@@ -1331,6 +1296,49 @@ function renderSizerHistory(){
       });
     }
   }
+}
+
+function updateSizerHistTitle(query,matchCount,totalCount){
+  const title=document.getElementById('sizer-hist-title');
+  if(title){
+    title.textContent=query
+      ?'計算履歴（'+matchCount+'/'+totalCount+'件）'
+      :(totalCount>0?'計算履歴（'+totalCount+'件）':'計算履歴');
+  }
+}
+
+// normalモードの1行分の描画（状態遷移ボタン付き）。3区画それぞれで共通して使う
+function renderSizerHistNormalRow(i,h){
+  const expanded=(_sizerHistExpanded===i);
+  const hasPrice=h.dir||h.in||h.sl||h.tp;
+  const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const status=getSizerHistStatus(h);
+  const nextLabel=SIZER_STATUS_NEXT_LABEL[status]; // 約定中の場合はundefined（これ以上進めない）
+  const isPending=(_sizerStatusPendingIdx===i);
+  const statusBtn=nextLabel
+    ?'<button class="sizer-status-advance-btn'+(isPending?' pending':'')+'" onclick="event.stopPropagation();advanceSizerHistStatusConfirm('+i+')">'+(isPending?'本当に進める？':nextLabel)+'</button>'
+    :'';
+  const revertBtn=status!=='normal'
+    ?'<button class="sizer-status-revert-btn" onclick="event.stopPropagation();revertSizerHistStatus('+i+')" title="ひとつ前の状態に戻す">↩</button>'
+    :'';
+
+  return '<div class="sizer-hist-row-wrap">'
+  +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
+  +'<div class="sizer-hist-main">'
+  +'<span class="sizer-hist-num">'+(i+1)+'</span>'
+  +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+  +dirBadge
+  +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+  +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
+  +'</div>'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
+  +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+  +'<div style="display:flex;gap:6px;align-items:center;">'+revertBtn+statusBtn+'</div>'
+  +'</div>'
+  +'</div>'
+  +renderSizerHistPriceArea(i,h,expanded)
+  +'</div>';
 }
 
 // ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
@@ -1358,6 +1366,10 @@ function cycleSizerHistMode(){
   sub.textContent=SIZER_HIST_MODE_SUBS[_sizerHistMode];
   // 「履歴をクリア」（全削除）は削除モード中のみ表示
   document.getElementById('sizer-hist-clear-btn').style.display=(_sizerHistMode==='delete')?'block':'none';
+  // モード切替時、状態遷移の確認待ちが残っていると、戻ってきた時に別の項目に
+  // 誤って確認待ち表示が残るリスクがあるため、確実にリセットする
+  _sizerStatusPendingIdx=null;
+  clearTimeout(_sizerStatusPendingTimer);
   playClick(_sizerHistMode!=='normal');
   renderSizerHistory();
 }
@@ -1368,6 +1380,61 @@ function moveSizerHistItem(idx,dir){
   [hist[idx],hist[target]]=[hist[target],hist[idx]];
   saveSizerHistoryArr(hist);
   playClick(true);
+  renderSizerHistory();
+}
+
+// ===== 計算履歴：注文の状態管理（通常 → 注文待機中 → 約定中） =====
+// 二重注文防止のため、「まだ計算しただけ」「MT5に発注済みで約定待ち」「実際に約定済み」を区別する。
+// 状態を進める操作は、誤タップ対策として簡易確認モーダルを一度挟んでから実行する
+const SIZER_STATUS_LABELS={normal:'通常','pending':'注文待機中',filled:'約定中'};
+const SIZER_STATUS_NEXT={normal:'pending',pending:'filled'};
+const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする'};
+function getSizerHistStatus(h){return h.status||'normal';}
+
+// 状態を進める操作は、iOSでネイティブconfirm()を連続して呼ぶと以降のダイアログが
+// 抑制されてしまう既知の問題があるため、削除機能と同じ「もう一度タップで確定」方式にする
+let _sizerStatusPendingIdx=null;
+let _sizerStatusPendingTimer=null;
+function advanceSizerHistStatusConfirm(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const current=getSizerHistStatus(h);
+  const next=SIZER_STATUS_NEXT[current];
+  if(!next)return; // 既に約定中（これ以上進む状態がない）
+
+  if(_sizerStatusPendingIdx===idx){
+    // 2回目のタップ：確定して状態を進める
+    clearTimeout(_sizerStatusPendingTimer);
+    _sizerStatusPendingIdx=null;
+    h.status=next;
+    saveSizerHistoryArr(hist);
+    playTheme(true);
+    renderSizerHistory();
+  }else{
+    // 1回目のタップ：確認待ち状態にして、3秒以内の再タップを待つ
+    _sizerStatusPendingIdx=idx;
+    playClick(true);
+    renderSizerHistory();
+    clearTimeout(_sizerStatusPendingTimer);
+    _sizerStatusPendingTimer=setTimeout(()=>{
+      _sizerStatusPendingIdx=null;
+      renderSizerHistory();
+    },3000);
+  }
+}
+
+// 状態を1段階戻す（誤って進めてしまった場合の対策。こちらは確認モーダルなしで即座に戻せる）
+function revertSizerHistStatus(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const current=getSizerHistStatus(h);
+  if(current==='pending')h.status='normal';
+  else if(current==='filled')h.status='pending';
+  else return;
+  saveSizerHistoryArr(hist);
+  playClick(false);
   renderSizerHistory();
 }
 
@@ -1491,6 +1558,8 @@ function deleteSizerHistoryItem(idx){
     hist.splice(idx,1);
     saveSizerHistoryArr(hist);
     _sizerHistExpanded=null; // 削除後はインデックスがズレるため展開状態をリセット
+    _sizerStatusPendingIdx=null; // 同様の理由で、状態遷移の確認待ちもリセットする
+    clearTimeout(_sizerStatusPendingTimer);
     renderSizerHistory();
     playClick(false);
   }else{
@@ -1652,327 +1721,6 @@ function copyImgOcrResult(){
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 
-// ===== STATS タブ：MT5取引履歴OCR（IMGタブと同じ考え方。色検出は不要なぶんシンプル） =====
-async function handleStatsFile(event){
-  const file=event.target.files[0];
-  if(!file)return;
-
-  const previewWrap=document.getElementById('stats-preview-wrap');
-  const preview=document.getElementById('stats-preview');
-  const reader=new FileReader();
-  const imgDataUrlPromise=new Promise(resolve=>{
-    reader.onload=e=>{preview.src=e.target.result;previewWrap.style.display='block';resolve(e.target.result);};
-  });
-  reader.readAsDataURL(file);
-
-  const statusEl=document.getElementById('stats-ocr-status');
-  const resultWrap=document.getElementById('stats-ocr-result-wrap');
-  const resultEl=document.getElementById('stats-ocr-result');
-  statusEl.style.display='block';
-  resultWrap.style.display='none';
-  statusEl.textContent='画像を準備中...';
-
-  try{
-    statusEl.textContent='準備中...';
-    await loadTesseractLazy();
-
-    const dataUrl=await imgDataUrlPromise;
-    const img=new Image();
-    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
-
-    // 元画像（損益の色検出用、コントラストは変更しない）
-    const origCanvas=document.createElement('canvas');
-    origCanvas.width=img.naturalWidth;origCanvas.height=img.naturalHeight;
-    origCanvas.getContext('2d').drawImage(img,0,0);
-
-    // OCR専用にコントラストを強調（IMGタブと同じ手法を流用）
-    const ocrCanvas=document.createElement('canvas');
-    ocrCanvas.width=img.naturalWidth;ocrCanvas.height=img.naturalHeight;
-    ocrCanvas.getContext('2d').drawImage(img,0,0);
-    enhanceContrastForOCR(ocrCanvas);
-
-    statusEl.textContent='解析中...';
-    const result=await Tesseract.recognize(ocrCanvas,'jpn+eng',{
-      logger:m=>{
-        if(m.status==='recognizing text'){
-          statusEl.textContent='解析中... '+Math.round(m.progress*100)+'%';
-        }else if(m.status){
-          statusEl.textContent=m.status;
-        }
-      }
-    });
-    statusEl.textContent='✅ 解析完了';
-    resultEl.value=result.data.text;
-    resultWrap.style.display='block';
-
-    // 損益の色（赤=マイナス／青=プラス）を画像から直接読み取り、各行オブジェクトに書き込む
-    // （OCRが「-」記号を読み落とすケースの対策。行データ自体をそのまま保持し、後で解析時に使う）
-    _statsOcrLines=result.data.lines||[];
-    try{
-      detectStatsPnlColor(origCanvas,_statsOcrLines);
-    }catch(e){}
-
-    playClick(true);
-  }catch(e){
-    statusEl.textContent='⚠ 解析に失敗しました: '+(e.message||e);
-    playClick(false);
-  }
-}
-
-function clearStatsResult(){
-  document.getElementById('stats-preview-wrap').style.display='none';
-  document.getElementById('stats-preview').src='';
-  document.getElementById('stats-ocr-status').style.display='none';
-  document.getElementById('stats-ocr-status').textContent='';
-  document.getElementById('stats-ocr-result-wrap').style.display='none';
-  document.getElementById('stats-ocr-result').value='';
-  document.getElementById('stats-parse-wrap').style.display='none';
-  document.getElementById('stats-parse-list').innerHTML='';
-  _statsParsedItems=[];
-  _statsOcrLines=[];
-  document.getElementById('stats-file-input').value='';
-  playClick(false);
-}
-
-function copyStatsOcrResult(){
-  const v=document.getElementById('stats-ocr-result').value;
-  if(!v)return;
-  const btn=document.getElementById('stats-ocr-copy-btn');
-  const original='📋 コピー';
-  const done=()=>{btn.textContent='✅ コピー済み';setTimeout(()=>{btn.textContent=original;},2000);};
-  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
-}
-
-// ===== STATS タブ：MT5「約定」履歴のパース =====
-// 1トレード = in行（エントリー）+ out行（決済、損益あり）のペアとして認識する。
-// 通貨ペア・in/outの検出は、OCRで空白やカンマが失われるケース（例: "NZDCHFsell,in"）にも
-// 対応できるよう、単語末尾の境界チェックを外した緩い正規表現にしている
-const STATS_CUR_LIST=['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD','XAU'];
-function parseStatsResult(){
-  // 行データはTesseractの生の行オブジェクト（bbox・_pnlColor付き）を優先して使う。
-  // テキストエリアの値を改行分割して作った「別の文字列」を色検出のキーに使うと、
-  // Tesseract内部のテキストと微妙にズレて参照が外れることがあったため、
-  // パースと色検出を「同じ行オブジェクト」に対して行うことで、そのズレを構造的になくしている
-  const useRawLines=_statsOcrLines.length>0;
-  const lineEntries=useRawLines
-    ?_statsOcrLines.filter(l=>l.text&&l.text.trim()).map(l=>({text:l.text.trim(),pnlColor:l._pnlColor||null}))
-    :document.getElementById('stats-ocr-result').value.split('\n').map(l=>l.trim()).filter(Boolean).map(t=>({text:t,pnlColor:null}));
-
-  const pairRe=new RegExp('\\b('+STATS_CUR_LIST.join('|')+')('+STATS_CUR_LIST.join('|')+')','i');
-  // sell→sall、in→im、out→ou/oul のようなOCR誤読パターンも吸収できるよう緩和
-  const inOutRe=/(s[ae]ll|buy)\s*,?\s*'?(i[nm]|ou[lt]?)/i;
-  // 損益パターン: ドル建て(例: -29.57)・円建て(例: 2 080、桁区切りに半角スペース・小数点なし)の両方に対応
-  const pnlRe=/(-?\d[\d\s]*\.\d{2}|-?\d[\d\s]*)\s*$/;
-  const dateRe=/(\d{4}\.\d{2}\.\d{2})\D{0,3}(\d{2}:\d{2}:\d{2})/;
-
-  const trades=[];
-  let pending=null;
-  lineEntries.forEach(({text:line,pnlColor})=>{
-    const pairMatch=line.match(pairRe);
-    if(pairMatch){
-      const pair=pairMatch[1].toUpperCase()+pairMatch[2].toUpperCase();
-      const ioMatch=line.match(inOutRe);
-      const pnlMatch=line.match(pnlRe);
-      let dir='',io='';
-      if(ioMatch){
-        dir=/^s/i.test(ioMatch[1])?'sell':'buy';
-        io=/^i/i.test(ioMatch[2])?'in':'out';
-      }
-      if(io==='in'){
-        pending={pair,dir,pnl:null};
-        return;
-      }
-      // out判定できた場合、または売買方向がひどく誤読されて不明でも、
-      // 通貨ペア・損益らしき数値が読み取れていれば「決済行」として扱う（完全な文字化け対策）
-      if(io==='out'||(!io&&pnlMatch)){
-        let pnl=pnlMatch?parseFloat(pnlMatch[1].replace(/\s+/g,'')):null;
-        if(pnl===null)return; // 損益すら読み取れない行は無視
-        // 画像から実際に読み取った色（赤=マイナス／青=プラス）があれば、
-        // テキスト解析の符号より優先して確定させる（OCRが「-」記号を読み落とすケースの対策）
-        if(pnlColor==='red')pnl=-Math.abs(pnl);
-        else if(pnlColor==='blue')pnl=Math.abs(pnl);
-        if(pending&&pending.pair===pair){
-          // 対応するin行が見つかっている場合はそちらの方向を維持しつつ損益を反映
-          pending.pnl=pnl;
-        }else{
-          // in行が画面外（スクロールで見切れている等）でも、out行単独で1件として登録する
-          pending={pair,dir:dir||'unknown',pnl};
-        }
-      }
-      return;
-    }
-    // 通貨ペアを含まない行（レート・日時のみの行）は、日時の検出を試みる
-    const dateMatch=line.match(dateRe);
-    if(dateMatch&&pending&&pending.pnl!==null){
-      pending.date=dateMatch[1]+' '+dateMatch[2];
-      trades.push(pending);
-      pending=null;
-    }
-  });
-
-  renderStatsParseList(trades);
-}
-
-let _statsParsedItems=[];
-let _statsOcrLines=[]; // Tesseractが検出した行オブジェクト配列（bbox・_pnlColorプロパティ付き）
-function renderStatsParseList(trades){
-  _statsParsedItems=trades;
-  const wrap=document.getElementById('stats-parse-wrap');
-  const list=document.getElementById('stats-parse-list');
-  if(trades.length===0){
-    list.innerHTML='<div style="font-size:11px;color:#333;padding:8px 0;">決済済みトレードが見つかりませんでした</div>';
-  }else{
-    list.innerHTML=trades.map(t=>{
-      const pnlColor=t.pnl>=0?'#4ADE80':'#EF4444';
-      return '<div class="img-parse-row">'
-        +'<span class="cult-item-text">'+t.date+' '+t.pair+' ('+t.dir+')</span>'
-        +'<span style="font-weight:700;color:'+pnlColor+';">'+(t.pnl>=0?'+':'')+t.pnl.toFixed(2)+'</span>'
-        +'</div>';
-    }).join('');
-  }
-  wrap.style.display='block';
-  playClick(trades.length>0);
-}
-
-// ===== STATS データの保存（直近500件まで、重複は日時・通貨・損益で判定） =====
-const STATS_HISTORY_KEY='ps_stats_history';
-const STATS_HISTORY_LIMIT=500;
-function loadStatsHistory(){
-  try{return JSON.parse(localStorage.getItem(STATS_HISTORY_KEY))||[];}catch(e){return [];}
-}
-function saveStatsHistory(arr){localStorage.setItem(STATS_HISTORY_KEY,JSON.stringify(arr));}
-
-function sendStatsItemsToHistory(){
-  if(_statsParsedItems.length===0){
-    alert('追加できるトレードがありません。先に「この内容を解析する」を実行してください。');
-    return;
-  }
-  const hist=loadStatsHistory();
-  let addedCount=0;
-  _statsParsedItems.forEach(t=>{
-    const dup=hist.some(h=>h.date===t.date&&h.pair===t.pair&&h.pnl===t.pnl);
-    if(dup)return;
-    hist.push({date:t.date,pair:t.pair,dir:t.dir,pnl:t.pnl});
-    addedCount++;
-  });
-  // 日時の古い順に並べ直し、直近500件のみ残す（500件を超えたら古いものから切り捨て）
-  hist.sort((a,b)=>a.date.localeCompare(b.date));
-  if(hist.length>STATS_HISTORY_LIMIT){
-    hist.splice(0,hist.length-STATS_HISTORY_LIMIT);
-  }
-  saveStatsHistory(hist);
-  renderStatsSummary();
-  playTheme(true);
-  alert(addedCount+'件を取引履歴に追加しました（重複分はスキップ）。');
-}
-
-function clearStatsHistoryConfirm(){
-  const btn=document.getElementById('stats-clear-history-btn');
-  if(btn.dataset.c==='1'){
-    saveStatsHistory([]);
-    btn.textContent='取引履歴データをクリア';btn.style.color='';btn.dataset.c='0';
-    renderStatsSummary();playClick(false);
-  }else{
-    btn.textContent='もう一度タップで実行';btn.style.color='#EF4444';btn.dataset.c='1';
-    setTimeout(()=>{btn.textContent='取引履歴データをクリア';btn.style.color='';btn.dataset.c='0';},3000);
-  }
-}
-
-// ===== サマリー表示・折れ線グラフ描画 =====
-function renderStatsSummary(){
-  const hist=loadStatsHistory();
-  const totalCountEl=document.getElementById('stats-total-count');
-  const winRateEl=document.getElementById('stats-win-rate');
-  const totalPnlEl=document.getElementById('stats-total-pnl');
-  const avgPnlEl=document.getElementById('stats-avg-pnl');
-  if(!totalCountEl)return; // STATSタブ未初期化時は何もしない
-
-  if(hist.length===0){
-    totalCountEl.textContent='0件';
-    winRateEl.textContent='—';
-    totalPnlEl.textContent='—';
-    avgPnlEl.textContent='—';
-    drawStatsChart([]);
-    return;
-  }
-
-  const wins=hist.filter(h=>h.pnl>0).length;
-  const winRate=(wins/hist.length*100).toFixed(1);
-  const totalPnl=hist.reduce((sum,h)=>sum+h.pnl,0);
-  const avgPnl=totalPnl/hist.length;
-
-  totalCountEl.textContent=hist.length+'件';
-  winRateEl.textContent=winRate+'%';
-  totalPnlEl.textContent=(totalPnl>=0?'+':'')+totalPnl.toFixed(2);
-  totalPnlEl.style.color=totalPnl>=0?'#4ADE80':'#EF4444';
-  avgPnlEl.textContent=(avgPnl>=0?'+':'')+avgPnl.toFixed(2);
-  avgPnlEl.style.color=avgPnl>=0?'#4ADE80':'#EF4444';
-
-  drawStatsChart(hist);
-}
-
-// 損益の累積推移を、外部ライブラリを使わずcanvasで自前描画する
-function drawStatsChart(hist){
-  const canvas=document.getElementById('stats-chart-canvas');
-  if(!canvas)return;
-  const dpr=window.devicePixelRatio||1;
-  const rect=canvas.getBoundingClientRect();
-  const w=rect.width||canvas.parentElement.clientWidth;
-  const h=180;
-  canvas.width=w*dpr;
-  canvas.height=h*dpr;
-  canvas.style.height=h+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h);
-
-  if(hist.length===0){
-    ctx.fillStyle='#333';
-    ctx.font='12px sans-serif';
-    ctx.textAlign='center';
-    ctx.fillText('データがありません',w/2,h/2);
-    return;
-  }
-
-  // 累積損益の推移を計算
-  let cum=0;
-  const points=hist.map(h=>{cum+=h.pnl;return cum;});
-  const minV=Math.min(0,...points);
-  const maxV=Math.max(0,...points);
-  const range=(maxV-minV)||1;
-  const padding=16;
-  const chartW=w-padding*2;
-  const chartH=h-padding*2;
-
-  // ゼロライン
-  const zeroY=padding+chartH-((0-minV)/range)*chartH;
-  ctx.strokeStyle='#D4AF5A33';
-  ctx.lineWidth=1;
-  ctx.beginPath();
-  ctx.moveTo(padding,zeroY);
-  ctx.lineTo(w-padding,zeroY);
-  ctx.stroke();
-
-  // 折れ線
-  ctx.strokeStyle='#D4AF5A';
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  points.forEach((v,i)=>{
-    const x=padding+(points.length===1?0:(i/(points.length-1))*chartW);
-    const y=padding+chartH-((v-minV)/range)*chartH;
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-
-  // 終点のマーカー
-  const lastX=padding+chartW;
-  const lastY=padding+chartH-((points[points.length-1]-minV)/range)*chartH;
-  ctx.fillStyle=points[points.length-1]>=0?'#4ADE80':'#EF4444';
-  ctx.beginPath();
-  ctx.arc(lastX,lastY,3,0,Math.PI*2);
-  ctx.fill();
-}
-
 function setPips(v){
   const el=document.getElementById('pips');
   if(+el.value===v){el.value='';document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));}
@@ -2108,12 +1856,12 @@ function toggleBtn3d(){
 }
 
 function switchTab(tab){
-  // デバッグモード中はCAL・IMG・SIZER・LEARNING・SETTINGS・STATS以外（FEE）への切り替えを禁止
-  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning'&&tab!=='settings'&&tab!=='stats')return;
+  // デバッグモード中はCAL・IMG・SIZER・LEARNING・SETTINGS以外（FEE）への切り替えを禁止
+  if(_debugMode&&tab!=='cal'&&tab!=='img'&&tab!=='sizer'&&tab!=='learning'&&tab!=='settings')return;
   // LEARNINGタブはデバッグモード中以外は選択不可
   if(!_debugMode&&tab==='learning')return;
   playClick(tab==='fee');
-  ['sizer','fee','cal','img','learning','settings','stats'].forEach(t=>{
+  ['sizer','fee','cal','img','learning','settings'].forEach(t=>{
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
@@ -2121,7 +1869,6 @@ function switchTab(tab){
   if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();}
   if(tab==='learning')renderLearningList();
   if(tab==='img')loadTesseractLazy(); // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）
-  if(tab==='stats'){loadTesseractLazy();renderStatsSummary();} // STATSタブもOCRを使うため遅延読み込み
   if(tab==='settings')renderChangelogList();
 }
 
@@ -2356,66 +2103,6 @@ function enhanceContrastForOCR(canvas){
   ctx.putImageData(imgData,0,0);
 }
 
-// ===== STATS タブ：MT5損益の符号をテキストではなく色から直接判定 =====
-// OCRは「-」（マイナス記号）のような細い文字を読み落としやすく、テキストだけでは
-// 符号を正しく復元できないケースがあるため、MT5が実際に使っている配色（赤=マイナス、青=プラス）を
-// 画像のピクセルから直接読み取り、テキスト解析の結果より優先して符号を確定させる
-function classifyRedOrBlue(r,g,b){
-  const max=Math.max(r,g,b),min=Math.min(r,g,b);
-  const l=(max+min)/2/255;
-  const s=max===min?0:(max-min)/(255-Math.abs(max+min-255));
-  if(s<0.25||l<0.15||l>0.9)return null; // 彩度・明度が低すぎる（グレー文字・背景等）は対象外
-  let h;
-  if(max===min)h=0;
-  else if(max===r)h=60*(((g-b)/(max-min))%6);
-  else if(max===g)h=60*((b-r)/(max-min)+2);
-  else h=60*((r-g)/(max-min)+4);
-  if(h<0)h+=360;
-  if(h<=20||h>=340)return 'red';
-  if(h>=190&&h<=250)return 'blue';
-  return null;
-}
-
-// Tesseractの行データ(bbox付き)から、損益の数値部分の色をサンプリングする。
-// FF指標のアイコン検出（行の左側）とは異なり、MT5は数値自体が着色されているため、
-// 行の右半分（損益が表示されている領域）を中心にスキャンする。
-// ※ MT5の画面は取引情報（左寄り）と損益数値（画面右端）の間に大きな余白があり、
-//   Tesseractがこれを同じ行として検出せず、別々の行に分割して検出することがある。
-//   そのため、行自身の狭いbbox幅に頼らず、その行と同じ縦位置（Y座標）における
-//   「画像全体の右端付近」を直接スキャンすることで、行分割のされ方に左右されないようにしている。
-// ※ 検出結果は辞書のキー参照ではなく、各行オブジェクトに直接プロパティとして書き込む。
-//   テキストエリアの値を改行分割して作った「別の文字列」をキーに突き合わせる方式は、
-//   Tesseractの内部テキストと微妙にズレる場合があり、参照が外れて機能しないリスクがあるため
-function detectStatsPnlColor(canvas,lines){
-  try{
-    const ctx=canvas.getContext('2d');
-    lines.forEach(line=>{
-      if(!line.bbox||!line.text||!line.text.trim())return;
-      const {y0,y1}=line.bbox;
-      const cy=Math.round((y0+y1)/2);
-      const lineHeight=Math.max(1,y1-y0);
-      // 画像全体の右端25%の範囲を対象にする（MT5は損益を常に画面右端に表示するため）
-      const sampleStartX=Math.round(canvas.width*0.75);
-      const votes={red:0,blue:0};
-      let total=0;
-      for(let x=sampleStartX;x<canvas.width;x+=2){
-        for(let dy=-Math.round(lineHeight*0.4);dy<=Math.round(lineHeight*0.4);dy+=2){
-          const y=cy+dy;
-          if(y<0||y>=canvas.height)continue;
-          const px=ctx.getImageData(x,y,1,1).data;
-          total++;
-          const cls=classifyRedOrBlue(px[0],px[1],px[2]);
-          if(cls)votes[cls]++;
-        }
-      }
-      const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-      if(best&&best[1]>=2&&total>0&&(best[1]/total)>=0.15){
-        line._pnlColor=best[0]; // 'red'（マイナス） または 'blue'（プラス）を行オブジェクトに直接記録
-      }
-    });
-  }catch(e){/* サンプリング失敗時はテキスト解析の符号にフォールバック */}
-}
-
 async function handleImgFile(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -2599,6 +2286,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.3',datetime:'2026.07.26 16:50頃（正確な時刻取得失敗のため概算）',note:'STATSタブ（MT5取引履歴OCR）を破棄。損益の符号判定精度が実用レベルに至らなかったため'},
   {version:'v3.2',datetime:'2026.07.26 16:41',note:'IMG色判定にLv4確認機能追加・ライトモード配色修正・MT5損益の色判定バグ修正'},
   {version:'v3.1',datetime:'2026.07.26 10:20',note:'IMG色判定を段階的審査フロー化・自動登録モードの完全連鎖化・MT5損益の色判定対応'},
   {version:'v3.0',datetime:'2026.07.26 09:13',note:'STATSタブ新設（MT5取引履歴OCR）・ENTRYタブ削除・ボタン3D効果'},
@@ -3557,7 +3245,6 @@ applyImgTabState();
 applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
-renderStatsSummary();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
