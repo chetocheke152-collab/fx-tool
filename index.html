@@ -141,6 +141,8 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-price-wrap{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease}
 .sizer-hist-price-wrap.open{max-height:320px;opacity:1}
 .sizer-hist-price-area{padding:4px 0 10px;display:flex;flex-direction:column;gap:6px}
+.sizer-hist-expand-indicator{text-align:center;padding:2px 0 6px;line-height:1;-webkit-user-select:none;user-select:none}
+.sizer-hist-expand-indicator span{display:inline-block;font-size:12px;color:#D4AF5A66;transform:scaleX(4);}
 .sizer-hist-price-row{display:flex;align-items:center;gap:8px}
 .sizer-hist-price-lbl{font-size:10px;font-weight:700;color:#D4AF5A88;width:22px;flex-shrink:0}
 .sizer-hist-price-input{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:6px;padding:7px 10px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;min-width:0;}
@@ -1480,6 +1482,7 @@ function renderSizerHistPriceArea(idx,h,expanded){
   //   実際のopen付与はrenderSizerHistory側でレンダリング後に行う。
   return '<div class="sizer-hist-price-wrap" data-price-idx="'+idx+'">'
     +'<div class="sizer-hist-price-area" onclick="event.stopPropagation()">'
+    +'<div class="sizer-hist-expand-indicator"><span>▽</span></div>'
     +'<div class="sizer-hist-price-row">'
     +'<span class="sizer-hist-price-lbl">方向</span>'
     +'<div style="display:flex;gap:6px;flex:1;">'
