@@ -168,6 +168,11 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-status-section{margin-bottom:6px}
 .sizer-status-section:last-child{margin-bottom:0}
 .sizer-status-section-hdr{font-size:10px;font-weight:700;color:#D4AF5A88;letter-spacing:1px;padding:8px 0 4px;border-bottom:1px solid #D4AF5A11}
+.sizer-status-section-hdr-fold{cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:space-between}
+.sizer-status-fold-arr{font-size:9px;transition:transform 0.25s ease}
+.sizer-status-fold-arr:not(.open){transform:rotate(-90deg)}
+.sizer-status-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease}
+.sizer-status-fold-body.open{max-height:2000px;opacity:1}
 .sizer-status-advance-btn{background:#D4AF5A18;border:1px solid #D4AF5A55;border-radius:6px;color:#D4AF5A;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
 .sizer-status-advance-btn.pending{background:#F59E0B18;border-color:#F59E0B;color:#F59E0B}
 .sizer-status-revert-btn{background:transparent;border:1px solid #333;border-radius:6px;color:#666;font-size:11px;padding:4px 7px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;line-height:1}
@@ -1259,9 +1264,9 @@ function renderSizerHistory(){
     return;
   }
 
-  // normal モード：注文の状態（通常／注文待機中／約定中）ごとに3区画に分けて表示
+  // normal モード：注文の状態（通常／注文待機中／約定中／決済済み）ごとに区画に分けて表示
   let matchCount=0;
-  const sections={normal:[],pending:[],filled:[]};
+  const sections={normal:[],pending:[],filled:[],closed:[]};
   hist.forEach((h,i)=>{
     const matches=!query||h.pair.toUpperCase().includes(query);
     if(!matches)return;
@@ -1283,6 +1288,19 @@ function renderSizerHistory(){
       +idxList.map(i=>renderSizerHistNormalRow(i,hist[i])).join('')
       +'</div>';
   });
+  // 決済済み区画は、内容自体は残すがデフォルトで折りたたんでおく（過去の記録を見返す時だけ開く）
+  const closedIdxList=sections.closed;
+  if(closedIdxList.length>0){
+    html+='<div class="sizer-status-section">'
+      +'<div class="sizer-status-section-hdr sizer-status-section-hdr-fold" onclick="toggleSizerClosedSection()">'
+      +'<span>🔒 決済済み（'+closedIdxList.length+'件）</span>'
+      +'<span class="sizer-status-fold-arr'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-arr">▼</span>'
+      +'</div>'
+      +'<div class="sizer-status-fold-body'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-body">'
+      +closedIdxList.map(i=>renderSizerHistNormalRow(i,hist[i])).join('')
+      +'</div>'
+      +'</div>';
+  }
   list.innerHTML=matchCount>0?html:'<div class="sizer-hist-empty">一致する履歴が見つかりません</div>';
   updateSizerHistTitle(query,matchCount,hist.length);
 
@@ -1341,6 +1359,17 @@ function renderSizerHistNormalRow(i,h){
   +'</div>';
 }
 
+// ===== 決済済み区画の折りたたみ（デフォルトは閉じた状態。記録は残すが普段は目に入らないようにする） =====
+let _sizerClosedSectionOpen=false;
+function toggleSizerClosedSection(){
+  _sizerClosedSectionOpen=!_sizerClosedSectionOpen;
+  const arr=document.getElementById('sizer-closed-fold-arr');
+  const body=document.getElementById('sizer-closed-fold-body');
+  if(arr)arr.classList.toggle('open',_sizerClosedSectionOpen);
+  if(body)body.classList.toggle('open',_sizerClosedSectionOpen);
+  playClick(_sizerClosedSectionOpen);
+}
+
 // ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
 let _sizerHistMode='normal';
 const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',delete:'削除'};
@@ -1386,9 +1415,9 @@ function moveSizerHistItem(idx,dir){
 // ===== 計算履歴：注文の状態管理（通常 → 注文待機中 → 約定中） =====
 // 二重注文防止のため、「まだ計算しただけ」「MT5に発注済みで約定待ち」「実際に約定済み」を区別する。
 // 状態を進める操作は、誤タップ対策として簡易確認モーダルを一度挟んでから実行する
-const SIZER_STATUS_LABELS={normal:'通常','pending':'注文待機中',filled:'約定中'};
-const SIZER_STATUS_NEXT={normal:'pending',pending:'filled'};
-const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする'};
+const SIZER_STATUS_LABELS={normal:'通常','pending':'注文待機中',filled:'約定中',closed:'決済済み'};
+const SIZER_STATUS_NEXT={normal:'pending',pending:'filled',filled:'closed'};
+const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする',filled:'決済済みにする'};
 function getSizerHistStatus(h){return h.status||'normal';}
 
 // 状態を進める操作は、iOSでネイティブconfirm()を連続して呼ぶと以降のダイアログが
@@ -1432,6 +1461,7 @@ function revertSizerHistStatus(idx){
   const current=getSizerHistStatus(h);
   if(current==='pending')h.status='normal';
   else if(current==='filled')h.status='pending';
+  else if(current==='closed')h.status='filled';
   else return;
   saveSizerHistoryArr(hist);
   playClick(false);
@@ -2286,6 +2316,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.4',datetime:'2026.07.29 11:30',note:'SIZER計算履歴に注文状態管理（通常/注文待機中/約定中/決済済み）を追加。二重注文防止・決済済み区画は折りたたみ表示'},
   {version:'v3.3',datetime:'2026.07.26 16:50頃（正確な時刻取得失敗のため概算）',note:'STATSタブ（MT5取引履歴OCR）を破棄。損益の符号判定精度が実用レベルに至らなかったため'},
   {version:'v3.2',datetime:'2026.07.26 16:41',note:'IMG色判定にLv4確認機能追加・ライトモード配色修正・MT5損益の色判定バグ修正'},
   {version:'v3.1',datetime:'2026.07.26 10:20',note:'IMG色判定を段階的審査フロー化・自動登録モードの完全連鎖化・MT5損益の色判定対応'},
