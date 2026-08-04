@@ -1146,7 +1146,6 @@ function maybeSaveSizerHistory(){
 function saveSizerHistoryManual(){
   const btn=document.getElementById('save-hist-btn');
   const saved=maybeSaveSizerHistory();
-  const original='📌 履歴に保存';
   if(saved){
     btn.textContent='✅ 保存しました';
     playClick(true);
@@ -1155,7 +1154,18 @@ function saveSizerHistoryManual(){
     btn.textContent='⚠ 保存できません';
     playClick(false);
   }
-  setTimeout(()=>{btn.textContent=original;},1800);
+  setTimeout(()=>{updateSaveHistBtnLabel();},1800);
+}
+
+// 保存ボタンに、現在選択中の口座名を表示する（「どちらの口座に保存されるか分からない」問題対策）
+function updateSaveHistBtnLabel(){
+  const btn=document.getElementById('save-hist-btn');
+  if(!btn)return;
+  const accounts=loadSizerAccounts();
+  const currentId=getCurrentSizerAccountId();
+  const current=accounts.find(a=>a.id===currentId);
+  const accountName=current?current.name:'';
+  btn.textContent='📌 '+accountName+'に保存';
 }
 
 // ===== IN/SL/TP 入力モーダル =====
@@ -1259,6 +1269,7 @@ function switchSizerAccount(id){
   clearTimeout(_sizerStatusPendingTimer);
   playClick(true);
   renderSizerHistory();
+  updateSaveHistBtnLabel();
 }
 function renameSizerAccount(id){
   const accounts=loadSizerAccounts();
@@ -1271,6 +1282,7 @@ function renameSizerAccount(id){
   account.name=trimmed.slice(0,12); // 表示崩れ防止のため長さを制限
   saveSizerAccounts(accounts);
   renderSizerAccountSwitch();
+  updateSaveHistBtnLabel(); // 変更した口座が現在選択中の口座であれば、保存ボタンの表示にも反映する
 }
 
 function renderSizerHistory(){
@@ -3353,6 +3365,7 @@ applyImgTabState();
 applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
+updateSaveHistBtnLabel();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
