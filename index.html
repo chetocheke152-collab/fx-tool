@@ -117,6 +117,13 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-arr.open{transform:rotate(180deg)}
 .sizer-hist-body{max-height:0;overflow:hidden;padding:0 16px;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
 .sizer-hist-search-input{width:100%;box-sizing:border-box;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:9px 12px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;margin-bottom:10px}
+.sizer-account-switch{display:flex;gap:6px;margin-bottom:10px}
+.sizer-account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+.sizer-account-tab.active{background:#D4AF5A18;border-color:#D4AF5A}
+.sizer-account-tab-name{font-size:12px;font-weight:700;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sizer-account-tab.active .sizer-account-tab-name{color:#D4AF5A}
+.sizer-account-tab-edit{background:transparent;border:none;color:#555;font-size:11px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;padding:0;line-height:1}
+.sizer-account-tab.active .sizer-account-tab-edit{color:#D4AF5A99}
 .sizer-hist-search-input:focus{border-color:#D4AF5A}
 .sizer-hist-body.open{max-height:2000px;padding:14px 16px 14px;opacity:1}
 .sizer-hist-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid #D4AF5A08;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -340,6 +347,8 @@ body.light .sizer-hist-pair{color:#1A1A1A}
 body.light .sizer-hist-row:active{background:#D4AF5A0A}
 body.light .sizer-hist-price-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
 body.light .sizer-hist-search-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
+body.light .sizer-account-tab{background:#F9F7F2;border-color:#D4AF5A33}
+body.light .sizer-account-tab.active{background:#D4AF5A18;border-color:#D4AF5A}
 body.light .sizer-hist-expand-btn{border-color:#D4AF5A33;color:#AAA}
 body.light .sizer-hist-expand-btn.has-price{border-color:#D4AF5A;color:#D4AF5A}
 body.light .lbl{color:#D4AF5A}
@@ -522,6 +531,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <span class="sizer-hist-arr" id="sizer-hist-arr">▼</span>
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
+    <div class="sizer-account-switch" id="sizer-account-switch"></div>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
@@ -1079,10 +1089,37 @@ function calc(animate=false){
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('on',+b.textContent===pips));
 }
 
+// ===== SIZER 口座管理（複数口座対応。まずは2口座、将来の追加も見込んだ拡張可能な設計） =====
+const SIZER_ACCOUNTS_KEY='ps_sizer_accounts';
+const SIZER_CURRENT_ACCOUNT_KEY='ps_sizer_current_account';
+// 口座a は既存の保存キー(ps_sizer_history)をそのまま使うため、既存データを自動的に引き継ぐ
+// （マイグレーション処理不要。口座bなど以降は "_口座id" をキーに付与して分離する）
+const SIZER_DEFAULT_ACCOUNTS=[
+  {id:'a',name:'A口座'},
+  {id:'b',name:'B口座'},
+];
+function loadSizerAccounts(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(SIZER_ACCOUNTS_KEY));
+    if(Array.isArray(saved)&&saved.length>0)return saved;
+  }catch(e){}
+  return SIZER_DEFAULT_ACCOUNTS.map(a=>({...a})); // 初回はデフォルト2口座を生成
+}
+function saveSizerAccounts(accounts){localStorage.setItem(SIZER_ACCOUNTS_KEY,JSON.stringify(accounts));}
+function getCurrentSizerAccountId(){
+  const saved=localStorage.getItem(SIZER_CURRENT_ACCOUNT_KEY);
+  const accounts=loadSizerAccounts();
+  if(saved&&accounts.some(a=>a.id===saved))return saved;
+  return accounts[0]?accounts[0].id:'a';
+}
+function setCurrentSizerAccountId(id){localStorage.setItem(SIZER_CURRENT_ACCOUNT_KEY,id);}
+
 // ===== SIZER 計算履歴 =====
-const SIZER_HIST_KEY_PROD='ps_sizer_history';
-const SIZER_HIST_KEY_DEBUG='ps_sizer_history_debug';
-function getSizerHistKey(){return isDebugMode()?SIZER_HIST_KEY_DEBUG:SIZER_HIST_KEY_PROD;}
+function getSizerHistKey(){
+  const accountId=getCurrentSizerAccountId();
+  const base=accountId==='a'?'ps_sizer_history':'ps_sizer_history_'+accountId;
+  return isDebugMode()?base+'_debug':base;
+}
 function loadSizerHistory(){
   try{return JSON.parse(localStorage.getItem(getSizerHistKey()))||[];}catch(e){return [];}
 }
@@ -1201,7 +1238,43 @@ function fmtSizerHistTime(ts){
 
 let _sizerHistExpanded=null; // 現在展開中の行のインデックス（アコーディオン方式、同時に1件のみ）
 
+// ===== 口座切替UI =====
+function renderSizerAccountSwitch(){
+  const wrap=document.getElementById('sizer-account-switch');
+  if(!wrap)return;
+  const accounts=loadSizerAccounts();
+  const currentId=getCurrentSizerAccountId();
+  wrap.innerHTML=accounts.map(a=>
+    '<div class="sizer-account-tab'+(a.id===currentId?' active':'')+'" onclick="switchSizerAccount(\''+a.id+'\')">'
+    +'<span class="sizer-account-tab-name">'+a.name+'</span>'
+    +'<button class="sizer-account-tab-edit" onclick="event.stopPropagation();renameSizerAccount(\''+a.id+'\')">✏️</button>'
+    +'</div>'
+  ).join('');
+}
+function switchSizerAccount(id){
+  if(id===getCurrentSizerAccountId())return;
+  setCurrentSizerAccountId(id);
+  _sizerHistExpanded=null; // 口座を切り替えたら、展開中・確認待ちの状態はリセットする
+  _sizerStatusPendingIdx=null;
+  clearTimeout(_sizerStatusPendingTimer);
+  playClick(true);
+  renderSizerHistory();
+}
+function renameSizerAccount(id){
+  const accounts=loadSizerAccounts();
+  const account=accounts.find(a=>a.id===id);
+  if(!account)return;
+  const newName=prompt('口座名を入力してください',account.name);
+  if(newName===null)return; // キャンセル
+  const trimmed=newName.trim();
+  if(!trimmed)return; // 空欄は無視
+  account.name=trimmed.slice(0,12); // 表示崩れ防止のため長さを制限
+  saveSizerAccounts(accounts);
+  renderSizerAccountSwitch();
+}
+
 function renderSizerHistory(){
+  renderSizerAccountSwitch(); // 呼び出し箇所が多数あるため、ここで一括して口座切替UIも同期させる
   const hist=loadSizerHistory();
   const list=document.getElementById('sizer-hist-list');
   if(!list)return;
@@ -1979,7 +2052,7 @@ function clearDebugCalData(){
 
 function clearDebugSizerHistory(){
   if(!confirm('検証用のSIZER履歴データをクリアします。よろしいですか？'))return;
-  localStorage.removeItem(SIZER_HIST_KEY_DEBUG);
+  localStorage.removeItem(getSizerHistKey()); // デバッグモード中は現在選択中の口座のデバッグ用キーを指す
   renderSizerHistory();
   playClick(false);
 }
@@ -2319,6 +2392,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.5',datetime:'2026.08.04 15:33',note:'SIZER計算履歴が複数口座に対応（口座切替・名前変更可）。展開時のワイド矢印・状態区画の境界線視認性を改善'},
   {version:'v3.4',datetime:'2026.07.29 11:30',note:'SIZER計算履歴に注文状態管理（通常/注文待機中/約定中/決済済み）を追加。二重注文防止・決済済み区画は折りたたみ表示'},
   {version:'v3.3',datetime:'2026.07.26 16:50頃（正確な時刻取得失敗のため概算）',note:'STATSタブ（MT5取引履歴OCR）を破棄。損益の符号判定精度が実用レベルに至らなかったため'},
   {version:'v3.2',datetime:'2026.07.26 16:41',note:'IMG色判定にLv4確認機能追加・ライトモード配色修正・MT5損益の色判定バグ修正'},
