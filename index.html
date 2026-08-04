@@ -134,6 +134,8 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
+.sizer-hist-lot.tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;transition:background-color 0.15s ease}
+.sizer-hist-lot.copied-flash{background-color:#D4AF5A33}
 .sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
 .sizer-hist-del.mode-del{border:1px solid #EF444466;border-radius:6px;color:#EF4444;font-size:13px;padding:5px 9px}
 .sizer-hist-del:active{color:#EF4444}
@@ -754,6 +756,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <span class="toggle-txt" id="img-toggle-txt2">OFF</span>
         </div>
       </div>
+      <div class="toggle-row" style="margin-top:12px;">
+        <div class="toggle-info">
+          <div class="toggle-lbl">計算履歴の削除モード</div>
+          <div class="toggle-sub">ONで計算履歴の操作モードに「削除」が復活します</div>
+        </div>
+        <div class="toggle-btn" id="sizer-delmode-toggle-btn" onclick="toggleSizerDeleteModeEnabled()">
+          <span class="toggle-txt" id="sizer-delmode-toggle-txt">OFF</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1267,6 +1278,8 @@ function switchSizerAccount(id){
   _sizerHistExpanded=null; // 口座を切り替えたら、展開中・確認待ちの状態はリセットする
   _sizerStatusPendingIdx=null;
   clearTimeout(_sizerStatusPendingTimer);
+  _sizerDelPendingIdx=null; // 削除確認待ちも同様の理由でリセットする
+  clearTimeout(_sizerDelPendingTimer);
   playClick(true);
   renderSizerHistory();
   updateSaveHistBtnLabel();
@@ -1300,58 +1313,8 @@ function renderSizerHistory(){
     return;
   }
 
-  // sort・deleteモードは、状態区分を無視した単一の一覧のまま（既存の挙動を変えない）
-  if(_sizerHistMode==='sort'||_sizerHistMode==='delete'){
-    let matchCount=0;
-    const rowsHtml=hist.map((h,i)=>{
-      const matches=!query||h.pair.toUpperCase().includes(query);
-      if(!matches)return '';
-      matchCount++;
-      const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
-
-      if(_sizerHistMode==='sort'){
-        const upDisabled=i===0?' disabled':'';
-        const downDisabled=i===hist.length-1?' disabled':'';
-        return '<div class="sizer-hist-row-wrap">'
-        +'<div class="sizer-hist-row sort-mode">'
-        +'<div class="sizer-hist-main">'
-        +'<span class="sizer-hist-num">'+(i+1)+'</span>'
-        +'<span class="sizer-hist-pair">'+h.pair+'</span>'
-        +dirBadge
-        +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
-        +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
-        +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',-1)"'+upDisabled+'>▲</button>'
-        +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',1)"'+downDisabled+'>▼</button>'
-        +'</div>'
-        +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
-        +'</div>'
-        +'</div>';
-      }
-
-      // delete mode
-      return '<div class="sizer-hist-row-wrap">'
-      +'<div class="sizer-hist-row sort-mode">'
-      +'<div class="sizer-hist-main">'
-      +'<span class="sizer-hist-num">'+(i+1)+'</span>'
-      +'<span class="sizer-hist-pair">'+h.pair+'</span>'
-      +dirBadge
-      +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
-      +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
-      +(_sizerDelPendingIdx===i
-        ?'<button class="sizer-hist-del pending" onclick="deleteSizerHistoryItem('+i+')">確認</button>'
-        :'<button class="sizer-hist-del mode-del" onclick="deleteSizerHistoryItem('+i+')">×</button>')
-      +'</div>'
-      +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
-      +'</div>'
-      +'</div>';
-    }).join('');
-
-    list.innerHTML=matchCount>0?rowsHtml:'<div class="sizer-hist-empty">一致する履歴が見つかりません</div>';
-    updateSizerHistTitle(query,matchCount,hist.length);
-    return;
-  }
-
-  // normal モード：注文の状態（通常／注文待機中／約定中／決済済み）ごとに区画に分けて表示
+  // normal・sort モード：注文の状態（通常／注文待機中／約定中／決済済み）ごとに区画に分けて表示。
+  // 並び替えも区画をまたがず、同じ状態の項目同士でのみ行う
   let matchCount=0;
   const sections={normal:[],pending:[],filled:[],closed:[]};
   hist.forEach((h,i)=>{
@@ -1372,10 +1335,15 @@ function renderSizerHistory(){
     if(idxList.length===0)return; // 空の区画は表示しない（通常区画が0件になることは通常運用上ほぼ無いが念のため）
     html+='<div class="sizer-status-section">'
       +'<div class="sizer-status-section-hdr">'+sec.label+'（'+idxList.length+'件）</div>'
-      +idxList.map(i=>renderSizerHistNormalRow(i,hist[i])).join('')
+      +idxList.map((origIdx,posInSection)=>{
+        if(_sizerHistMode==='sort')return renderSizerHistSortRow(origIdx,hist[origIdx],posInSection,idxList.length);
+        if(_sizerHistMode==='delete')return renderSizerHistDeleteRow(origIdx,hist[origIdx],posInSection);
+        return renderSizerHistNormalRow(origIdx,hist[origIdx],posInSection);
+      }).join('')
       +'</div>';
   });
   // 決済済み区画は、内容自体は残すがデフォルトで折りたたんでおく（過去の記録を見返す時だけ開く）
+  // ナンバリングは表示しない（他区画からの通し番号を引き継いでしまう混乱を避けるため）
   const closedIdxList=sections.closed;
   if(closedIdxList.length>0){
     html+='<div class="sizer-status-section">'
@@ -1384,7 +1352,11 @@ function renderSizerHistory(){
       +'<span class="sizer-status-fold-arr'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-arr">▼</span>'
       +'</div>'
       +'<div class="sizer-status-fold-body'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-body">'
-      +closedIdxList.map(i=>renderSizerHistNormalRow(i,hist[i])).join('')
+      +closedIdxList.map((origIdx,posInSection)=>{
+        if(_sizerHistMode==='sort')return renderSizerHistSortRow(origIdx,hist[origIdx],posInSection,closedIdxList.length,true);
+        if(_sizerHistMode==='delete')return renderSizerHistDeleteRow(origIdx,hist[origIdx],posInSection,true);
+        return renderSizerHistNormalRow(origIdx,hist[origIdx],posInSection,true);
+      }).join('')
       +'</div>'
       +'</div>';
   }
@@ -1413,7 +1385,7 @@ function updateSizerHistTitle(query,matchCount,totalCount){
 }
 
 // normalモードの1行分の描画（状態遷移ボタン付き）。3区画それぞれで共通して使う
-function renderSizerHistNormalRow(i,h){
+function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const expanded=(_sizerHistExpanded===i);
   const hasPrice=h.dir||h.in||h.sl||h.tp;
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
@@ -1426,15 +1398,17 @@ function renderSizerHistNormalRow(i,h){
   const revertBtn=status!=='normal'
     ?'<button class="sizer-status-revert-btn" onclick="event.stopPropagation();revertSizerHistStatus('+i+')" title="ひとつ前の状態に戻す">↩</button>'
     :'';
+  // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
+  const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
 
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
   +'<div class="sizer-hist-main">'
-  +'<span class="sizer-hist-num">'+(i+1)+'</span>'
+  +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
   +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
-  +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+  +'<span class="sizer-hist-lot tappable" id="sizer-hist-lot-'+i+'" onclick="event.stopPropagation();copySizerHistLot('+i+')">'+h.lot.toFixed(2)+' lot</span>'
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
   +'</div>'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
@@ -1443,6 +1417,49 @@ function renderSizerHistNormalRow(i,h){
   +'</div>'
   +'</div>'
   +renderSizerHistPriceArea(i,h,expanded)
+  +'</div>';
+}
+
+// 並び替えモードの1行分の描画（区画内で共通して使う）。上下ボタンは区画の端で無効化する
+function renderSizerHistSortRow(i,h,posInSection,sectionLength,hideNumber){
+  const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const upDisabled=posInSection===0?' disabled':'';
+  const downDisabled=posInSection===sectionLength-1?' disabled':'';
+  const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
+  return '<div class="sizer-hist-row-wrap">'
+  +'<div class="sizer-hist-row sort-mode">'
+  +'<div class="sizer-hist-main">'
+  +numHtml
+  +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+  +dirBadge
+  +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+  +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',-1)"'+upDisabled+'>▲</button>'
+  +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',1)"'+downDisabled+'>▼</button>'
+  +'</div>'
+  +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+  +'</div>'
+  +'</div>';
+}
+
+// 削除モードの1行分の描画（区画内で共通して使う。SETTINGSタブのトグルがONの時だけ選択可能なモード）
+function renderSizerHistDeleteRow(i,h,posInSection,hideNumber){
+  const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
+  return '<div class="sizer-hist-row-wrap">'
+  +'<div class="sizer-hist-row sort-mode">'
+  +'<div class="sizer-hist-main">'
+  +numHtml
+  +'<span class="sizer-hist-pair">'+h.pair+'</span>'
+  +dirBadge
+  +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
+  +(_sizerDelPendingIdx===i
+    ?'<button class="sizer-hist-del pending" onclick="deleteSizerHistoryItem('+i+')">確認</button>'
+    :'<button class="sizer-hist-del mode-del" onclick="deleteSizerHistoryItem('+i+')">×</button>')
+  +'</div>'
+  +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+  +'</div>'
   +'</div>';
 }
 
@@ -1461,7 +1478,7 @@ function toggleSizerClosedSection(){
 let _sizerHistMode='normal';
 const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',delete:'削除'};
 const SIZER_HIST_MODE_SUBS={
-  normal:'タップで通常・並び替え・削除を切替',
+  normal:'タップで通常・並び替えを切替',
   sort:'▲▼で順番を入れ替えできます',
   delete:'×タップで削除（2段階確認）'
 };
@@ -1470,8 +1487,49 @@ function filterSizerHistory(){
   renderSizerHistory();
 }
 
+// ===== 計算履歴 削除モードの有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
+const SIZER_DELMODE_KEY='ps_sizer_delmode_enabled';
+function isSizerDeleteModeEnabled(){return localStorage.getItem(SIZER_DELMODE_KEY)==='1';}
+function toggleSizerDeleteModeEnabled(){
+  const btn=document.getElementById('sizer-delmode-toggle-btn');
+  const txt=document.getElementById('sizer-delmode-toggle-txt');
+  const clearBtn=document.getElementById('sizer-hist-clear-btn');
+  const isOn=isSizerDeleteModeEnabled();
+  if(isOn){
+    localStorage.setItem(SIZER_DELMODE_KEY,'0');
+    btn.classList.remove('on');
+    txt.textContent='OFF';
+    if(clearBtn)clearBtn.style.display='none';
+    // 削除確認待ちが残っていると紛らわしいため、念のためリセットしておく
+    // （実害はないが、口座切替・モード切替時の既存パターンと一貫性を持たせる）
+    _sizerDelPendingIdx=null;
+    clearTimeout(_sizerDelPendingTimer);
+    // OFFにした瞬間、もし削除モードを使用中だったら通常モードへ戻す（選択肢自体が消えるため）
+    if(_sizerHistMode==='delete'){
+      _sizerHistMode='normal';
+      renderSizerHistory();
+    }
+  }else{
+    localStorage.setItem(SIZER_DELMODE_KEY,'1');
+    btn.classList.add('on');
+    txt.textContent='ON';
+    if(clearBtn)clearBtn.style.display='block';
+  }
+  playClick(!isOn);
+}
+function applySizerDeleteModeUI(){
+  const btn=document.getElementById('sizer-delmode-toggle-btn');
+  const txt=document.getElementById('sizer-delmode-toggle-txt');
+  const clearBtn=document.getElementById('sizer-hist-clear-btn');
+  if(!btn||!txt)return;
+  const enabled=isSizerDeleteModeEnabled();
+  btn.classList.toggle('on',enabled);
+  txt.textContent=enabled?'ON':'OFF';
+  if(clearBtn)clearBtn.style.display=enabled?'block':'none';
+}
+
 function cycleSizerHistMode(){
-  const order=['normal','sort','delete'];
+  const order=isSizerDeleteModeEnabled()?['normal','sort','delete']:['normal','sort'];
   const idx=order.indexOf(_sizerHistMode);
   _sizerHistMode=order[(idx+1)%order.length];
   const btn=document.getElementById('sizer-hist-mode-btn');
@@ -1480,20 +1538,29 @@ function cycleSizerHistMode(){
   btn.classList.toggle('on',_sizerHistMode!=='normal');
   txt.textContent=SIZER_HIST_MODE_LABELS[_sizerHistMode];
   sub.textContent=SIZER_HIST_MODE_SUBS[_sizerHistMode];
-  // 「履歴をクリア」（全削除）は削除モード中のみ表示
-  document.getElementById('sizer-hist-clear-btn').style.display=(_sizerHistMode==='delete')?'block':'none';
-  // モード切替時、状態遷移の確認待ちが残っていると、戻ってきた時に別の項目に
+  // モード切替時、状態遷移・削除の確認待ちが残っていると、戻ってきた時に別の項目に
   // 誤って確認待ち表示が残るリスクがあるため、確実にリセットする
   _sizerStatusPendingIdx=null;
   clearTimeout(_sizerStatusPendingTimer);
+  _sizerDelPendingIdx=null;
+  clearTimeout(_sizerDelPendingTimer);
   playClick(_sizerHistMode!=='normal');
   renderSizerHistory();
 }
 function moveSizerHistItem(idx,dir){
   const hist=loadSizerHistory();
-  const target=idx+dir;
-  if(target<0||target>=hist.length)return;
-  [hist[idx],hist[target]]=[hist[target],hist[idx]];
+  if(!hist[idx])return;
+  const status=getSizerHistStatus(hist[idx]);
+  // 同じステータスを持つ項目の、元配列でのインデックス一覧を順番通りに取得し、
+  // その並びの中でだけ位置を交換する（ステータスをまたいだ並び替えは行わない）
+  const sameStatusIndices=[];
+  hist.forEach((h,i)=>{if(getSizerHistStatus(h)===status)sameStatusIndices.push(i);});
+  const posInGroup=sameStatusIndices.indexOf(idx);
+  const targetPosInGroup=posInGroup+dir;
+  if(targetPosInGroup<0||targetPosInGroup>=sameStatusIndices.length)return; // 区画の端では何もしない
+
+  const targetIdx=sameStatusIndices[targetPosInGroup];
+  [hist[idx],hist[targetIdx]]=[hist[targetIdx],hist[idx]];
   saveSizerHistoryArr(hist);
   playClick(true);
   renderSizerHistory();
@@ -1662,6 +1729,23 @@ function copySizerHistPrice(idx,key){
   if(!v)return;
   const btn=event.currentTarget;
   const done=()=>{const orig=btn.textContent;btn.textContent='✅';setTimeout(()=>{btn.textContent=orig;},1200);};
+  navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
+}
+
+// 注文前・注文待機中などの各区画で共通して使うlot表示のタップコピー。
+// ボタンを新設するスペースが無いため、既存のlot表示自体をタップ対象にし、
+// 見た目（テキスト）は変えずに、背景を一瞬光らせるだけでコピー成功を伝える
+function copySizerHistLot(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const v=h.lot.toFixed(2);
+  const el=document.getElementById('sizer-hist-lot-'+idx);
+  const done=()=>{
+    if(!el)return;
+    el.classList.add('copied-flash');
+    setTimeout(()=>{el.classList.remove('copied-flash');},400);
+  };
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
 }
 
@@ -2404,6 +2488,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.6',datetime:'2026.08.05 08:41',note:'並び替え・ナンバリングをステータス区画ごとに独立化。lotタップコピー追加。削除モードをSETTINGSタブのトグルへ移動（普段は非表示）'},
   {version:'v3.5',datetime:'2026.08.04 15:33',note:'SIZER計算履歴が複数口座に対応（口座切替・名前変更可）。展開時のワイド矢印・状態区画の境界線視認性を改善'},
   {version:'v3.4',datetime:'2026.07.29 11:30',note:'SIZER計算履歴に注文状態管理（通常/注文待機中/約定中/決済済み）を追加。二重注文防止・決済済み区画は折りたたみ表示'},
   {version:'v3.3',datetime:'2026.07.26 16:50頃（正確な時刻取得失敗のため概算）',note:'STATSタブ（MT5取引履歴OCR）を破棄。損益の符号判定精度が実用レベルに至らなかったため'},
@@ -3366,6 +3451,7 @@ applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
 updateSaveHistBtnLabel();
+applySizerDeleteModeUI();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
