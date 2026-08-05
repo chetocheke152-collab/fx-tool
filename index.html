@@ -539,7 +539,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
     <div class="sizer-account-switch" id="sizer-account-switch"></div>
-    <button class="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()">📋 口座間で計算履歴をコピー</button>
+    <button class="sizer-account-copy-btn" id="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()" style="display:none;">📋 口座間で計算履歴をコピー</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
@@ -769,6 +769,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         </div>
         <div class="toggle-btn" id="sizer-delmode-toggle-btn" onclick="toggleSizerDeleteModeEnabled()">
           <span class="toggle-txt" id="sizer-delmode-toggle-txt">OFF</span>
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:12px;">
+        <div class="toggle-info">
+          <div class="toggle-lbl">口座間コピー機能</div>
+          <div class="toggle-sub">ONで計算履歴を口座間でコピーするボタンが表示されます</div>
+        </div>
+        <div class="toggle-btn" id="sizer-copymode-toggle-btn" onclick="toggleSizerCopyModeEnabled()">
+          <span class="toggle-txt" id="sizer-copymode-toggle-txt">OFF</span>
         </div>
       </div>
     </div>
@@ -1150,6 +1159,29 @@ function getCurrentSizerAccountId(){
 }
 function setCurrentSizerAccountId(id){localStorage.setItem(SIZER_CURRENT_ACCOUNT_KEY,id);}
 
+// 証拠金・リスク%も口座ごとに記憶する（口座aは既存キーをそのまま使い、既存データを自動的に引き継ぐ）
+function getSizerEquityKey(accountIdOverride){
+  const accountId=accountIdOverride||getCurrentSizerAccountId();
+  return accountId==='a'?'ps_equity':'ps_equity_'+accountId;
+}
+function getSizerRiskKey(accountIdOverride){
+  const accountId=accountIdOverride||getCurrentSizerAccountId();
+  return accountId==='a'?'ps_risk':'ps_risk_'+accountId;
+}
+// 口座切替時に、証拠金・リスク%欄をその口座の記憶値で復元する
+// （まだ一度もその口座で入力したことが無ければ、フィールドは空のままにする＝誤った他口座の値を流用しない）
+function applySizerAccountFields(){
+  const eq=localStorage.getItem(getSizerEquityKey());
+  const rk=localStorage.getItem(getSizerRiskKey());
+  const eqInput=document.getElementById('equity');
+  const rkInput=document.getElementById('risk');
+  if(eqInput)eqInput.value=eq||'';
+  // リスク%はプルダウンのため「空欄」を持てない。この口座にまだ記憶がなければ、
+  // 前の口座の選択値を引きずらないよう、アプリ本来の初期値（2%）へ明示的に戻す
+  if(rkInput)rkInput.value=rk||'0.02';
+  calc();
+}
+
 // ===== SIZER 計算履歴 =====
 function getSizerHistKey(accountIdOverride){
   const accountId=accountIdOverride||getCurrentSizerAccountId();
@@ -1305,6 +1337,7 @@ function switchSizerAccount(id){
   clearTimeout(_sizerStatusPendingTimer);
   _sizerDelPendingIdx=null; // 削除確認待ちも同様の理由でリセットする
   clearTimeout(_sizerDelPendingTimer);
+  applySizerAccountFields(); // 証拠金・リスク%を、切替先の口座で記憶している値に復元する
   playClick(true);
   renderSizerHistory();
   updateSaveHistBtnLabel();
@@ -1616,6 +1649,38 @@ function applySizerDeleteModeUI(){
   btn.classList.toggle('on',enabled);
   txt.textContent=enabled?'ON':'OFF';
   if(clearBtn)clearBtn.style.display=enabled?'block':'none';
+}
+
+// ===== 口座間コピー機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
+const SIZER_COPYMODE_KEY='ps_sizer_copymode_enabled';
+function isSizerCopyModeEnabled(){return localStorage.getItem(SIZER_COPYMODE_KEY)==='1';}
+function toggleSizerCopyModeEnabled(){
+  const btn=document.getElementById('sizer-copymode-toggle-btn');
+  const txt=document.getElementById('sizer-copymode-toggle-txt');
+  const copyBtn=document.getElementById('sizer-account-copy-btn');
+  const isOn=isSizerCopyModeEnabled();
+  if(isOn){
+    localStorage.setItem(SIZER_COPYMODE_KEY,'0');
+    btn.classList.remove('on');
+    txt.textContent='OFF';
+    if(copyBtn)copyBtn.style.display='none';
+  }else{
+    localStorage.setItem(SIZER_COPYMODE_KEY,'1');
+    btn.classList.add('on');
+    txt.textContent='ON';
+    if(copyBtn)copyBtn.style.display='block';
+  }
+  playClick(!isOn);
+}
+function applySizerCopyModeUI(){
+  const btn=document.getElementById('sizer-copymode-toggle-btn');
+  const txt=document.getElementById('sizer-copymode-toggle-txt');
+  const copyBtn=document.getElementById('sizer-account-copy-btn');
+  if(!btn||!txt)return;
+  const enabled=isSizerCopyModeEnabled();
+  btn.classList.toggle('on',enabled);
+  txt.textContent=enabled?'ON':'OFF';
+  if(copyBtn)copyBtn.style.display=enabled?'block':'none';
 }
 
 function cycleSizerHistMode(){
@@ -2135,22 +2200,23 @@ function pickPair(v,close=true){
 
 (function(){
   // 旧方式（円・ドル別々のキー）からの移行: 現在の通貨設定に対応する方の値を採用する
+  // （この移行は口座a＝既存の ps_equity キーに対してのみ行う。口座a以外は元々この移行の対象外）
   const oldJpy=localStorage.getItem('ps_equity_jpy');
   const oldUsd=localStorage.getItem('ps_equity_usd');
   if(!localStorage.getItem('ps_equity')){
     if(_currency==='USD'&&oldUsd)localStorage.setItem('ps_equity',oldUsd);
     else if(oldJpy)localStorage.setItem('ps_equity',oldJpy);
   }
-  const eq=localStorage.getItem('ps_equity'),rk=localStorage.getItem('ps_risk'),pr=localStorage.getItem('ps_pair');
+  const eq=localStorage.getItem(getSizerEquityKey()),rk=localStorage.getItem(getSizerRiskKey()),pr=localStorage.getItem('ps_pair');
   if(eq)document.getElementById('equity').value=eq;
   if(rk)document.getElementById('risk').value=rk;
   if(pr){document.getElementById('pair').value=pr;const btn=document.getElementById('pair-btn');btn.textContent=pr;btn.classList.add('sel');}
   applyCurrencyUI();
 })();
 document.getElementById('equity').addEventListener('change',()=>{
-  localStorage.setItem('ps_equity',document.getElementById('equity').value);
+  localStorage.setItem(getSizerEquityKey(),document.getElementById('equity').value);
 });
-document.getElementById('risk').addEventListener('change',()=>localStorage.setItem('ps_risk',document.getElementById('risk').value));
+document.getElementById('risk').addEventListener('change',()=>localStorage.setItem(getSizerRiskKey(),document.getElementById('risk').value));
 
 const savedTheme=localStorage.getItem('ps_theme');
 if(savedTheme==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='LIGHT';}
@@ -2621,6 +2687,8 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.9',datetime:'2026.08.06 08:45',note:'証拠金・リスク%を口座ごとに自動記憶するように変更。口座切替時に前回入力した値が自動復元される'},
+  {version:'v3.8',datetime:'2026.08.06 08:25',note:'口座間コピー機能をSETTINGSタブのトグルで表示/非表示に切替可能に（削除モードと同じ扱い、普段は非表示）'},
   {version:'v3.7',datetime:'2026.08.06 01:23',note:'口座間で計算履歴を全件コピーする機能を追加（確認モーダル付き）。lotをダブルタップ（1秒以内）で編集できるように'},
   {version:'v3.6',datetime:'2026.08.05 08:41',note:'並び替え・ナンバリングをステータス区画ごとに独立化。lotタップコピー追加。削除モードをSETTINGSタブのトグルへ移動（普段は非表示）'},
   {version:'v3.5',datetime:'2026.08.04 15:33',note:'SIZER計算履歴が複数口座に対応（口座切替・名前変更可）。展開時のワイド矢印・状態区画の境界線視認性を改善'},
@@ -3586,6 +3654,7 @@ renderSizerHistory();
 renderSizerTodayEvents();
 updateSaveHistBtnLabel();
 applySizerDeleteModeUI();
+applySizerCopyModeUI();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
