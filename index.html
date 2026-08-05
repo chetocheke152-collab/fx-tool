@@ -123,6 +123,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-account-tab-name{font-size:12px;font-weight:700;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sizer-account-tab.active .sizer-account-tab-name{color:#D4AF5A}
 .sizer-account-tab-edit{background:transparent;border:none;color:#555;font-size:11px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;padding:0;line-height:1}
+.sizer-account-copy-btn{width:100%;margin-bottom:10px;padding:8px;background:transparent;border:1px solid #D4AF5A33;border-radius:8px;color:#888;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
 .sizer-account-tab.active .sizer-account-tab-edit{color:#D4AF5A99}
 .sizer-hist-search-input:focus{border-color:#D4AF5A}
 .sizer-hist-body.open{max-height:2000px;padding:14px 16px 14px;opacity:1}
@@ -136,6 +137,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-lot.tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;transition:background-color 0.15s ease}
 .sizer-hist-lot.copied-flash{background-color:#D4AF5A33}
+.sizer-hist-lot-input{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A;background:#1A1A1A;border:1px solid #D4AF5A;border-radius:4px;padding:1px 4px;width:64px;outline:none;-webkit-appearance:none}
 .sizer-hist-del{background:transparent;border:none;color:#333;font-size:15px;cursor:pointer;padding:2px 4px;-webkit-appearance:none;flex-shrink:0;line-height:1;margin-left:auto}
 .sizer-hist-del.mode-del{border:1px solid #EF444466;border-radius:6px;color:#EF4444;font-size:13px;padding:5px 9px}
 .sizer-hist-del:active{color:#EF4444}
@@ -348,9 +350,11 @@ body.light .sizer-status-revert-btn{border-color:#D4AF5A33;color:#999}
 body.light .sizer-hist-pair{color:#1A1A1A}
 body.light .sizer-hist-row:active{background:#D4AF5A0A}
 body.light .sizer-hist-price-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
+body.light .sizer-hist-lot-input{background:#F9F7F2}
 body.light .sizer-hist-search-input{background:#F9F7F2;border-color:#D4AF5A33;color:#1A1A1A}
 body.light .sizer-account-tab{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .sizer-account-tab.active{background:#D4AF5A18;border-color:#D4AF5A}
+body.light .sizer-account-copy-btn{border-color:#D4AF5A44;color:#999}
 body.light .sizer-hist-expand-btn{border-color:#D4AF5A33;color:#AAA}
 body.light .sizer-hist-expand-btn.has-price{border-color:#D4AF5A;color:#D4AF5A}
 body.light .lbl{color:#D4AF5A}
@@ -535,6 +539,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
     <div class="sizer-account-switch" id="sizer-account-switch"></div>
+    <button class="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()">📋 口座間で計算履歴をコピー</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
@@ -848,6 +853,25 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button onclick="confirmCultEvent()" style="margin:10px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">決定</button>
 </div>
 
+<!-- SIZER 口座間コピー Sheet -->
+<div class="overlay" id="sizer-account-copy-overlay" onclick="closeSizerAccountCopySheet()"></div>
+<div class="sheet" id="sizer-account-copy-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">口座間で計算履歴をコピー</div>
+  <div style="padding:16px;">
+    <div class="field">
+      <span class="lbl">コピー元</span>
+      <select id="sizer-copy-from" class="cult-input" style="width:100%;" onchange="renderSizerAccountCopyPreview()"></select>
+    </div>
+    <div class="field" style="margin-top:14px;">
+      <span class="lbl">コピー先</span>
+      <select id="sizer-copy-to" class="cult-input" style="width:100%;" onchange="renderSizerAccountCopyPreview()"></select>
+    </div>
+    <div id="sizer-copy-preview" style="margin-top:14px;font-size:12px;color:#888;line-height:1.6;"></div>
+  </div>
+  <button onclick="confirmSizerAccountCopy()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">コピーを実行する</button>
+</div>
+
 <!-- SIZER履歴 IN/SL/TP 入力モーダル -->
 <div class="overlay" id="sizer-price-overlay" onclick="closeSizerPriceModal()"></div>
 <div class="sheet" id="sizer-price-modal">
@@ -1127,15 +1151,15 @@ function getCurrentSizerAccountId(){
 function setCurrentSizerAccountId(id){localStorage.setItem(SIZER_CURRENT_ACCOUNT_KEY,id);}
 
 // ===== SIZER 計算履歴 =====
-function getSizerHistKey(){
-  const accountId=getCurrentSizerAccountId();
+function getSizerHistKey(accountIdOverride){
+  const accountId=accountIdOverride||getCurrentSizerAccountId();
   const base=accountId==='a'?'ps_sizer_history':'ps_sizer_history_'+accountId;
   return isDebugMode()?base+'_debug':base;
 }
-function loadSizerHistory(){
-  try{return JSON.parse(localStorage.getItem(getSizerHistKey()))||[];}catch(e){return [];}
+function loadSizerHistory(accountIdOverride){
+  try{return JSON.parse(localStorage.getItem(getSizerHistKey(accountIdOverride)))||[];}catch(e){return [];}
 }
-function saveSizerHistoryArr(arr){localStorage.setItem(getSizerHistKey(),JSON.stringify(arr));}
+function saveSizerHistoryArr(arr,accountIdOverride){localStorage.setItem(getSizerHistKey(accountIdOverride),JSON.stringify(arr));}
 
 function maybeSaveSizerHistory(){
   const pName=document.getElementById('pair').value;
@@ -1297,6 +1321,71 @@ function renameSizerAccount(id){
   saveSizerAccounts(accounts);
   renderSizerAccountSwitch();
   updateSaveHistBtnLabel(); // 変更した口座が現在選択中の口座であれば、保存ボタンの表示にも反映する
+}
+
+// ===== 口座間で計算履歴をコピー =====
+function openSizerAccountCopySheet(){
+  const accounts=loadSizerAccounts();
+  const fromSelect=document.getElementById('sizer-copy-from');
+  const toSelect=document.getElementById('sizer-copy-to');
+  const optionsHtml=accounts.map(a=>'<option value="'+a.id+'">'+a.name+'</option>').join('');
+  fromSelect.innerHTML=optionsHtml;
+  toSelect.innerHTML=optionsHtml;
+  // 現在選択中の口座をコピー元の初期値にし、コピー先はそれ以外の最初の口座にしておく
+  const currentId=getCurrentSizerAccountId();
+  fromSelect.value=currentId;
+  const otherAccount=accounts.find(a=>a.id!==currentId);
+  toSelect.value=otherAccount?otherAccount.id:currentId;
+  renderSizerAccountCopyPreview();
+  document.getElementById('sizer-account-copy-overlay').classList.add('open');
+  document.getElementById('sizer-account-copy-sheet').classList.add('open');
+}
+function closeSizerAccountCopySheet(){
+  document.getElementById('sizer-account-copy-overlay').classList.remove('open');
+  document.getElementById('sizer-account-copy-sheet').classList.remove('open');
+}
+function renderSizerAccountCopyPreview(){
+  const fromId=document.getElementById('sizer-copy-from').value;
+  const toId=document.getElementById('sizer-copy-to').value;
+  const preview=document.getElementById('sizer-copy-preview');
+  const accounts=loadSizerAccounts();
+  const fromName=accounts.find(a=>a.id===fromId)?.name||fromId;
+  const toName=accounts.find(a=>a.id===toId)?.name||toId;
+  if(fromId===toId){
+    preview.innerHTML='<span style="color:#EF4444;">⚠ コピー元とコピー先が同じです。別の口座を選んでください</span>';
+    return;
+  }
+  const fromCount=loadSizerHistory(fromId).length;
+  const toCount=loadSizerHistory(toId).length;
+  preview.innerHTML=fromName+'（'+fromCount+'件）→ '+toName+'（現在'+toCount+'件）に全件コピーします。<br>'+toName+'の既存データはそのまま残り、追加される形になります。';
+}
+function confirmSizerAccountCopy(){
+  const fromId=document.getElementById('sizer-copy-from').value;
+  const toId=document.getElementById('sizer-copy-to').value;
+  if(fromId===toId){
+    alert('コピー元とコピー先が同じです。別の口座を選んでください');
+    return;
+  }
+  const accounts=loadSizerAccounts();
+  const fromName=accounts.find(a=>a.id===fromId)?.name||fromId;
+  const toName=accounts.find(a=>a.id===toId)?.name||toId;
+  const fromHist=loadSizerHistory(fromId);
+  if(fromHist.length===0){
+    alert(fromName+'の計算履歴が空のため、コピーする内容がありません');
+    return;
+  }
+  const ok=confirm(fromName+'の計算履歴（'+fromHist.length+'件）を、'+toName+'にコピーします。\nよろしいですか？');
+  if(!ok)return;
+
+  const toHist=loadSizerHistory(toId);
+  const copied=JSON.parse(JSON.stringify(fromHist)); // ディープコピー（コピー元データへの参照を残さない）
+  const merged=toHist.concat(copied);
+  saveSizerHistoryArr(merged,toId);
+
+  playTheme(true);
+  closeSizerAccountCopySheet();
+  renderSizerHistory(); // 現在表示中の口座が影響を受けている場合に備えて再描画
+  alert(fromHist.length+'件を'+toName+'にコピーしました。');
 }
 
 function renderSizerHistory(){
@@ -1736,7 +1825,21 @@ function copySizerHistPrice(idx,key){
 // 注文前・注文待機中などの各区画で共通して使うlot表示のタップコピー。
 // ボタンを新設するスペースが無いため、既存のlot表示自体をタップ対象にし、
 // 見た目（テキスト）は変えずに、背景を一瞬光らせるだけでコピー成功を伝える
+// タップでコピー、1秒以内のダブルタップで編集モードに入る
+let _sizerLotLastTapTime={}; // idx -> 直前のタップ時刻（undefinedは「直前のタップなし」を意味する）
+const SIZER_LOT_DOUBLE_TAP_THRESHOLD=1000;
 function copySizerHistLot(idx){
+  const now=Date.now();
+  const last=_sizerLotLastTapTime[idx];
+  const isDoubleTap=(last!==undefined)&&((now-last)<SIZER_LOT_DOUBLE_TAP_THRESHOLD);
+  _sizerLotLastTapTime[idx]=now;
+
+  if(isDoubleTap){
+    delete _sizerLotLastTapTime[idx]; // 編集モードに入ったら、連続タップの起点をリセットしておく
+    enterSizerLotEditMode(idx);
+    return;
+  }
+
   const hist=loadSizerHistory();
   const h=hist[idx];
   if(!h)return;
@@ -1748,6 +1851,35 @@ function copySizerHistLot(idx){
     setTimeout(()=>{el.classList.remove('copied-flash');},400);
   };
   navigator.clipboard?navigator.clipboard.writeText(v).then(done).catch(()=>fbCopy(v,done)):fbCopy(v,done);
+}
+
+// lot編集モード：表示中のspanを一時的にinput要素に差し替える
+function enterSizerLotEditMode(idx){
+  const el=document.getElementById('sizer-hist-lot-'+idx);
+  if(!el)return;
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const currentVal=h.lot.toFixed(2);
+  el.outerHTML='<input type="text" inputmode="decimal" class="sizer-hist-lot-input" id="sizer-hist-lot-'+idx+'" value="'+currentVal+'" onclick="event.stopPropagation()" onblur="confirmSizerLotEdit('+idx+')" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">';
+  playClick(true);
+  setTimeout(()=>{
+    const input=document.getElementById('sizer-hist-lot-'+idx);
+    if(input){input.focus();input.select();}
+  },50);
+}
+function confirmSizerLotEdit(idx){
+  const input=document.getElementById('sizer-hist-lot-'+idx);
+  if(!input)return;
+  const raw=input.value.trim();
+  const parsed=parseFloat(raw);
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(h&&!isNaN(parsed)&&parsed>0){
+    h.lot=parsed;
+    saveSizerHistoryArr(hist);
+  }
+  renderSizerHistory(); // 編集を終えたら通常のspan表示に戻す（不正な値だった場合は元の値のまま再描画される）
 }
 
 let _sizerDelPendingIdx=null;
@@ -2489,6 +2621,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.7',datetime:'2026.08.06 01:23',note:'口座間で計算履歴を全件コピーする機能を追加（確認モーダル付き）。lotをダブルタップ（1秒以内）で編集できるように'},
   {version:'v3.6',datetime:'2026.08.05 08:41',note:'並び替え・ナンバリングをステータス区画ごとに独立化。lotタップコピー追加。削除モードをSETTINGSタブのトグルへ移動（普段は非表示）'},
   {version:'v3.5',datetime:'2026.08.04 15:33',note:'SIZER計算履歴が複数口座に対応（口座切替・名前変更可）。展開時のワイド矢印・状態区画の境界線視認性を改善'},
   {version:'v3.4',datetime:'2026.07.29 11:30',note:'SIZER計算履歴に注文状態管理（通常/注文待機中/約定中/決済済み）を追加。二重注文防止・決済済み区画は折りたたみ表示'},
