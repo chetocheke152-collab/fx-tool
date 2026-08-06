@@ -197,8 +197,8 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-status-fold-arr:not(.open){transform:rotate(-90deg)}
 .sizer-status-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease}
 .sizer-status-fold-body.open{max-height:2000px;opacity:1}
-.sizer-status-advance-btn{background:#D4AF5A18;border:1px solid #D4AF5A55;border-radius:6px;color:#D4AF5A;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
-.sizer-status-revert-btn{background:transparent;border:1px solid #333;border-radius:6px;color:#666;font-size:11px;padding:4px 7px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;line-height:1}
+.sizer-status-advance-btn{background:#D4AF5A18;border:1px solid #D4AF5A55;border-radius:8px;color:#D4AF5A;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
+.sizer-status-revert-btn{background:transparent;border:1px solid #333;border-radius:8px;color:#666;font-size:14px;padding:8px 11px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
 .tab-btn{flex:1;min-width:0;padding:11px 2px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:#666;cursor:pointer;text-align:center;background:transparent;border:none;transition:all 0.2s;-webkit-appearance:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1602,13 +1602,13 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
   const status=getSizerHistStatus(h);
   const nextLabel=SIZER_STATUS_NEXT_LABEL[status]; // 約定中の場合はundefined（これ以上進めない）
-  // 状態変更ボタン（進める・戻す）は、誤タップ防止のため「状態変更」モードの時だけ表示する
-  // （モーダルの代わりに、モード自体を切り替えないと操作できないようにすることで事故を防ぐ）
-  const inStatusMode=(_sizerHistMode==='status');
-  const statusBtn=(inStatusMode&&nextLabel)
+  // 状態変更ボタン（進める・戻す）は常に表示する。以前はモード切替が必要だったが、
+  // 頻繁に使う操作にモード切替という別の工数を挟むのはかえって非効率と判断し、
+  // 代わりにボタン自体のサイズを大きくして誤タップを防ぐ方針に変更した
+  const statusBtn=nextLabel
     ?'<button class="sizer-status-advance-btn" onclick="event.stopPropagation();advanceSizerHistStatusConfirm('+i+')">'+nextLabel+'</button>'
     :'';
-  const revertBtn=(inStatusMode&&status!=='normal')
+  const revertBtn=status!=='normal'
     ?'<button class="sizer-status-revert-btn" onclick="event.stopPropagation();revertSizerHistStatus('+i+')" title="ひとつ前の状態に戻す">↩</button>'
     :'';
   // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
@@ -1695,11 +1695,10 @@ function toggleSizerClosedSection(){
 
 // ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
 let _sizerHistMode='normal';
-const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',status:'状態変更',delete:'削除'};
+const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',delete:'削除'};
 const SIZER_HIST_MODE_SUBS={
   normal:'タップで通常・並び替えを切替',
   sort:'▲▼で順番を入れ替えできます',
-  status:'各行の状態変更ボタンが表示されます',
   delete:'×タップで削除（2段階確認）'
 };
 // 通貨ペアの部分一致で計算履歴を絞り込み（表示のみ、データ自体は変更しない）
@@ -1772,7 +1771,9 @@ function applySizerCopyModeUI(){
 
 // ===== 注文待機中の一括戻し機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
 const SIZER_BULKREVERT_KEY='ps_sizer_bulkrevert_enabled';
-function isSizerBulkRevertEnabled(){return localStorage.getItem(SIZER_BULKREVERT_KEY)==='1';}
+// デフォルトON（指標回避などの緊急時に、SETTINGSまで探しに行く手間をなくすため）。
+// 明示的に'0'が保存されている場合のみOFFとして扱う（既にOFFにしていたユーザーの意思は尊重する）
+function isSizerBulkRevertEnabled(){return localStorage.getItem(SIZER_BULKREVERT_KEY)!=='0';}
 function toggleSizerBulkRevertEnabled(){
   const btn=document.getElementById('sizer-bulkrevert-toggle-btn');
   const bulkBtn=document.getElementById('sizer-bulkrevert-btn');
@@ -1817,7 +1818,7 @@ function confirmSizerBulkRevertPending(){
 }
 
 function cycleSizerHistMode(){
-  const order=isSizerDeleteModeEnabled()?['normal','sort','status','delete']:['normal','sort','status'];
+  const order=isSizerDeleteModeEnabled()?['normal','sort','delete']:['normal','sort'];
   const idx=order.indexOf(_sizerHistMode);
   _sizerHistMode=order[(idx+1)%order.length];
   const btn=document.getElementById('sizer-hist-mode-btn');
@@ -2792,6 +2793,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.20',datetime:'2026.08.06 19:13',note:'ユーザーシナリオテストを踏まえ2点改善：①状態変更モードを廃止しボタンを常時表示・拡大（頻繁な操作にモード切替の手間を挟まない）②一括戻し機能をデフォルトONに変更'},
   {version:'v3.19',datetime:'2026.08.06 16:32',note:'計算履歴の操作モードに「状態変更」を追加。各行の状態変更・↩ボタンは、このモードの時だけ表示（誤タップ防止のモーダル代替）'},
   {version:'v3.18',datetime:'2026.08.06 16:15',note:'pips不一致判定を「最初に登録した固定値」基準に修正（重大バグ修正：IN/SL入力のたびに基準が動いていた）。自動修正機能（タップ・一括とも）は原理的に不可能なため廃止、赤字は警告表示のみに'},
   {version:'v3.17',datetime:'2026.08.06 15:20',note:'9つの主要トグルをドル円と同じ左右スライドスイッチ形式に統一（ダーク=ゴールド地に白文字、ライト=アイボリー地）。循環ボタンの著しいコントラスト不足も併せて修正'},
