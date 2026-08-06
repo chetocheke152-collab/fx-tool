@@ -1835,7 +1835,8 @@ function moveSizerHistItem(idx,dir){
 
 // ===== 計算履歴：注文の状態管理（通常 → 注文待機中 → 約定中） =====
 // 二重注文防止のため、「まだ計算しただけ」「MT5に発注済みで約定待ち」「実際に約定済み」を区別する。
-// 状態を進める操作は、誤タップ対策として簡易確認モーダルを一度挟んでから実行する
+// 状態を進める操作は、作業工数を優先してタップ即座に確定する（確認モーダルは挟まない。
+// 誤って進めた場合は「↩」でいつでも1段階戻せるため、確認なしでも実用上問題ない）
 const SIZER_STATUS_LABELS={normal:'通常','pending':'注文待機中',filled:'約定中',closed:'決済済み'};
 const SIZER_STATUS_NEXT={normal:'pending',pending:'filled',filled:'closed'};
 const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする',filled:'決済済みにする'};
@@ -1853,6 +1854,7 @@ function advanceSizerHistStatusConfirm(idx){
   // （誤って進めてしまった場合は「↩」でいつでも1段階戻せるため、確認なしでも実用上問題ない）
   h.status=next;
   saveSizerHistoryArr(hist);
+  _sizerHistExpanded=null; // 状態変更後はレートの確認・編集を行わないため、展開中の項目は自動的に閉じる
   playTheme(true);
   renderSizerHistory();
 }
@@ -1868,6 +1870,7 @@ function revertSizerHistStatus(idx){
   else if(current==='closed')h.status='filled';
   else return;
   saveSizerHistoryArr(hist);
+  _sizerHistExpanded=null; // 状態変更後はレートの確認・編集を行わないため、展開中の項目は自動的に閉じる
   playClick(false);
   renderSizerHistory();
 }
@@ -2774,6 +2777,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.22',datetime:'2026.08.06 22:06',note:'ステータス変更（進める・戻す）後、展開中のIN/SL/TPパネルを自動的に閉じるように変更'},
   {version:'v3.21',datetime:'2026.08.06 20:05',note:'設計意図の再確認により2点改善：①削除モードのSETTINGSトグルを廃止、操作モード循環のみに一本化②口座A/Bのキー形式を完全対等に統一（既存データは自動移行、消失なし）'},
   {version:'v3.20',datetime:'2026.08.06 19:13',note:'ユーザーシナリオテストを踏まえ2点改善：①状態変更モードを廃止しボタンを常時表示・拡大（頻繁な操作にモード切替の手間を挟まない）②一括戻し機能をデフォルトONに変更'},
   {version:'v3.19',datetime:'2026.08.06 16:32',note:'計算履歴の操作モードに「状態変更」を追加。各行の状態変更・↩ボタンは、このモードの時だけ表示（誤タップ防止のモーダル代替）'},
