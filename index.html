@@ -122,9 +122,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-account-tab.active{background:#D4AF5A18;border-color:#D4AF5A}
 .sizer-account-tab-name{font-size:12px;font-weight:700;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sizer-account-tab.active .sizer-account-tab-name{color:#D4AF5A}
-.sizer-account-tab-edit{background:transparent;border:none;color:#555;font-size:11px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;padding:0;line-height:1}
 .sizer-account-copy-btn{width:100%;margin-bottom:10px;padding:8px;background:transparent;border:1px solid #D4AF5A33;border-radius:8px;color:#888;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
-.sizer-account-tab.active .sizer-account-tab-edit{color:#D4AF5A99}
 .sizer-hist-search-input:focus{border-color:#D4AF5A}
 .sizer-hist-body.open{max-height:2000px;padding:14px 16px 14px;opacity:1}
 .sizer-hist-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid #D4AF5A08;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -422,6 +420,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <span class="toggle-txt" id="sizer-accordion-toggle-txt">OFF</span>
   </div>
 </div>
+<div class="sizer-account-switch" id="sizer-account-switch" style="margin:14px 14px 10px;"></div>
 <div class="card" style="margin-top:14px;">
   <div class="card-hdr sizer-fold-hdr" onclick="toggleSizerFold('account')" style="display:flex;align-items:center;justify-content:space-between;">
     <span>Account</span>
@@ -538,7 +537,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <span class="sizer-hist-arr" id="sizer-hist-arr">▼</span>
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
-    <div class="sizer-account-switch" id="sizer-account-switch"></div>
     <button class="sizer-account-copy-btn" id="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()" style="display:none;">📋 口座間で計算履歴をコピー</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
@@ -1060,6 +1058,9 @@ function toggleCurrency(){
     // ドル → 円
     eqInput.value=Math.round(current*rate);
   }
+  // プログラムでvalueを直接書き換えても'change'イベントは自動発火しないため、
+  // ここで明示的に保存しておく（保存し忘れると、口座切替を挟んだ時に換算前の古い値に戻ってしまう）
+  localStorage.setItem(getSizerEquityKey(),eqInput.value);
   _currency=_currency==='JPY'?'USD':'JPY';
   localStorage.setItem('ps_currency',_currency);
   applyCurrencyUI();
@@ -1323,11 +1324,26 @@ function renderSizerAccountSwitch(){
   const accounts=loadSizerAccounts();
   const currentId=getCurrentSizerAccountId();
   wrap.innerHTML=accounts.map(a=>
-    '<div class="sizer-account-tab'+(a.id===currentId?' active':'')+'" onclick="switchSizerAccount(\''+a.id+'\')">'
+    '<div class="sizer-account-tab'+(a.id===currentId?' active':'')+'" onclick="handleSizerAccountTabTap(\''+a.id+'\')">'
     +'<span class="sizer-account-tab-name">'+a.name+'</span>'
-    +'<button class="sizer-account-tab-edit" onclick="event.stopPropagation();renameSizerAccount(\''+a.id+'\')">✏️</button>'
     +'</div>'
   ).join('');
+}
+// タップで口座切替、1秒以内のダブルタップで口座名編集（lotのダブルタップ編集と同じ考え方）
+let _sizerAccountTabLastTapTime={}; // id -> 直前のタップ時刻（undefinedは「直前のタップなし」を意味する）
+const SIZER_ACCOUNT_TAB_DOUBLE_TAP_THRESHOLD=1000;
+function handleSizerAccountTabTap(id){
+  const now=Date.now();
+  const last=_sizerAccountTabLastTapTime[id];
+  const isDoubleTap=(last!==undefined)&&((now-last)<SIZER_ACCOUNT_TAB_DOUBLE_TAP_THRESHOLD);
+  _sizerAccountTabLastTapTime[id]=now;
+
+  if(isDoubleTap){
+    delete _sizerAccountTabLastTapTime[id]; // 編集に入ったら、連続タップの起点をリセットしておく
+    renameSizerAccount(id);
+    return;
+  }
+  switchSizerAccount(id);
 }
 function switchSizerAccount(id){
   if(id===getCurrentSizerAccountId())return;
@@ -2687,6 +2703,8 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.11',datetime:'2026.08.06 09:33',note:'口座名編集の✏️ボタンを廃止し、ダブルタップ（1秒以内）方式に変更。タップでの口座切替との干渉を解消'},
+  {version:'v3.10',datetime:'2026.08.06 09:15',note:'口座切替UIを計算履歴パネルからSIZERタブ上部へ移動。Accountパネルの開閉に関係なく常に表示されるように'},
   {version:'v3.9',datetime:'2026.08.06 08:45',note:'証拠金・リスク%を口座ごとに自動記憶するように変更。口座切替時に前回入力した値が自動復元される'},
   {version:'v3.8',datetime:'2026.08.06 08:25',note:'口座間コピー機能をSETTINGSタブのトグルで表示/非表示に切替可能に（削除モードと同じ扱い、普段は非表示）'},
   {version:'v3.7',datetime:'2026.08.06 01:23',note:'口座間で計算履歴を全件コピーする機能を追加（確認モーダル付き）。lotをダブルタップ（1秒以内）で編集できるように'},
