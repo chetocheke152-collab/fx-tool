@@ -132,6 +132,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-num{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#D4AF5A88;flex-shrink:0;min-width:18px;text-align:center}
 .sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
+.sizer-hist-pips-mismatch{color:#EF4444;font-weight:700}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-lot.tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;transition:background-color 0.15s ease}
 .sizer-hist-lot.copied-flash{background-color:#D4AF5A33}
@@ -185,7 +186,6 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-status-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease}
 .sizer-status-fold-body.open{max-height:2000px;opacity:1}
 .sizer-status-advance-btn{background:#D4AF5A18;border:1px solid #D4AF5A55;border-radius:6px;color:#D4AF5A;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer;-webkit-appearance:none;flex-shrink:0}
-.sizer-status-advance-btn.pending{background:#F59E0B18;border-color:#F59E0B;color:#F59E0B}
 .sizer-status-revert-btn{background:transparent;border:1px solid #333;border-radius:6px;color:#666;font-size:11px;padding:4px 7px;cursor:pointer;-webkit-appearance:none;flex-shrink:0;line-height:1}
 .sizer-hist-clear-btn{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .tab-nav{display:flex;margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
@@ -538,6 +538,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   </div>
   <div class="sizer-hist-body" id="sizer-hist-body">
     <button class="sizer-account-copy-btn" id="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()" style="display:none;">📋 口座間で計算履歴をコピー</button>
+    <button class="sizer-account-copy-btn" id="sizer-bulkrevert-btn" onclick="confirmSizerBulkRevertPending()" style="display:none;">⏪ 注文待機中を全て「注文前」に戻す</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
@@ -778,6 +779,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <span class="toggle-txt" id="sizer-copymode-toggle-txt">OFF</span>
         </div>
       </div>
+      <div class="toggle-row" style="margin-top:12px;">
+        <div class="toggle-info">
+          <div class="toggle-lbl">注文待機中の一括戻し</div>
+          <div class="toggle-sub">ONで「注文待機中」全件を「注文前」に一括で戻すボタンが表示されます</div>
+        </div>
+        <div class="toggle-btn" id="sizer-bulkrevert-toggle-btn" onclick="toggleSizerBulkRevertEnabled()">
+          <span class="toggle-txt" id="sizer-bulkrevert-toggle-txt">OFF</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -989,6 +999,18 @@ function pip1(type){
   if(type==='JPY')return 1000;if(type==='XAU')return RATE.USD;
   if(type==='JP225')return 1;if(type==='BTC')return RATE.USD;
   return(RATE[type]||RATE.USD)*10;
+}
+
+// ===== 計算履歴：IN/SL価格差からの実際pips逆算（入力pipsとの整合性チェック用） =====
+// XAU・JP225・BTCは1pipの定義が特殊（またはpips運用に馴染まない）銘柄のため対象外とする
+function calcActualPipsFromPrices(pairName,inPrice,slPrice){
+  const p=PAIRS.find(x=>x.pair===pairName);
+  if(!p)return null;
+  if(p.type==='XAU'||p.type==='JP225'||p.type==='BTC')return null;
+  const inNum=parseFloat(inPrice),slNum=parseFloat(slPrice);
+  if(isNaN(inNum)||isNaN(slNum))return null;
+  const pipSize=p.type==='JPY'?0.01:0.0001;
+  return Math.abs(inNum-slNum)/pipSize;
 }
 
 // ===== 通貨表示切替（円⇔ドル） =====
@@ -1348,9 +1370,7 @@ function handleSizerAccountTabTap(id){
 function switchSizerAccount(id){
   if(id===getCurrentSizerAccountId())return;
   setCurrentSizerAccountId(id);
-  _sizerHistExpanded=null; // 口座を切り替えたら、展開中・確認待ちの状態はリセットする
-  _sizerStatusPendingIdx=null;
-  clearTimeout(_sizerStatusPendingTimer);
+  _sizerHistExpanded=null; // 口座を切り替えたら、展開中の状態はリセットする
   _sizerDelPendingIdx=null; // 削除確認待ちも同様の理由でリセットする
   clearTimeout(_sizerDelPendingTimer);
   applySizerAccountFields(); // 証拠金・リスク%を、切替先の口座で記憶している値に復元する
@@ -1530,15 +1550,20 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
   const status=getSizerHistStatus(h);
   const nextLabel=SIZER_STATUS_NEXT_LABEL[status]; // 約定中の場合はundefined（これ以上進めない）
-  const isPending=(_sizerStatusPendingIdx===i);
   const statusBtn=nextLabel
-    ?'<button class="sizer-status-advance-btn'+(isPending?' pending':'')+'" onclick="event.stopPropagation();advanceSizerHistStatusConfirm('+i+')">'+(isPending?'本当に進める？':nextLabel)+'</button>'
+    ?'<button class="sizer-status-advance-btn" onclick="event.stopPropagation();advanceSizerHistStatusConfirm('+i+')">'+nextLabel+'</button>'
     :'';
   const revertBtn=status!=='normal'
     ?'<button class="sizer-status-revert-btn" onclick="event.stopPropagation();revertSizerHistStatus('+i+')" title="ひとつ前の状態に戻す">↩</button>'
     :'';
   // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
   const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
+  // IN/SLの価格差から実際のpips数を逆算し、入力したpips数とズレていれば赤字で注意を促す
+  // （入力自体を禁止するものではなく、あくまで確認用の表示）
+  const actualPips=(h.in&&h.sl)?calcActualPipsFromPrices(h.pair,h.in,h.sl):null;
+  const pipsMismatch=(actualPips!==null)&&(Math.abs(h.pips-actualPips)>=0.1);
+  const pipsClass=pipsMismatch?' sizer-hist-pips-mismatch':'';
+  const pipsTitle=pipsMismatch?' title="IN/SLの価格差からは約'+actualPips.toFixed(1)+'pipsと算出されます"':'';
 
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
@@ -1546,7 +1571,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
-  +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+'>'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot tappable" id="sizer-hist-lot-'+i+'" onclick="event.stopPropagation();copySizerHistLot('+i+')">'+h.lot.toFixed(2)+' lot</span>'
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
   +'</div>'
@@ -1699,6 +1724,57 @@ function applySizerCopyModeUI(){
   if(copyBtn)copyBtn.style.display=enabled?'block':'none';
 }
 
+// ===== 注文待機中の一括戻し機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
+const SIZER_BULKREVERT_KEY='ps_sizer_bulkrevert_enabled';
+function isSizerBulkRevertEnabled(){return localStorage.getItem(SIZER_BULKREVERT_KEY)==='1';}
+function toggleSizerBulkRevertEnabled(){
+  const btn=document.getElementById('sizer-bulkrevert-toggle-btn');
+  const txt=document.getElementById('sizer-bulkrevert-toggle-txt');
+  const bulkBtn=document.getElementById('sizer-bulkrevert-btn');
+  const isOn=isSizerBulkRevertEnabled();
+  if(isOn){
+    localStorage.setItem(SIZER_BULKREVERT_KEY,'0');
+    btn.classList.remove('on');
+    txt.textContent='OFF';
+    if(bulkBtn)bulkBtn.style.display='none';
+  }else{
+    localStorage.setItem(SIZER_BULKREVERT_KEY,'1');
+    btn.classList.add('on');
+    txt.textContent='ON';
+    if(bulkBtn)bulkBtn.style.display='block';
+  }
+  playClick(!isOn);
+}
+function applySizerBulkRevertUI(){
+  const btn=document.getElementById('sizer-bulkrevert-toggle-btn');
+  const txt=document.getElementById('sizer-bulkrevert-toggle-txt');
+  const bulkBtn=document.getElementById('sizer-bulkrevert-btn');
+  if(!btn||!txt)return;
+  const enabled=isSizerBulkRevertEnabled();
+  btn.classList.toggle('on',enabled);
+  txt.textContent=enabled?'ON':'OFF';
+  if(bulkBtn)bulkBtn.style.display=enabled?'block':'none';
+}
+// 「注文待機中」区画の全件を「注文前」へ一括で戻す（指標回避でMT5側の注文をまとめて削除した際の追従用）
+// 決済済み・約定中には一切影響しない。件数が多い操作のため確認モーダルを挟む
+function confirmSizerBulkRevertPending(){
+  const hist=loadSizerHistory();
+  const pendingCount=hist.filter(h=>getSizerHistStatus(h)==='pending').length;
+  if(pendingCount===0){
+    alert('「注文待機中」の項目がありません');
+    return;
+  }
+  const ok=confirm('「注文待機中」の'+pendingCount+'件を、全て「注文前」に戻します。\nよろしいですか？');
+  if(!ok)return;
+  hist.forEach(h=>{
+    if(getSizerHistStatus(h)==='pending')h.status='normal';
+  });
+  saveSizerHistoryArr(hist);
+  playTheme(true);
+  renderSizerHistory();
+  alert(pendingCount+'件を「注文前」に戻しました。');
+}
+
 function cycleSizerHistMode(){
   const order=isSizerDeleteModeEnabled()?['normal','sort','delete']:['normal','sort'];
   const idx=order.indexOf(_sizerHistMode);
@@ -1709,10 +1785,8 @@ function cycleSizerHistMode(){
   btn.classList.toggle('on',_sizerHistMode!=='normal');
   txt.textContent=SIZER_HIST_MODE_LABELS[_sizerHistMode];
   sub.textContent=SIZER_HIST_MODE_SUBS[_sizerHistMode];
-  // モード切替時、状態遷移・削除の確認待ちが残っていると、戻ってきた時に別の項目に
+  // モード切替時、削除の確認待ちが残っていると、戻ってきた時に別の項目に
   // 誤って確認待ち表示が残るリスクがあるため、確実にリセットする
-  _sizerStatusPendingIdx=null;
-  clearTimeout(_sizerStatusPendingTimer);
   _sizerDelPendingIdx=null;
   clearTimeout(_sizerDelPendingTimer);
   playClick(_sizerHistMode!=='normal');
@@ -1745,10 +1819,6 @@ const SIZER_STATUS_NEXT={normal:'pending',pending:'filled',filled:'closed'};
 const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする',filled:'決済済みにする'};
 function getSizerHistStatus(h){return h.status||'normal';}
 
-// 状態を進める操作は、iOSでネイティブconfirm()を連続して呼ぶと以降のダイアログが
-// 抑制されてしまう既知の問題があるため、削除機能と同じ「もう一度タップで確定」方式にする
-let _sizerStatusPendingIdx=null;
-let _sizerStatusPendingTimer=null;
 function advanceSizerHistStatusConfirm(idx){
   const hist=loadSizerHistory();
   const h=hist[idx];
@@ -1757,25 +1827,12 @@ function advanceSizerHistStatusConfirm(idx){
   const next=SIZER_STATUS_NEXT[current];
   if(!next)return; // 既に約定中（これ以上進む状態がない）
 
-  if(_sizerStatusPendingIdx===idx){
-    // 2回目のタップ：確定して状態を進める
-    clearTimeout(_sizerStatusPendingTimer);
-    _sizerStatusPendingIdx=null;
-    h.status=next;
-    saveSizerHistoryArr(hist);
-    playTheme(true);
-    renderSizerHistory();
-  }else{
-    // 1回目のタップ：確認待ち状態にして、3秒以内の再タップを待つ
-    _sizerStatusPendingIdx=idx;
-    playClick(true);
-    renderSizerHistory();
-    clearTimeout(_sizerStatusPendingTimer);
-    _sizerStatusPendingTimer=setTimeout(()=>{
-      _sizerStatusPendingIdx=null;
-      renderSizerHistory();
-    },3000);
-  }
+  // 状態を進める操作は、確認モーダルを挟むと作業工数が増えるため、タップ即座に確定する
+  // （誤って進めてしまった場合は「↩」でいつでも1段階戻せるため、確認なしでも実用上問題ない）
+  h.status=next;
+  saveSizerHistoryArr(hist);
+  playTheme(true);
+  renderSizerHistory();
 }
 
 // 状態を1段階戻す（誤って進めてしまった場合の対策。こちらは確認モーダルなしで即座に戻せる）
@@ -1974,8 +2031,6 @@ function deleteSizerHistoryItem(idx){
     hist.splice(idx,1);
     saveSizerHistoryArr(hist);
     _sizerHistExpanded=null; // 削除後はインデックスがズレるため展開状態をリセット
-    _sizerStatusPendingIdx=null; // 同様の理由で、状態遷移の確認待ちもリセットする
-    clearTimeout(_sizerStatusPendingTimer);
     renderSizerHistory();
     playClick(false);
   }else{
@@ -2703,6 +2758,9 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.14',datetime:'2026.08.06 10:35',note:'「注文待機中」全件を「注文前」に一括で戻す機能を追加（確認モーダルあり、SETTINGSタブのトグルで表示/非表示）。指標回避でMT5側の注文を一括削除した際の追従用'},
+  {version:'v3.13',datetime:'2026.08.06 10:26',note:'計算履歴のステータス変更（進める操作）の確認モーダルを廃止し、タップ即座に確定するよう変更。削除機能・↩（戻す）は従来通り確認あり'},
+  {version:'v3.12',datetime:'2026.08.06 10:14',note:'計算履歴のpips表示に、IN/SL価格差からの逆算チェックを追加。入力値とズレていれば赤字で表示（入力自体は制限しない）'},
   {version:'v3.11',datetime:'2026.08.06 09:33',note:'口座名編集の✏️ボタンを廃止し、ダブルタップ（1秒以内）方式に変更。タップでの口座切替との干渉を解消'},
   {version:'v3.10',datetime:'2026.08.06 09:15',note:'口座切替UIを計算履歴パネルからSIZERタブ上部へ移動。Accountパネルの開閉に関係なく常に表示されるように'},
   {version:'v3.9',datetime:'2026.08.06 08:45',note:'証拠金・リスク%を口座ごとに自動記憶するように変更。口座切替時に前回入力した値が自動復元される'},
@@ -3673,6 +3731,7 @@ renderSizerTodayEvents();
 updateSaveHistBtnLabel();
 applySizerDeleteModeUI();
 applySizerCopyModeUI();
+applySizerBulkRevertUI();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
