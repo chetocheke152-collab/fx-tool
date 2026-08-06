@@ -72,15 +72,27 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .qbtns{display:flex;gap:6px;margin-top:8px}
 .qbtn{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:9px 0;font-size:13px;font-weight:700;color:#666;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all 0.15s}
 .qbtn.on{background:#D4AF5A18;border-color:#D4AF5A;color:#D4AF5A}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#1A1A1A;border-radius:8px;border:1px solid #D4AF5A33}
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;padding:14px;background:#1A1A1A;border-radius:8px;border:1px solid #D4AF5A33}
 .debug-disabled-notice{margin:14px;padding:30px 16px;text-align:center;font-size:13px;color:#666;background:#141414;border:1px dashed #EF444444;border-radius:12px;letter-spacing:0.3px}
 .toggle-info{flex:1}
 .toggle-lbl{font-size:14px;font-weight:600;color:#E8E0D0}
 .toggle-sub{font-size:11px;color:#666;margin-top:2px}
-.toggle-btn{width:68px;height:32px;background:#0D0D0D;border:1px solid #D4AF5A;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s}
-.toggle-btn.on{background:#D4AF5A18;border-color:#D4AF5A}
-.toggle-txt{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#444;pointer-events:none;transition:color 0.2s}
-.toggle-btn.on .toggle-txt{color:#D4AF5A}
+.toggle-btn{position:relative;width:68px;height:32px;background:#D4AF5A;border:1px solid #D4AF5A;border-radius:16px;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background 0.2s,border-color 0.2s}
+.toggle-txt{position:absolute;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;color:#F0EDE6;pointer-events:none;transition:color 0.25s ease,font-weight 0.25s ease;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+.toggle-txt.off-lbl{left:9px}
+.toggle-txt.on-lbl{right:8px}
+.toggle-btn:not(.on) .toggle-txt.off-lbl{color:#F0EDE6;font-weight:700}
+.toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F0EDE6;font-weight:400}
+.toggle-btn.on .toggle-txt.off-lbl{color:#F0EDE6;font-weight:400}
+.toggle-btn.on .toggle-txt.on-lbl{color:#F0EDE6;font-weight:700}
+.toggle-knob{position:absolute;top:2px;left:2px;width:32px;height:26px;background:#1A1A1A;border-radius:13px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.toggle-btn.on .toggle-knob{transform:translateX(32px);background:#1A1A1A}
+/* 2値（ON/OFF）ではなく3状態などを循環するボタン用。左右スイッチでは状態数を正しく表現できないため、
+   従来通りの「中央に文字が表示される角丸ボタン」のデザインを維持する（例：計算履歴の操作モード、IMG登録モード） */
+.toggle-btn-cycle{width:68px;height:32px;background:#0D0D0D;border:1px solid #D4AF5A;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;-webkit-tap-highlight-color:transparent}
+.toggle-btn-cycle.on{background:#D4AF5A18;border-color:#D4AF5A}
+.toggle-txt-cycle{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#F0EDE6;pointer-events:none;transition:color 0.2s}
+.toggle-btn-cycle.on .toggle-txt-cycle{color:#D4AF5A}
 .result-card{margin:14px 14px 0;border-radius:12px;overflow:hidden;border:1px solid #D4AF5A33}
 .result-top{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%);padding:28px 20px 20px;text-align:center;border-bottom:1px solid #D4AF5A22}
 .result-top-lbl{font-size:9px;font-weight:700;letter-spacing:3px;color:#D4AF5A;text-transform:uppercase;margin-bottom:8px}
@@ -119,7 +131,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-search-input{width:100%;box-sizing:border-box;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:9px 12px;color:#E8E0D0;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;margin-bottom:10px}
 .sizer-account-switch{display:flex;gap:6px;margin-bottom:10px}
 .sizer-account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
-.sizer-account-tab.active{background:#D4AF5A18;border-color:#D4AF5A}
+.sizer-account-tab.active{background:#0D0D0D;border-color:#D4AF5A;border-width:2px}
 .sizer-account-tab-name{font-size:12px;font-weight:700;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sizer-account-tab.active .sizer-account-tab-name{color:#D4AF5A}
 .sizer-account-copy-btn{width:100%;margin-bottom:10px;padding:8px;background:transparent;border:1px solid #D4AF5A33;border-radius:8px;color:#888;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
@@ -132,7 +144,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-num{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#D4AF5A88;flex-shrink:0;min-width:18px;text-align:center}
 .sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
-.sizer-hist-pips-mismatch{color:#EF4444;font-weight:700}
+.sizer-hist-pips-mismatch{color:#EF4444;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-lot.tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;transition:background-color 0.15s ease}
 .sizer-hist-lot.copied-flash{background-color:#D4AF5A33}
@@ -323,7 +335,18 @@ body.light .toggle-row{background:#F9F7F2;border-color:#D4AF5A33}
 body.light .cult-list-hdr{background:#F9F7F2}
 body.light .toggle-lbl{color:#1A1A1A}
 body.light .toggle-sub{color:#888}
-body.light .toggle-btn{background:#E8E4DC;border-color:#D4AF5A44}
+body.light .toggle-btn{background:#D4AF5A;border-color:#D4AF5A}
+body.light .toggle-txt{color:#F9F7F2}
+body.light .toggle-btn:not(.on) .toggle-txt.off-lbl{color:#F9F7F2}
+body.light .toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F9F7F2}
+body.light .toggle-btn.on .toggle-txt.off-lbl{color:#F9F7F2}
+body.light .toggle-btn.on .toggle-txt.on-lbl{color:#F9F7F2}
+body.light .toggle-knob{background:#F9F7F2}
+body.light .toggle-btn.on .toggle-knob{background:#F9F7F2}
+body.light .toggle-btn-cycle{background:#E8E4DC;border-color:#D4AF5A44}
+body.light .toggle-btn-cycle.on{background:#D4AF5A18;border-color:#D4AF5A}
+body.light .toggle-txt-cycle{color:#8A6E2F}
+body.light .toggle-btn-cycle.on .toggle-txt-cycle{color:#8A6E2F}
 body.light .currency-slide{background:#D4AF5A;border-color:#D4AF5A}
 body.light .currency-slide-knob{background:#F9F7F2}
 body.light .currency-slide-lbl{color:#B08D3E}
@@ -417,7 +440,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
     <div class="toggle-sub">ONで1つ開くと他が自動的に閉じます</div>
   </div>
   <div class="toggle-btn" id="sizer-accordion-toggle-btn" onclick="toggleSizerAccordionMode()">
-    <span class="toggle-txt" id="sizer-accordion-toggle-txt">OFF</span>
+    <span class="toggle-txt off-lbl">OFF</span>
+    <span class="toggle-txt on-lbl">ON</span>
+    <span class="toggle-knob"></span>
   </div>
 </div>
 <div class="sizer-account-switch" id="sizer-account-switch" style="margin:14px 14px 10px;"></div>
@@ -494,7 +519,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONで手数料込みのlot数を計算</div>
         </div>
         <div class="toggle-btn" id="toggle-btn" onclick="toggleFee()">
-          <span class="toggle-txt" id="toggle-txt">OFF</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
         <input type="hidden" id="fee-toggle" value="0">
       </div>
@@ -539,14 +566,15 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div class="sizer-hist-body" id="sizer-hist-body">
     <button class="sizer-account-copy-btn" id="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()" style="display:none;">📋 口座間で計算履歴をコピー</button>
     <button class="sizer-account-copy-btn" id="sizer-bulkrevert-btn" onclick="confirmSizerBulkRevertPending()" style="display:none;">⏪ 注文待機中を全て「注文前」に戻す</button>
+    <button class="sizer-account-copy-btn" id="sizer-bulkfixpips-btn" onclick="confirmSizerBulkFixPips()" style="display:none;">🔧 pips不一致を一括修正</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
         <div class="toggle-lbl" style="font-size:12px;">操作モード</div>
         <div class="toggle-sub" id="sizer-hist-mode-sub" style="font-size:10px;">タップで通常・並び替え・削除を切替</div>
       </div>
-      <div class="toggle-btn" id="sizer-hist-mode-btn" onclick="cycleSizerHistMode()" style="width:84px;">
-        <span class="toggle-txt" id="sizer-hist-mode-txt" style="font-size:12px;">通常</span>
+      <div class="toggle-btn-cycle" id="sizer-hist-mode-btn" onclick="cycleSizerHistMode()" style="width:84px;">
+        <span class="toggle-txt-cycle" id="sizer-hist-mode-txt" style="font-size:12px;">通常</span>
       </div>
     </div>
     <div id="sizer-hist-list"></div>
@@ -610,7 +638,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       <div class="toggle-sub">ONにすると各日の指標を▲▼で並び替えできます</div>
     </div>
     <div class="toggle-btn" id="sort-toggle-btn" onclick="toggleSortMode()">
-      <span class="toggle-txt" id="sort-toggle-txt">OFF</span>
+      <span class="toggle-txt off-lbl">OFF</span>
+      <span class="toggle-txt on-lbl">ON</span>
+      <span class="toggle-knob"></span>
     </div>
   </div>
 
@@ -685,8 +715,8 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       </div>
       <div class="img-mode-row">
         <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
-        <div class="toggle-btn" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
-          <span class="toggle-txt" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
+        <div class="toggle-btn-cycle" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
+          <span class="toggle-txt-cycle" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
         </div>
       </div>
       <div id="img-preview-wrap" style="display:none;margin-top:14px;">
@@ -749,7 +779,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONで主要ボタンに光沢・押し込みアニメーションを付与</div>
         </div>
         <div class="toggle-btn on" id="btn3d-toggle-btn" onclick="toggleBtn3d()">
-          <span class="toggle-txt" id="btn3d-toggle-txt">ON</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
       </div>
       <div class="toggle-row" style="margin-top:12px;">
@@ -758,7 +790,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONにするとIMGタブが出現します</div>
         </div>
         <div class="toggle-btn" id="img-toggle-btn2" onclick="toggleImgTab()">
-          <span class="toggle-txt" id="img-toggle-txt2">OFF</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
       </div>
       <div class="toggle-row" style="margin-top:12px;">
@@ -767,7 +801,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONで計算履歴の操作モードに「削除」が復活します</div>
         </div>
         <div class="toggle-btn" id="sizer-delmode-toggle-btn" onclick="toggleSizerDeleteModeEnabled()">
-          <span class="toggle-txt" id="sizer-delmode-toggle-txt">OFF</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
       </div>
       <div class="toggle-row" style="margin-top:12px;">
@@ -776,7 +812,9 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONで計算履歴を口座間でコピーするボタンが表示されます</div>
         </div>
         <div class="toggle-btn" id="sizer-copymode-toggle-btn" onclick="toggleSizerCopyModeEnabled()">
-          <span class="toggle-txt" id="sizer-copymode-toggle-txt">OFF</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
       </div>
       <div class="toggle-row" style="margin-top:12px;">
@@ -785,7 +823,20 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <div class="toggle-sub">ONで「注文待機中」全件を「注文前」に一括で戻すボタンが表示されます</div>
         </div>
         <div class="toggle-btn" id="sizer-bulkrevert-toggle-btn" onclick="toggleSizerBulkRevertEnabled()">
-          <span class="toggle-txt" id="sizer-bulkrevert-toggle-txt">OFF</span>
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:12px;">
+        <div class="toggle-info">
+          <div class="toggle-lbl">pips不一致の一括修正</div>
+          <div class="toggle-sub">ONでpips不一致（赤字）の全件をIN/SL価格差から一括修正するボタンが表示されます</div>
+        </div>
+        <div class="toggle-btn" id="sizer-bulkfixpips-toggle-btn" onclick="toggleSizerBulkFixPipsEnabled()">
+          <span class="toggle-txt off-lbl">OFF</span>
+          <span class="toggle-txt on-lbl">ON</span>
+          <span class="toggle-knob"></span>
         </div>
       </div>
     </div>
@@ -1012,6 +1063,31 @@ function calcActualPipsFromPrices(pairName,inPrice,slPrice){
   const pipSize=p.type==='JPY'?0.01:0.0001;
   return Math.abs(inNum-slNum)/pipSize;
 }
+// IN/SL価格差から算出したpips値を、既存の入力欄と同じ小数点第1位までに丸める（単一修正・一括修正で共通利用）
+function calcRoundedActualPips(h){
+  const actualPips=calcActualPipsFromPrices(h.pair,h.in,h.sl);
+  if(actualPips===null)return null;
+  return Math.round(actualPips*10)/10;
+}
+function isSizerHistPipsMismatch(h){
+  const rounded=calcRoundedActualPips(h);
+  return rounded!==null&&Math.abs(h.pips-rounded)>=0.1;
+}
+
+// pips表示が赤字（IN/SLとの不一致）の時にタップすると、実際の価格差から算出した値に修正する
+function confirmFixSizerHistPips(idx){
+  const hist=loadSizerHistory();
+  const h=hist[idx];
+  if(!h)return;
+  const rounded=calcRoundedActualPips(h);
+  if(rounded===null)return; // 何らかの理由で算出できなくなっていた場合は何もしない
+  const ok=confirm('pips数を、IN/SLの価格差から算出した値に修正します。\n'+h.pips+' pips → '+rounded+' pips\nよろしいですか？');
+  if(!ok)return;
+  h.pips=rounded;
+  saveSizerHistoryArr(hist);
+  playTheme(true);
+  renderSizerHistory();
+}
 
 // ===== 通貨表示切替（円⇔ドル） =====
 let _currency=localStorage.getItem('ps_currency')||'JPY';
@@ -1031,9 +1107,7 @@ let _sizerAccordionMode=false; // OFF: 個別に開閉／ON: 1つ開くと他は
 function toggleSizerAccordionMode(){
   _sizerAccordionMode=!_sizerAccordionMode;
   const btn=document.getElementById('sizer-accordion-toggle-btn');
-  const txt=document.getElementById('sizer-accordion-toggle-txt');
   btn.classList.toggle('on',_sizerAccordionMode);
-  txt.textContent=_sizerAccordionMode?'ON':'OFF';
   playClick(_sizerAccordionMode);
 }
 function toggleSizerFold(section){
@@ -1559,11 +1633,12 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
   const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
   // IN/SLの価格差から実際のpips数を逆算し、入力したpips数とズレていれば赤字で注意を促す
-  // （入力自体を禁止するものではなく、あくまで確認用の表示）
-  const actualPips=(h.in&&h.sl)?calcActualPipsFromPrices(h.pair,h.in,h.sl):null;
-  const pipsMismatch=(actualPips!==null)&&(Math.abs(h.pips-actualPips)>=0.1);
+  // （入力自体を禁止するものではなく、あくまで確認用の表示。修正時に実際に反映される値と表示を一致させるため、丸め済みの値を使う）
+  const roundedActualPips=calcRoundedActualPips(h);
+  const pipsMismatch=isSizerHistPipsMismatch(h);
   const pipsClass=pipsMismatch?' sizer-hist-pips-mismatch':'';
-  const pipsTitle=pipsMismatch?' title="IN/SLの価格差からは約'+actualPips.toFixed(1)+'pipsと算出されます"':'';
+  const pipsTitle=pipsMismatch?' title="タップすると、IN/SLの価格差から算出した値（'+roundedActualPips+'pips）に修正できます"':'';
+  const pipsOnclick=pipsMismatch?' onclick="confirmFixSizerHistPips('+i+')"':'';
 
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
@@ -1571,7 +1646,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
-  +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+'>'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+pipsOnclick+'>'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot tappable" id="sizer-hist-lot-'+i+'" onclick="event.stopPropagation();copySizerHistLot('+i+')">'+h.lot.toFixed(2)+' lot</span>'
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
   +'</div>'
@@ -1656,13 +1731,11 @@ const SIZER_DELMODE_KEY='ps_sizer_delmode_enabled';
 function isSizerDeleteModeEnabled(){return localStorage.getItem(SIZER_DELMODE_KEY)==='1';}
 function toggleSizerDeleteModeEnabled(){
   const btn=document.getElementById('sizer-delmode-toggle-btn');
-  const txt=document.getElementById('sizer-delmode-toggle-txt');
   const clearBtn=document.getElementById('sizer-hist-clear-btn');
   const isOn=isSizerDeleteModeEnabled();
   if(isOn){
     localStorage.setItem(SIZER_DELMODE_KEY,'0');
     btn.classList.remove('on');
-    txt.textContent='OFF';
     if(clearBtn)clearBtn.style.display='none';
     // 削除確認待ちが残っていると紛らわしいため、念のためリセットしておく
     // （実害はないが、口座切替・モード切替時の既存パターンと一貫性を持たせる）
@@ -1676,19 +1749,16 @@ function toggleSizerDeleteModeEnabled(){
   }else{
     localStorage.setItem(SIZER_DELMODE_KEY,'1');
     btn.classList.add('on');
-    txt.textContent='ON';
     if(clearBtn)clearBtn.style.display='block';
   }
   playClick(!isOn);
 }
 function applySizerDeleteModeUI(){
   const btn=document.getElementById('sizer-delmode-toggle-btn');
-  const txt=document.getElementById('sizer-delmode-toggle-txt');
   const clearBtn=document.getElementById('sizer-hist-clear-btn');
-  if(!btn||!txt)return;
+  if(!btn)return;
   const enabled=isSizerDeleteModeEnabled();
   btn.classList.toggle('on',enabled);
-  txt.textContent=enabled?'ON':'OFF';
   if(clearBtn)clearBtn.style.display=enabled?'block':'none';
 }
 
@@ -1697,30 +1767,25 @@ const SIZER_COPYMODE_KEY='ps_sizer_copymode_enabled';
 function isSizerCopyModeEnabled(){return localStorage.getItem(SIZER_COPYMODE_KEY)==='1';}
 function toggleSizerCopyModeEnabled(){
   const btn=document.getElementById('sizer-copymode-toggle-btn');
-  const txt=document.getElementById('sizer-copymode-toggle-txt');
   const copyBtn=document.getElementById('sizer-account-copy-btn');
   const isOn=isSizerCopyModeEnabled();
   if(isOn){
     localStorage.setItem(SIZER_COPYMODE_KEY,'0');
     btn.classList.remove('on');
-    txt.textContent='OFF';
     if(copyBtn)copyBtn.style.display='none';
   }else{
     localStorage.setItem(SIZER_COPYMODE_KEY,'1');
     btn.classList.add('on');
-    txt.textContent='ON';
     if(copyBtn)copyBtn.style.display='block';
   }
   playClick(!isOn);
 }
 function applySizerCopyModeUI(){
   const btn=document.getElementById('sizer-copymode-toggle-btn');
-  const txt=document.getElementById('sizer-copymode-toggle-txt');
   const copyBtn=document.getElementById('sizer-account-copy-btn');
-  if(!btn||!txt)return;
+  if(!btn)return;
   const enabled=isSizerCopyModeEnabled();
   btn.classList.toggle('on',enabled);
-  txt.textContent=enabled?'ON':'OFF';
   if(copyBtn)copyBtn.style.display=enabled?'block':'none';
 }
 
@@ -1729,30 +1794,25 @@ const SIZER_BULKREVERT_KEY='ps_sizer_bulkrevert_enabled';
 function isSizerBulkRevertEnabled(){return localStorage.getItem(SIZER_BULKREVERT_KEY)==='1';}
 function toggleSizerBulkRevertEnabled(){
   const btn=document.getElementById('sizer-bulkrevert-toggle-btn');
-  const txt=document.getElementById('sizer-bulkrevert-toggle-txt');
   const bulkBtn=document.getElementById('sizer-bulkrevert-btn');
   const isOn=isSizerBulkRevertEnabled();
   if(isOn){
     localStorage.setItem(SIZER_BULKREVERT_KEY,'0');
     btn.classList.remove('on');
-    txt.textContent='OFF';
     if(bulkBtn)bulkBtn.style.display='none';
   }else{
     localStorage.setItem(SIZER_BULKREVERT_KEY,'1');
     btn.classList.add('on');
-    txt.textContent='ON';
     if(bulkBtn)bulkBtn.style.display='block';
   }
   playClick(!isOn);
 }
 function applySizerBulkRevertUI(){
   const btn=document.getElementById('sizer-bulkrevert-toggle-btn');
-  const txt=document.getElementById('sizer-bulkrevert-toggle-txt');
   const bulkBtn=document.getElementById('sizer-bulkrevert-btn');
-  if(!btn||!txt)return;
+  if(!btn)return;
   const enabled=isSizerBulkRevertEnabled();
   btn.classList.toggle('on',enabled);
-  txt.textContent=enabled?'ON':'OFF';
   if(bulkBtn)bulkBtn.style.display=enabled?'block':'none';
 }
 // 「注文待機中」区画の全件を「注文前」へ一括で戻す（指標回避でMT5側の注文をまとめて削除した際の追従用）
@@ -1773,6 +1833,51 @@ function confirmSizerBulkRevertPending(){
   playTheme(true);
   renderSizerHistory();
   alert(pendingCount+'件を「注文前」に戻しました。');
+}
+
+// ===== pips不一致の一括修正機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
+const SIZER_BULKFIXPIPS_KEY='ps_sizer_bulkfixpips_enabled';
+function isSizerBulkFixPipsEnabled(){return localStorage.getItem(SIZER_BULKFIXPIPS_KEY)==='1';}
+function toggleSizerBulkFixPipsEnabled(){
+  const btn=document.getElementById('sizer-bulkfixpips-toggle-btn');
+  const bulkBtn=document.getElementById('sizer-bulkfixpips-btn');
+  const isOn=isSizerBulkFixPipsEnabled();
+  if(isOn){
+    localStorage.setItem(SIZER_BULKFIXPIPS_KEY,'0');
+    btn.classList.remove('on');
+    if(bulkBtn)bulkBtn.style.display='none';
+  }else{
+    localStorage.setItem(SIZER_BULKFIXPIPS_KEY,'1');
+    btn.classList.add('on');
+    if(bulkBtn)bulkBtn.style.display='block';
+  }
+  playClick(!isOn);
+}
+function applySizerBulkFixPipsUI(){
+  const btn=document.getElementById('sizer-bulkfixpips-toggle-btn');
+  const bulkBtn=document.getElementById('sizer-bulkfixpips-btn');
+  if(!btn)return;
+  const enabled=isSizerBulkFixPipsEnabled();
+  btn.classList.toggle('on',enabled);
+  if(bulkBtn)bulkBtn.style.display=enabled?'block':'none';
+}
+// pipsが不一致（赤字）になっている全件を、IN/SLの価格差から算出した値に一括で修正する
+function confirmSizerBulkFixPips(){
+  const hist=loadSizerHistory();
+  const targets=hist.filter(h=>isSizerHistPipsMismatch(h));
+  if(targets.length===0){
+    alert('pips不一致（赤字）の項目がありません');
+    return;
+  }
+  const ok=confirm('pips不一致の'+targets.length+'件を、IN/SLの価格差から算出した値に修正します。\nよろしいですか？');
+  if(!ok)return;
+  targets.forEach(h=>{
+    h.pips=calcRoundedActualPips(h);
+  });
+  saveSizerHistoryArr(hist);
+  playTheme(true);
+  renderSizerHistory();
+  alert(targets.length+'件のpipsを修正しました。');
 }
 
 function cycleSizerHistMode(){
@@ -2143,9 +2248,9 @@ function countUp(el,target){
 }
 
 function toggleFee(){
-  const h=document.getElementById('fee-toggle'),btn=document.getElementById('toggle-btn'),txt=document.getElementById('toggle-txt');
+  const h=document.getElementById('fee-toggle'),btn=document.getElementById('toggle-btn');
   const on=h.value==='1';h.value=on?'0':'1';
-  btn.classList.toggle('on',!on);txt.textContent=on?'OFF':'ON';
+  btn.classList.toggle('on',!on);
   playClick(!on);calc();
 }
 
@@ -2305,23 +2410,18 @@ if(savedBtn3d==='off'){
   document.body.classList.add('btn3d-off');
   // SETTINGSタブのトグル表示も保存済み設定に合わせておく（タブを開いた瞬間から正しい状態で見えるように）
   const btn3dBtnEl=document.getElementById('btn3d-toggle-btn');
-  const btn3dTxtEl=document.getElementById('btn3d-toggle-txt');
   if(btn3dBtnEl){btn3dBtnEl.classList.remove('on');}
-  if(btn3dTxtEl){btn3dTxtEl.textContent='OFF';}
 }
 function toggleBtn3d(){
   const btn=document.getElementById('btn3d-toggle-btn');
-  const txt=document.getElementById('btn3d-toggle-txt');
   const isOn=!document.body.classList.contains('btn3d-off');
   if(isOn){
     document.body.classList.add('btn3d-off');
     btn.classList.remove('on');
-    txt.textContent='OFF';
     localStorage.setItem('ps_btn3d','off');
   }else{
     document.body.classList.remove('btn3d-off');
     btn.classList.add('on');
-    txt.textContent='ON';
     localStorage.setItem('ps_btn3d','on');
   }
   playClick(!isOn);
@@ -2429,9 +2529,7 @@ function applyImgTabState(){
   const enabled=localStorage.getItem(IMG_TAB_KEY)==='1';
   document.getElementById('tab-img').style.display=enabled?'':'none';
   const btn=document.getElementById('img-toggle-btn2');
-  const txt=document.getElementById('img-toggle-txt2');
   if(btn)btn.classList.toggle('on',enabled);
-  if(txt)txt.textContent=enabled?'ON':'OFF';
   // OFFにした際、IMGタブが表示中だったらSIZERへ戻す
   if(!enabled&&document.getElementById('tab-img').classList.contains('active')){
     switchTab('sizer');
@@ -2758,6 +2856,9 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.17',datetime:'2026.08.06 15:20',note:'9つの主要トグルをドル円と同じ左右スライドスイッチ形式に統一（ダーク=ゴールド地に白文字、ライト=アイボリー地）。循環ボタンの著しいコントラスト不足も併せて修正'},
+  {version:'v3.16',datetime:'2026.08.06 14:46',note:'pips不一致（赤字）の全件を一括修正するボタンを追加（確認モーダルあり、SETTINGSタブのトグルで表示/非表示）'},
+  {version:'v3.15',datetime:'2026.08.06 14:37',note:'pips不一致（赤字）の行をタップすると、IN/SL価格差から算出した値に修正できる確認モーダルを追加'},
   {version:'v3.14',datetime:'2026.08.06 10:35',note:'「注文待機中」全件を「注文前」に一括で戻す機能を追加（確認モーダルあり、SETTINGSタブのトグルで表示/非表示）。指標回避でMT5側の注文を一括削除した際の追従用'},
   {version:'v3.13',datetime:'2026.08.06 10:26',note:'計算履歴のステータス変更（進める操作）の確認モーダルを廃止し、タップ即座に確定するよう変更。削除機能・↩（戻す）は従来通り確認あり'},
   {version:'v3.12',datetime:'2026.08.06 10:14',note:'計算履歴のpips表示に、IN/SL価格差からの逆算チェックを追加。入力値とズレていれば赤字で表示（入力自体は制限しない）'},
@@ -3217,9 +3318,7 @@ let _sortMode=false;
 function toggleSortMode(){
   _sortMode=!_sortMode;
   const btn=document.getElementById('sort-toggle-btn');
-  const txt=document.getElementById('sort-toggle-txt');
   btn.classList.toggle('on',_sortMode);
-  txt.textContent=_sortMode?'ON':'OFF';
   playClick(_sortMode);
   renderCalendar();
 }
@@ -3732,6 +3831,7 @@ updateSaveHistBtnLabel();
 applySizerDeleteModeUI();
 applySizerCopyModeUI();
 applySizerBulkRevertUI();
+applySizerBulkFixPipsUI();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
