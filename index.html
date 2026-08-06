@@ -144,7 +144,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-num{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#D4AF5A88;flex-shrink:0;min-width:18px;text-align:center}
 .sizer-hist-pair{font-size:13px;font-weight:700;color:#E8E0D0;min-width:76px}
 .sizer-hist-pips{font-size:12px;color:#888;flex:1}
-.sizer-hist-pips-mismatch{color:#EF4444;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-hist-pips-mismatch{color:#EF4444;font-weight:700}
 .sizer-hist-lot{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#D4AF5A}
 .sizer-hist-lot.tappable{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;transition:background-color 0.15s ease}
 .sizer-hist-lot.copied-flash{background-color:#D4AF5A33}
@@ -566,7 +566,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <div class="sizer-hist-body" id="sizer-hist-body">
     <button class="sizer-account-copy-btn" id="sizer-account-copy-btn" onclick="openSizerAccountCopySheet()" style="display:none;">📋 口座間で計算履歴をコピー</button>
     <button class="sizer-account-copy-btn" id="sizer-bulkrevert-btn" onclick="confirmSizerBulkRevertPending()" style="display:none;">⏪ 注文待機中を全て「注文前」に戻す</button>
-    <button class="sizer-account-copy-btn" id="sizer-bulkfixpips-btn" onclick="confirmSizerBulkFixPips()" style="display:none;">🔧 pips不一致を一括修正</button>
     <input id="sizer-hist-search" class="sizer-hist-search-input" type="text" placeholder="🔍 通貨ペアで絞り込み（例: USD, JPY）" oninput="filterSizerHistory()">
     <div class="toggle-row" style="margin-bottom:10px;">
       <div class="toggle-info">
@@ -828,17 +827,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
           <span class="toggle-knob"></span>
         </div>
       </div>
-      <div class="toggle-row" style="margin-top:12px;">
-        <div class="toggle-info">
-          <div class="toggle-lbl">pips不一致の一括修正</div>
-          <div class="toggle-sub">ONでpips不一致（赤字）の全件をIN/SL価格差から一括修正するボタンが表示されます</div>
-        </div>
-        <div class="toggle-btn" id="sizer-bulkfixpips-toggle-btn" onclick="toggleSizerBulkFixPipsEnabled()">
-          <span class="toggle-txt off-lbl">OFF</span>
-          <span class="toggle-txt on-lbl">ON</span>
-          <span class="toggle-knob"></span>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1063,32 +1051,22 @@ function calcActualPipsFromPrices(pairName,inPrice,slPrice){
   const pipSize=p.type==='JPY'?0.01:0.0001;
   return Math.abs(inNum-slNum)/pipSize;
 }
-// IN/SL価格差から算出したpips値を、既存の入力欄と同じ小数点第1位までに丸める（単一修正・一括修正で共通利用）
-function calcRoundedActualPips(h){
-  const actualPips=calcActualPipsFromPrices(h.pair,h.in,h.sl);
-  if(actualPips===null)return null;
-  return Math.round(actualPips*10)/10;
+// 最初に履歴へ保存した時点のpips値を、不変の基準として取得する。
+// （既存データにoriginalPipsが無い場合は、後方互換としてpipsをそのまま初回値とみなす）
+// この基準は「修正」機能では一切書き換えない。IN/SLは後から何度でも入力・修正されうるため、
+// その都度動く値を基準にしてしまうと、矛盾チェック自体の意味がなくなってしまう
+function getSizerHistOriginalPips(h){
+  return h.originalPips!==undefined?h.originalPips:h.pips;
 }
 function isSizerHistPipsMismatch(h){
-  const rounded=calcRoundedActualPips(h);
-  return rounded!==null&&Math.abs(h.pips-rounded)>=0.1;
+  const actualPips=calcActualPipsFromPrices(h.pair,h.in,h.sl);
+  if(actualPips===null)return false;
+  const rounded=Math.round(actualPips*10)/10;
+  const basis=getSizerHistOriginalPips(h);
+  return Math.abs(basis-rounded)>=0.1;
 }
 
 // pips表示が赤字（IN/SLとの不一致）の時にタップすると、実際の価格差から算出した値に修正する
-function confirmFixSizerHistPips(idx){
-  const hist=loadSizerHistory();
-  const h=hist[idx];
-  if(!h)return;
-  const rounded=calcRoundedActualPips(h);
-  if(rounded===null)return; // 何らかの理由で算出できなくなっていた場合は何もしない
-  const ok=confirm('pips数を、IN/SLの価格差から算出した値に修正します。\n'+h.pips+' pips → '+rounded+' pips\nよろしいですか？');
-  if(!ok)return;
-  h.pips=rounded;
-  saveSizerHistoryArr(hist);
-  playTheme(true);
-  renderSizerHistory();
-}
-
 // ===== 通貨表示切替（円⇔ドル） =====
 let _currency=localStorage.getItem('ps_currency')||'JPY';
 
@@ -1300,7 +1278,7 @@ function maybeSaveSizerHistory(){
   const last=hist[0];
   // 直前の記録と完全一致する場合は重複記録しない
   if(last&&last.pair===pName&&last.pips===pips&&last.lot===lot)return false;
-  hist.unshift({pair:pName,pips,lot,dir:'',in:'',sl:'',tp:'',ts:Date.now()});
+  hist.unshift({pair:pName,pips,originalPips:pips,lot,dir:'',in:'',sl:'',tp:'',ts:Date.now()});
   if(hist.length>20)hist.length=20; // 直近20件まで
   saveSizerHistoryArr(hist);
   renderSizerHistory();
@@ -1632,13 +1610,12 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
     :'';
   // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
   const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
-  // IN/SLの価格差から実際のpips数を逆算し、入力したpips数とズレていれば赤字で注意を促す
-  // （入力自体を禁止するものではなく、あくまで確認用の表示。修正時に実際に反映される値と表示を一致させるため、丸め済みの値を使う）
-  const roundedActualPips=calcRoundedActualPips(h);
+  // 最初に履歴へ保存した時点のpips（不変の基準）と、IN/SLの価格差から実際に算出したpipsがズレていれば
+  // 赤字で注意を促す（自動修正は行わない。IN/SLはあとから何度でも入力し直せるため、都度の値を基準にすると
+  // 矛盾チェック自体の意味がなくなってしまう）
   const pipsMismatch=isSizerHistPipsMismatch(h);
   const pipsClass=pipsMismatch?' sizer-hist-pips-mismatch':'';
-  const pipsTitle=pipsMismatch?' title="タップすると、IN/SLの価格差から算出した値（'+roundedActualPips+'pips）に修正できます"':'';
-  const pipsOnclick=pipsMismatch?' onclick="confirmFixSizerHistPips('+i+')"':'';
+  const pipsTitle=pipsMismatch?' title="最初に登録したpips数と、IN/SLの価格差から算出した値が一致しません"':'';
 
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
@@ -1646,7 +1623,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
-  +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+pipsOnclick+'>'+h.pips+' pips</span>'
+  +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+'>'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot tappable" id="sizer-hist-lot-'+i+'" onclick="event.stopPropagation();copySizerHistLot('+i+')">'+h.lot.toFixed(2)+' lot</span>'
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
   +'</div>'
@@ -1833,51 +1810,6 @@ function confirmSizerBulkRevertPending(){
   playTheme(true);
   renderSizerHistory();
   alert(pendingCount+'件を「注文前」に戻しました。');
-}
-
-// ===== pips不一致の一括修正機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
-const SIZER_BULKFIXPIPS_KEY='ps_sizer_bulkfixpips_enabled';
-function isSizerBulkFixPipsEnabled(){return localStorage.getItem(SIZER_BULKFIXPIPS_KEY)==='1';}
-function toggleSizerBulkFixPipsEnabled(){
-  const btn=document.getElementById('sizer-bulkfixpips-toggle-btn');
-  const bulkBtn=document.getElementById('sizer-bulkfixpips-btn');
-  const isOn=isSizerBulkFixPipsEnabled();
-  if(isOn){
-    localStorage.setItem(SIZER_BULKFIXPIPS_KEY,'0');
-    btn.classList.remove('on');
-    if(bulkBtn)bulkBtn.style.display='none';
-  }else{
-    localStorage.setItem(SIZER_BULKFIXPIPS_KEY,'1');
-    btn.classList.add('on');
-    if(bulkBtn)bulkBtn.style.display='block';
-  }
-  playClick(!isOn);
-}
-function applySizerBulkFixPipsUI(){
-  const btn=document.getElementById('sizer-bulkfixpips-toggle-btn');
-  const bulkBtn=document.getElementById('sizer-bulkfixpips-btn');
-  if(!btn)return;
-  const enabled=isSizerBulkFixPipsEnabled();
-  btn.classList.toggle('on',enabled);
-  if(bulkBtn)bulkBtn.style.display=enabled?'block':'none';
-}
-// pipsが不一致（赤字）になっている全件を、IN/SLの価格差から算出した値に一括で修正する
-function confirmSizerBulkFixPips(){
-  const hist=loadSizerHistory();
-  const targets=hist.filter(h=>isSizerHistPipsMismatch(h));
-  if(targets.length===0){
-    alert('pips不一致（赤字）の項目がありません');
-    return;
-  }
-  const ok=confirm('pips不一致の'+targets.length+'件を、IN/SLの価格差から算出した値に修正します。\nよろしいですか？');
-  if(!ok)return;
-  targets.forEach(h=>{
-    h.pips=calcRoundedActualPips(h);
-  });
-  saveSizerHistoryArr(hist);
-  playTheme(true);
-  renderSizerHistory();
-  alert(targets.length+'件のpipsを修正しました。');
 }
 
 function cycleSizerHistMode(){
@@ -2856,6 +2788,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.18',datetime:'2026.08.06 16:15',note:'pips不一致判定を「最初に登録した固定値」基準に修正（重大バグ修正：IN/SL入力のたびに基準が動いていた）。自動修正機能（タップ・一括とも）は原理的に不可能なため廃止、赤字は警告表示のみに'},
   {version:'v3.17',datetime:'2026.08.06 15:20',note:'9つの主要トグルをドル円と同じ左右スライドスイッチ形式に統一（ダーク=ゴールド地に白文字、ライト=アイボリー地）。循環ボタンの著しいコントラスト不足も併せて修正'},
   {version:'v3.16',datetime:'2026.08.06 14:46',note:'pips不一致（赤字）の全件を一括修正するボタンを追加（確認モーダルあり、SETTINGSタブのトグルで表示/非表示）'},
   {version:'v3.15',datetime:'2026.08.06 14:37',note:'pips不一致（赤字）の行をタップすると、IN/SL価格差から算出した値に修正できる確認モーダルを追加'},
@@ -3831,7 +3764,6 @@ updateSaveHistBtnLabel();
 applySizerDeleteModeUI();
 applySizerCopyModeUI();
 applySizerBulkRevertUI();
-applySizerBulkFixPipsUI();
 applyHeaderVersionFromChangelog();
 </script>
 </body>
