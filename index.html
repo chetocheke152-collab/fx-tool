@@ -1602,10 +1602,13 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
   const status=getSizerHistStatus(h);
   const nextLabel=SIZER_STATUS_NEXT_LABEL[status]; // 約定中の場合はundefined（これ以上進めない）
-  const statusBtn=nextLabel
+  // 状態変更ボタン（進める・戻す）は、誤タップ防止のため「状態変更」モードの時だけ表示する
+  // （モーダルの代わりに、モード自体を切り替えないと操作できないようにすることで事故を防ぐ）
+  const inStatusMode=(_sizerHistMode==='status');
+  const statusBtn=(inStatusMode&&nextLabel)
     ?'<button class="sizer-status-advance-btn" onclick="event.stopPropagation();advanceSizerHistStatusConfirm('+i+')">'+nextLabel+'</button>'
     :'';
-  const revertBtn=status!=='normal'
+  const revertBtn=(inStatusMode&&status!=='normal')
     ?'<button class="sizer-status-revert-btn" onclick="event.stopPropagation();revertSizerHistStatus('+i+')" title="ひとつ前の状態に戻す">↩</button>'
     :'';
   // ナンバリングは区画内での相対位置（登録・並び替え順）に基づく。決済済み区画では表示しない
@@ -1692,10 +1695,11 @@ function toggleSizerClosedSection(){
 
 // ===== 計算履歴 操作モード（通常 → 並び替え → 削除 → 通常...を巡回） =====
 let _sizerHistMode='normal';
-const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',delete:'削除'};
+const SIZER_HIST_MODE_LABELS={normal:'通常',sort:'並び替え',status:'状態変更',delete:'削除'};
 const SIZER_HIST_MODE_SUBS={
   normal:'タップで通常・並び替えを切替',
   sort:'▲▼で順番を入れ替えできます',
+  status:'各行の状態変更ボタンが表示されます',
   delete:'×タップで削除（2段階確認）'
 };
 // 通貨ペアの部分一致で計算履歴を絞り込み（表示のみ、データ自体は変更しない）
@@ -1813,7 +1817,7 @@ function confirmSizerBulkRevertPending(){
 }
 
 function cycleSizerHistMode(){
-  const order=isSizerDeleteModeEnabled()?['normal','sort','delete']:['normal','sort'];
+  const order=isSizerDeleteModeEnabled()?['normal','sort','status','delete']:['normal','sort','status'];
   const idx=order.indexOf(_sizerHistMode);
   _sizerHistMode=order[(idx+1)%order.length];
   const btn=document.getElementById('sizer-hist-mode-btn');
@@ -2788,6 +2792,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.19',datetime:'2026.08.06 16:32',note:'計算履歴の操作モードに「状態変更」を追加。各行の状態変更・↩ボタンは、このモードの時だけ表示（誤タップ防止のモーダル代替）'},
   {version:'v3.18',datetime:'2026.08.06 16:15',note:'pips不一致判定を「最初に登録した固定値」基準に修正（重大バグ修正：IN/SL入力のたびに基準が動いていた）。自動修正機能（タップ・一括とも）は原理的に不可能なため廃止、赤字は警告表示のみに'},
   {version:'v3.17',datetime:'2026.08.06 15:20',note:'9つの主要トグルをドル円と同じ左右スライドスイッチ形式に統一（ダーク=ゴールド地に白文字、ライト=アイボリー地）。循環ボタンの著しいコントラスト不足も併せて修正'},
   {version:'v3.16',datetime:'2026.08.06 14:46',note:'pips不一致（赤字）の全件を一括修正するボタンを追加（確認モーダルあり、SETTINGSタブのトグルで表示/非表示）'},
