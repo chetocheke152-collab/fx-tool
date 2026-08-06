@@ -796,17 +796,6 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       </div>
       <div class="toggle-row" style="margin-top:12px;">
         <div class="toggle-info">
-          <div class="toggle-lbl">計算履歴の削除モード</div>
-          <div class="toggle-sub">ONで計算履歴の操作モードに「削除」が復活します</div>
-        </div>
-        <div class="toggle-btn" id="sizer-delmode-toggle-btn" onclick="toggleSizerDeleteModeEnabled()">
-          <span class="toggle-txt off-lbl">OFF</span>
-          <span class="toggle-txt on-lbl">ON</span>
-          <span class="toggle-knob"></span>
-        </div>
-      </div>
-      <div class="toggle-row" style="margin-top:12px;">
-        <div class="toggle-info">
           <div class="toggle-lbl">口座間コピー機能</div>
           <div class="toggle-sub">ONで計算履歴を口座間でコピーするボタンが表示されます</div>
         </div>
@@ -961,6 +950,23 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 </div>
 
 <script>
+// ===== 口座A旧キーからの移行（A口座を特別扱いしていた旧形式から、A/B完全に対等な新形式へ） =====
+// 新形式のキーにまだデータが無く、かつ旧形式にデータがある場合だけ、コピーして移行する。
+// 旧キー自体は消さない（実害のない残骸だが、万が一の際の復旧手段として残しておく）
+(function migrateSizerAccountAKeys(){
+  const migrations=[
+    ['ps_equity','ps_equity_a'],
+    ['ps_risk','ps_risk_a'],
+    ['ps_sizer_history','ps_sizer_history_a'],
+    ['ps_sizer_history_debug','ps_sizer_history_a_debug'],
+  ];
+  migrations.forEach(([oldKey,newKey])=>{
+    if(localStorage.getItem(newKey)===null&&localStorage.getItem(oldKey)!==null){
+      localStorage.setItem(newKey,localStorage.getItem(oldKey));
+    }
+  });
+})();
+
 // ===== デバッグモード（検証用データ切替。リロードのたびに必ずOFFから開始） =====
 let _debugMode=false;
 function isDebugMode(){return _debugMode;}
@@ -1148,6 +1154,8 @@ function sanitizePipsInput(el){
   let cursorPos=null;
   try{cursorPos=el.selectionStart;}catch(e){}
   let v=original;
+  // マイナス記号は常に除去する（pipsは値幅であり、負の値が入力される意味を持たないため）
+  v=v.replace(/-/g,'');
   const parts=v.split('.');
   if(parts.length>2){
     v=parts[0]+'.'+parts.slice(1).join('');
@@ -1180,10 +1188,16 @@ function calc(animate=false){
   const maxLoss=equity*risk;
   document.getElementById('res-loss').textContent=maxLoss>0?fmtCur(maxLoss):'—';
   const p=PAIRS.find(x=>x.pair===pName);
-  if(!p||!pips||!rate){
+  if(!p||!rate){
     ['res-lot','res-pip','res-fee','res-sl'].forEach(id=>{document.getElementById(id).textContent='—';});
     document.getElementById('res-lot').className='result-lot';
     document.getElementById('res-unit').textContent='ペアとpips数を入力';
+    return;
+  }
+  if(pips<=0){
+    ['res-lot','res-pip','res-fee','res-sl'].forEach(id=>{document.getElementById(id).textContent='—';});
+    document.getElementById('res-lot').className='result-lot';
+    document.getElementById('res-unit').textContent='pipsは0より大きい値を入力してください';
     return;
   }
   const pv=pip1(p.type);const feeJpy=p.fee*rate*2;
@@ -1237,11 +1251,11 @@ function setCurrentSizerAccountId(id){localStorage.setItem(SIZER_CURRENT_ACCOUNT
 // 証拠金・リスク%も口座ごとに記憶する（口座aは既存キーをそのまま使い、既存データを自動的に引き継ぐ）
 function getSizerEquityKey(accountIdOverride){
   const accountId=accountIdOverride||getCurrentSizerAccountId();
-  return accountId==='a'?'ps_equity':'ps_equity_'+accountId;
+  return 'ps_equity_'+accountId;
 }
 function getSizerRiskKey(accountIdOverride){
   const accountId=accountIdOverride||getCurrentSizerAccountId();
-  return accountId==='a'?'ps_risk':'ps_risk_'+accountId;
+  return 'ps_risk_'+accountId;
 }
 // 口座切替時に、証拠金・リスク%欄をその口座の記憶値で復元する
 // （まだ一度もその口座で入力したことが無ければ、フィールドは空のままにする＝誤った他口座の値を流用しない）
@@ -1260,8 +1274,7 @@ function applySizerAccountFields(){
 // ===== SIZER 計算履歴 =====
 function getSizerHistKey(accountIdOverride){
   const accountId=accountIdOverride||getCurrentSizerAccountId();
-  const base=accountId==='a'?'ps_sizer_history':'ps_sizer_history_'+accountId;
-  return isDebugMode()?base+'_debug':base;
+  return isDebugMode()?'ps_sizer_history_'+accountId+'_debug':'ps_sizer_history_'+accountId;
 }
 function loadSizerHistory(accountIdOverride){
   try{return JSON.parse(localStorage.getItem(getSizerHistKey(accountIdOverride)))||[];}catch(e){return [];}
@@ -1706,42 +1719,6 @@ function filterSizerHistory(){
   renderSizerHistory();
 }
 
-// ===== 計算履歴 削除モードの有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
-const SIZER_DELMODE_KEY='ps_sizer_delmode_enabled';
-function isSizerDeleteModeEnabled(){return localStorage.getItem(SIZER_DELMODE_KEY)==='1';}
-function toggleSizerDeleteModeEnabled(){
-  const btn=document.getElementById('sizer-delmode-toggle-btn');
-  const clearBtn=document.getElementById('sizer-hist-clear-btn');
-  const isOn=isSizerDeleteModeEnabled();
-  if(isOn){
-    localStorage.setItem(SIZER_DELMODE_KEY,'0');
-    btn.classList.remove('on');
-    if(clearBtn)clearBtn.style.display='none';
-    // 削除確認待ちが残っていると紛らわしいため、念のためリセットしておく
-    // （実害はないが、口座切替・モード切替時の既存パターンと一貫性を持たせる）
-    _sizerDelPendingIdx=null;
-    clearTimeout(_sizerDelPendingTimer);
-    // OFFにした瞬間、もし削除モードを使用中だったら通常モードへ戻す（選択肢自体が消えるため）
-    if(_sizerHistMode==='delete'){
-      _sizerHistMode='normal';
-      renderSizerHistory();
-    }
-  }else{
-    localStorage.setItem(SIZER_DELMODE_KEY,'1');
-    btn.classList.add('on');
-    if(clearBtn)clearBtn.style.display='block';
-  }
-  playClick(!isOn);
-}
-function applySizerDeleteModeUI(){
-  const btn=document.getElementById('sizer-delmode-toggle-btn');
-  const clearBtn=document.getElementById('sizer-hist-clear-btn');
-  if(!btn)return;
-  const enabled=isSizerDeleteModeEnabled();
-  btn.classList.toggle('on',enabled);
-  if(clearBtn)clearBtn.style.display=enabled?'block':'none';
-}
-
 // ===== 口座間コピー機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
 const SIZER_COPYMODE_KEY='ps_sizer_copymode_enabled';
 function isSizerCopyModeEnabled(){return localStorage.getItem(SIZER_COPYMODE_KEY)==='1';}
@@ -1818,15 +1795,18 @@ function confirmSizerBulkRevertPending(){
 }
 
 function cycleSizerHistMode(){
-  const order=isSizerDeleteModeEnabled()?['normal','sort','delete']:['normal','sort'];
+  const order=['normal','sort','delete'];
   const idx=order.indexOf(_sizerHistMode);
   _sizerHistMode=order[(idx+1)%order.length];
   const btn=document.getElementById('sizer-hist-mode-btn');
   const txt=document.getElementById('sizer-hist-mode-txt');
   const sub=document.getElementById('sizer-hist-mode-sub');
+  const clearBtn=document.getElementById('sizer-hist-clear-btn');
   btn.classList.toggle('on',_sizerHistMode!=='normal');
   txt.textContent=SIZER_HIST_MODE_LABELS[_sizerHistMode];
   sub.textContent=SIZER_HIST_MODE_SUBS[_sizerHistMode];
+  // 「履歴をクリア」（全削除）は、削除モードに入っている間だけ表示する
+  if(clearBtn)clearBtn.style.display=(_sizerHistMode==='delete')?'block':'none';
   // モード切替時、削除の確認待ちが残っていると、戻ってきた時に別の項目に
   // 誤って確認待ち表示が残るリスクがあるため、確実にリセットする
   _sizerDelPendingIdx=null;
@@ -2313,12 +2293,13 @@ function pickPair(v,close=true){
 
 (function(){
   // 旧方式（円・ドル別々のキー）からの移行: 現在の通貨設定に対応する方の値を採用する
-  // （この移行は口座a＝既存の ps_equity キーに対してのみ行う。口座a以外は元々この移行の対象外）
+  // （これは口座A・B共通の仕組みではなく、そもそも複数口座対応より前の、さらに古い形式からの移行のため、
+  // 対象は最初のアクセス時点で選択されている口座のキーに対してのみ行う）
   const oldJpy=localStorage.getItem('ps_equity_jpy');
   const oldUsd=localStorage.getItem('ps_equity_usd');
-  if(!localStorage.getItem('ps_equity')){
-    if(_currency==='USD'&&oldUsd)localStorage.setItem('ps_equity',oldUsd);
-    else if(oldJpy)localStorage.setItem('ps_equity',oldJpy);
+  if(!localStorage.getItem(getSizerEquityKey())){
+    if(_currency==='USD'&&oldUsd)localStorage.setItem(getSizerEquityKey(),oldUsd);
+    else if(oldJpy)localStorage.setItem(getSizerEquityKey(),oldJpy);
   }
   const eq=localStorage.getItem(getSizerEquityKey()),rk=localStorage.getItem(getSizerRiskKey()),pr=localStorage.getItem('ps_pair');
   if(eq)document.getElementById('equity').value=eq;
@@ -2793,6 +2774,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.21',datetime:'2026.08.06 20:05',note:'設計意図の再確認により2点改善：①削除モードのSETTINGSトグルを廃止、操作モード循環のみに一本化②口座A/Bのキー形式を完全対等に統一（既存データは自動移行、消失なし）'},
   {version:'v3.20',datetime:'2026.08.06 19:13',note:'ユーザーシナリオテストを踏まえ2点改善：①状態変更モードを廃止しボタンを常時表示・拡大（頻繁な操作にモード切替の手間を挟まない）②一括戻し機能をデフォルトONに変更'},
   {version:'v3.19',datetime:'2026.08.06 16:32',note:'計算履歴の操作モードに「状態変更」を追加。各行の状態変更・↩ボタンは、このモードの時だけ表示（誤タップ防止のモーダル代替）'},
   {version:'v3.18',datetime:'2026.08.06 16:15',note:'pips不一致判定を「最初に登録した固定値」基準に修正（重大バグ修正：IN/SL入力のたびに基準が動いていた）。自動修正機能（タップ・一括とも）は原理的に不可能なため廃止、赤字は警告表示のみに'},
@@ -3768,7 +3750,6 @@ applyImgDirectModeUI();
 renderSizerHistory();
 renderSizerTodayEvents();
 updateSaveHistBtnLabel();
-applySizerDeleteModeUI();
 applySizerCopyModeUI();
 applySizerBulkRevertUI();
 applyHeaderVersionFromChangelog();
