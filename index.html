@@ -135,6 +135,10 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-account-tab-name{font-size:12px;font-weight:700;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sizer-account-tab.active .sizer-account-tab-name{color:#D4AF5A}
 .sizer-account-copy-btn{width:100%;margin-bottom:10px;padding:8px;background:transparent;border:1px solid #D4AF5A33;border-radius:8px;color:#888;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
+.sizer-result-btn{width:100%;padding:14px;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;cursor:pointer;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;border:1px solid}
+.sizer-result-btn.win{background:#4ADE8018;border-color:#4ADE80;color:#4ADE80}
+.sizer-result-btn.loss{background:#EF444418;border-color:#EF4444;color:#EF4444}
+.sizer-result-btn.other{background:#88888818;border-color:#888;color:#AAA}
 .sizer-hist-search-input:focus{border-color:#D4AF5A}
 .sizer-hist-body.open{max-height:2000px;padding:14px 16px 14px;opacity:1}
 .sizer-hist-row{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid #D4AF5A08;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -187,6 +191,10 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-hist-dir-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;letter-spacing:0.5px}
 .sizer-hist-dir-badge.buy{background:#22C55E18;color:#22C55E}
 .sizer-hist-dir-badge.sell{background:#EF444418;color:#EF4444}
+.sizer-result-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;letter-spacing:0.5px}
+.sizer-result-badge.win{background:#4ADE8018;color:#4ADE80}
+.sizer-result-badge.loss{background:#EF444418;color:#EF4444}
+.sizer-result-badge.other{background:#88888818;color:#AAA}
 .sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
 .sizer-status-section{margin-bottom:6px}
@@ -917,6 +925,18 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   <button onclick="confirmSizerAccountCopy()" style="margin:6px 16px 16px;padding:13px;background:#D4AF5A18;border:1px solid #D4AF5A;border-radius:10px;color:#D4AF5A;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;width:calc(100% - 32px);">コピーを実行する</button>
 </div>
 
+<!-- SIZER 決済結果選択 Sheet -->
+<div class="overlay" id="sizer-result-overlay" onclick="cancelSizerResultSheet()"></div>
+<div class="sheet" id="sizer-result-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">決済結果を記録</div>
+  <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+    <button class="sizer-result-btn win" onclick="confirmSizerResult('win')">✅ 勝ち</button>
+    <button class="sizer-result-btn loss" onclick="confirmSizerResult('loss')">❌ 負け</button>
+    <button class="sizer-result-btn other" onclick="confirmSizerResult('other')">➖ その他（指標回避決済など）</button>
+  </div>
+</div>
+
 <!-- SIZER履歴 IN/SL/TP 入力モーダル -->
 <div class="overlay" id="sizer-price-overlay" onclick="closeSizerPriceModal()"></div>
 <div class="sheet" id="sizer-price-modal">
@@ -1613,6 +1633,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const expanded=(_sizerHistExpanded===i);
   const hasPrice=h.dir||h.in||h.sl||h.tp;
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const resultBadge=h.result?'<span class="sizer-result-badge '+h.result+'">'+SIZER_RESULT_LABELS[h.result]+'</span>':'';
   const status=getSizerHistStatus(h);
   const nextLabel=SIZER_STATUS_NEXT_LABEL[status]; // 約定中の場合はundefined（これ以上進めない）
   // 状態変更ボタン（進める・戻す）は常に表示する。以前はモード切替が必要だったが、
@@ -1639,6 +1660,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
+  +resultBadge
   +'<span class="sizer-hist-pips'+pipsClass+'"'+pipsTitle+'>'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot tappable" id="sizer-hist-lot-'+i+'" onclick="event.stopPropagation();copySizerHistLot('+i+')">'+h.lot.toFixed(2)+' lot</span>'
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
@@ -1655,6 +1677,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
 // 並び替えモードの1行分の描画（区画内で共通して使う）。上下ボタンは区画の端で無効化する
 function renderSizerHistSortRow(i,h,posInSection,sectionLength,hideNumber){
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const resultBadge=h.result?'<span class="sizer-result-badge '+h.result+'">'+SIZER_RESULT_LABELS[h.result]+'</span>':'';
   const upDisabled=posInSection===0?' disabled':'';
   const downDisabled=posInSection===sectionLength-1?' disabled':'';
   const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
@@ -1664,6 +1687,7 @@ function renderSizerHistSortRow(i,h,posInSection,sectionLength,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
+  +resultBadge
   +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
   +'<button class="cal-sort-btn" onclick="moveSizerHistItem('+i+',-1)"'+upDisabled+'>▲</button>'
@@ -1677,6 +1701,7 @@ function renderSizerHistSortRow(i,h,posInSection,sectionLength,hideNumber){
 // 削除モードの1行分の描画（区画内で共通して使う。SETTINGSタブのトグルがONの時だけ選択可能なモード）
 function renderSizerHistDeleteRow(i,h,posInSection,hideNumber){
   const dirBadge=h.dir?'<span class="sizer-hist-dir-badge '+h.dir+'">'+(h.dir==='buy'?'BUY':'SELL')+'</span>':'';
+  const resultBadge=h.result?'<span class="sizer-result-badge '+h.result+'">'+SIZER_RESULT_LABELS[h.result]+'</span>':'';
   const numHtml=hideNumber?'':'<span class="sizer-hist-num">'+(posInSection+1)+'</span>';
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row sort-mode">'
@@ -1684,6 +1709,7 @@ function renderSizerHistDeleteRow(i,h,posInSection,hideNumber){
   +numHtml
   +'<span class="sizer-hist-pair">'+h.pair+'</span>'
   +dirBadge
+  +resultBadge
   +'<span class="sizer-hist-pips">'+h.pips+' pips</span>'
   +'<span class="sizer-hist-lot">'+h.lot.toFixed(2)+' lot</span>'
   +(_sizerDelPendingIdx===i
@@ -1840,6 +1866,7 @@ function moveSizerHistItem(idx,dir){
 const SIZER_STATUS_LABELS={normal:'通常','pending':'注文待機中',filled:'約定中',closed:'決済済み'};
 const SIZER_STATUS_NEXT={normal:'pending',pending:'filled',filled:'closed'};
 const SIZER_STATUS_NEXT_LABEL={normal:'注文待機中にする',pending:'約定済みにする',filled:'決済済みにする'};
+const SIZER_RESULT_LABELS={win:'✅ 勝ち',loss:'❌ 負け',other:'➖ その他'};
 function getSizerHistStatus(h){return h.status||'normal';}
 
 function advanceSizerHistStatusConfirm(idx){
@@ -1850,11 +1877,44 @@ function advanceSizerHistStatusConfirm(idx){
   const next=SIZER_STATUS_NEXT[current];
   if(!next)return; // 既に約定中（これ以上進む状態がない）
 
-  // 状態を進める操作は、確認モーダルを挟むと作業工数が増えるため、タップ即座に確定する
-  // （誤って進めてしまった場合は「↩」でいつでも1段階戻せるため、確認なしでも実用上問題ない）
+  // 「決済済み」へ進む場合だけ、勝敗記録シートを開いてから確定する
+  // （それ以外の状態遷移は、確認モーダルを挟むと作業工数が増えるため、タップ即座に確定する）
+  if(next==='closed'){
+    openSizerResultSheet(idx);
+    return;
+  }
   h.status=next;
   saveSizerHistoryArr(hist);
   _sizerHistExpanded=null; // 状態変更後はレートの確認・編集を行わないため、展開中の項目は自動的に閉じる
+  playTheme(true);
+  renderSizerHistory();
+}
+
+// ===== 決済結果（勝ち／負け／その他）の記録 =====
+let _sizerResultSheetIdx=null;
+function openSizerResultSheet(idx){
+  _sizerResultSheetIdx=idx;
+  document.getElementById('sizer-result-overlay').classList.add('open');
+  document.getElementById('sizer-result-sheet').classList.add('open');
+}
+function cancelSizerResultSheet(){
+  _sizerResultSheetIdx=null;
+  document.getElementById('sizer-result-overlay').classList.remove('open');
+  document.getElementById('sizer-result-sheet').classList.remove('open');
+}
+function confirmSizerResult(result){
+  if(_sizerResultSheetIdx===null)return;
+  const hist=loadSizerHistory();
+  const h=hist[_sizerResultSheetIdx];
+  if(h){
+    h.status='closed';
+    h.result=result; // 'win' | 'loss' | 'other'
+    saveSizerHistoryArr(hist);
+    _sizerHistExpanded=null; // 状態変更後はレートの確認・編集を行わないため、展開中の項目は自動的に閉じる
+  }
+  _sizerResultSheetIdx=null;
+  document.getElementById('sizer-result-overlay').classList.remove('open');
+  document.getElementById('sizer-result-sheet').classList.remove('open');
   playTheme(true);
   renderSizerHistory();
 }
@@ -1867,7 +1927,10 @@ function revertSizerHistStatus(idx){
   const current=getSizerHistStatus(h);
   if(current==='pending')h.status='normal';
   else if(current==='filled')h.status='pending';
-  else if(current==='closed')h.status='filled';
+  else if(current==='closed'){
+    h.status='filled';
+    delete h.result; // 決済を取り消すので、記録していた勝敗結果も一緒にクリアする
+  }
   else return;
   saveSizerHistoryArr(hist);
   _sizerHistExpanded=null; // 状態変更後はレートの確認・編集を行わないため、展開中の項目は自動的に閉じる
@@ -2777,6 +2840,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.23',datetime:'2026.08.06 23:10頃（正確な時刻取得失敗のため概算）',note:'決済済みにする際、勝ち／負け／その他の結果を記録するモーダルを追加。「↩」で決済取消すると記録もクリアされる'},
   {version:'v3.22',datetime:'2026.08.06 22:06',note:'ステータス変更（進める・戻す）後、展開中のIN/SL/TPパネルを自動的に閉じるように変更'},
   {version:'v3.21',datetime:'2026.08.06 20:05',note:'設計意図の再確認により2点改善：①削除モードのSETTINGSトグルを廃止、操作モード循環のみに一本化②口座A/Bのキー形式を完全対等に統一（既存データは自動移行、消失なし）'},
   {version:'v3.20',datetime:'2026.08.06 19:13',note:'ユーザーシナリオテストを踏まえ2点改善：①状態変更モードを廃止しボタンを常時表示・拡大（頻繁な操作にモード切替の手間を挟まない）②一括戻し機能をデフォルトONに変更'},
