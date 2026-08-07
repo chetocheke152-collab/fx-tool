@@ -196,10 +196,12 @@ body.btn3d-off .btn-3d::after{display:none}
 .sizer-result-badge.loss{background:#EF444418;color:#EF4444}
 .sizer-result-badge.other{background:#88888818;color:#AAA}
 .sizer-hist-time{font-size:10px;color:#444;letter-spacing:0.3px}
+.sizer-hist-rr{font-size:10px;color:#D4AF5A99;letter-spacing:0.3px;margin-left:8px}
 .sizer-hist-empty{font-size:11px;color:#333;padding:10px 0;letter-spacing:0.3px}
 .sizer-status-section{margin-bottom:6px}
 .sizer-status-section:last-child{margin-bottom:0}
 .sizer-status-section-hdr{font-size:12px;font-weight:700;color:#D4AF5A88;letter-spacing:1px;padding:8px 0 5px;border-bottom:2px solid #E8C56E77}
+.sizer-winrate{font-size:11px;font-weight:400;color:#888;letter-spacing:0;margin-left:8px}
 .sizer-status-section-hdr-fold{cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:space-between}
 .sizer-status-fold-arr{font-size:9px;transition:transform 0.25s ease}
 .sizer-status-fold-arr:not(.open){transform:rotate(-90deg)}
@@ -1077,6 +1079,16 @@ function calcActualPipsFromPrices(pairName,inPrice,slPrice){
   const pipSize=p.type==='JPY'?0.01:0.0001;
   return Math.abs(inNum-slNum)/pipSize;
 }
+// IN・SL・TPの価格から、予定されていたリスクリワード比（利確幅÷損切り幅）を計算する。
+// 実際の決済価格ではなく、あくまで「その時点で設定していたTP/SL」に基づく予定値
+function calcSizerHistRiskReward(h){
+  const inNum=parseFloat(h.in),slNum=parseFloat(h.sl),tpNum=parseFloat(h.tp);
+  if(isNaN(inNum)||isNaN(slNum)||isNaN(tpNum))return null;
+  const risk=Math.abs(inNum-slNum);
+  const reward=Math.abs(tpNum-inNum);
+  if(risk===0)return null;
+  return reward/risk;
+}
 // 最初に履歴へ保存した時点のpips値を、不変の基準として取得する。
 // （既存データにoriginalPipsが無い場合は、後方互換としてpipsをそのまま初回値とみなす）
 // この基準は「修正」機能では一切書き換えない。IN/SLは後から何度でも入力・修正されうるため、
@@ -1590,9 +1602,17 @@ function renderSizerHistory(){
   // ナンバリングは表示しない（他区画からの通し番号を引き継いでしまう混乱を避けるため）
   const closedIdxList=sections.closed;
   if(closedIdxList.length>0){
+    // 勝率は「勝ち」「負け」の記録だけで計算する（「その他」＝指標回避決済などは、
+    // 予定通りの決済ではないため、分母・分子どちらからも除外する）
+    const closedItems=closedIdxList.map(idx=>hist[idx]);
+    const winLossItems=closedItems.filter(h=>h.result==='win'||h.result==='loss');
+    const winCount=winLossItems.filter(h=>h.result==='win').length;
+    const winRateHtml=winLossItems.length>0
+      ?'<span class="sizer-winrate">勝率 '+Math.round(winCount/winLossItems.length*100)+'%（'+winCount+'/'+winLossItems.length+'）</span>'
+      :'';
     html+='<div class="sizer-status-section">'
       +'<div class="sizer-status-section-hdr sizer-status-section-hdr-fold" onclick="toggleSizerClosedSection()">'
-      +'<span>🔒 決済済み（'+closedIdxList.length+'件）</span>'
+      +'<span>🔒 決済済み（'+closedIdxList.length+'件）'+winRateHtml+'</span>'
       +'<span class="sizer-status-fold-arr'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-arr">▼</span>'
       +'</div>'
       +'<div class="sizer-status-fold-body'+(_sizerClosedSectionOpen?' open':'')+'" id="sizer-closed-fold-body">'
@@ -1653,6 +1673,9 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   const pipsMismatch=isSizerHistPipsMismatch(h);
   const pipsClass=pipsMismatch?' sizer-hist-pips-mismatch':'';
   const pipsTitle=pipsMismatch?' title="最初に登録したpips数と、IN/SLの価格差から算出した値が一致しません"':'';
+  // リスクリワード比は、決済済みの取引だけに表示する（予定していたTP/SLに基づく値であり、実際の決済価格ではない）
+  const rr=(status==='closed')?calcSizerHistRiskReward(h):null;
+  const rrHtml=rr!==null?'<span class="sizer-hist-rr">RR '+rr.toFixed(2)+'</span>':'';
 
   return '<div class="sizer-hist-row-wrap">'
   +'<div class="sizer-hist-row" onclick="restoreSizerHistory('+i+')">'
@@ -1666,7 +1689,7 @@ function renderSizerHistNormalRow(i,h,posInSection,hideNumber){
   +(expanded?'<button class="sizer-hist-expand-btn has-price" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▲</button>':'<button class="sizer-hist-expand-btn'+(hasPrice?' has-price':'')+'" onclick="event.stopPropagation();toggleSizerHistExpand('+i+')">▼</button>')
   +'</div>'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
-  +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+'</div>'
+  +'<div class="sizer-hist-time">'+fmtSizerHistTime(h.ts)+rrHtml+'</div>'
   +'<div style="display:flex;gap:6px;align-items:center;">'+revertBtn+statusBtn+'</div>'
   +'</div>'
   +'</div>'
@@ -2840,6 +2863,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.24',datetime:'2026.08.07 13:35',note:'決済済み取引にリスクリワード比（TP/SLベースの予定値）を表示。決済済み区画の見出しに勝率（勝ち/負けのみ、その他は除外）を表示'},
   {version:'v3.23',datetime:'2026.08.06 23:10頃（正確な時刻取得失敗のため概算）',note:'決済済みにする際、勝ち／負け／その他の結果を記録するモーダルを追加。「↩」で決済取消すると記録もクリアされる'},
   {version:'v3.22',datetime:'2026.08.06 22:06',note:'ステータス変更（進める・戻す）後、展開中のIN/SL/TPパネルを自動的に閉じるように変更'},
   {version:'v3.21',datetime:'2026.08.06 20:05',note:'設計意図の再確認により2点改善：①削除モードのSETTINGSトグルを廃止、操作モード循環のみに一本化②口座A/Bのキー形式を完全対等に統一（既存データは自動移行、消失なし）'},
