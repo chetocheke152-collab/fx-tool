@@ -722,10 +722,10 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <button class="img-upload-btn btn-3d" style="flex:1;" onclick="document.getElementById('img-file-input').click()">📷 画像を選択</button>
         <button class="img-clear-btn" onclick="clearImgResult()">クリア</button>
       </div>
-      <div class="img-mode-row">
-        <span style="font-size:11px;color:#666;letter-spacing:0.3px;" id="img-mode-lbl">登録モード（プレビュー経由）</span>
+      <div class="img-mode-row" id="img-mode-row">
+        <span style="font-size:11px;color:#666;letter-spacing:0.3px;">登録モード（デバッグ限定：直接登録⇔自動登録）</span>
         <div class="toggle-btn-cycle" id="img-direct-toggle-btn" onclick="cycleImgRegisterMode()" style="width:84px;height:28px;">
-          <span class="toggle-txt-cycle" id="img-direct-toggle-txt" style="font-size:12px;">通常</span>
+          <span class="toggle-txt-cycle" id="img-direct-toggle-txt" style="font-size:12px;">直接登録</span>
         </div>
       </div>
       <div id="img-preview-wrap" style="display:none;margin-top:14px;">
@@ -758,7 +758,7 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
         <div style="font-size:10px;color:#333;margin-top:8px;letter-spacing:0.3px;">
           ※ タップで色を選択・変更できます（未判定のままの項目はCALに送られません）
         </div>
-        <button class="cult-confirm-btn btn-3d" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALのプレビューに送る</button>
+        <button class="cult-confirm-btn btn-3d" id="img-send-btn" style="margin-top:10px;" onclick="sendImgItemsToCal()">CALに直接登録する</button>
       </div>
     </div>
   </div>
@@ -2447,7 +2447,7 @@ function switchTab(tab){
   if(tab==='cal')renderCalendar();
   if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();}
   if(tab==='learning')renderLearningList();
-  if(tab==='img')loadTesseractLazy(); // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）
+  if(tab==='img'){loadTesseractLazy();applyImgDirectModeUI();} // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）。モード表示も念のため再適用する
   if(tab==='settings')renderChangelogList();
 }
 
@@ -2863,6 +2863,9 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.27',datetime:'2026.08.09 11:32',note:'深層リファクタリングにより、switchTab（IMGタブ）でもapplyImgDirectModeUIを再適用するよう防御を追加（実害はなかったが、より確実な設計に）'},
+  {version:'v3.26',datetime:'2026.08.09 11:29',note:'IMGタブの「通常（プレビュー経由）」モードを廃止し、直接登録に一本化（実運用で使われていなかったため）。デバッグ限定の自動登録機能は維持。デバッグOFF時は登録モード切替ボタン自体を非表示に'},
+  {version:'v3.25',datetime:'2026.08.09 11:13',note:'IMGタブ「通常（プレビュー経由）」モードの登録完了メッセージを強化。まだCALに反映されていないことが明確に伝わる文言に修正（バグではなく仕様通りだが、誤解を招く表現だったため）'},
   {version:'v3.24',datetime:'2026.08.07 13:35',note:'決済済み取引にリスクリワード比（TP/SLベースの予定値）を表示。決済済み区画の見出しに勝率（勝ち/負けのみ、その他は除外）を表示'},
   {version:'v3.23',datetime:'2026.08.06 23:10頃（正確な時刻取得失敗のため概算）',note:'決済済みにする際、勝ち／負け／その他の結果を記録するモーダルを追加。「↩」で決済取消すると記録もクリアされる'},
   {version:'v3.22',datetime:'2026.08.06 22:06',note:'ステータス変更（進める・戻す）後、展開中のIN/SL/TPパネルを自動的に閉じるように変更'},
@@ -3069,33 +3072,29 @@ function resolveImgLv4Conflict(idx){
 // ===== 直接登録モード（プレビューを経ずにCALへ即登録） =====
 // ===== IMGタブ 登録モード（通常 → 直接登録 → 自動登録 を巡回） =====
 // 「自動登録」は人の確認を一切介さずCALへ登録する強力なモードのため、デバッグモード中のみ選択可能とする
-const IMG_MODE_KEY='ps_img_register_mode'; // 'normal' | 'direct' | 'auto'
-const IMG_MODE_LABELS={normal:'通常',direct:'直接登録',auto:'自動登録'};
-const IMG_MODE_SUB_LABELS={
-  normal:'登録モード',
-  direct:'登録モード',
-  auto:'登録モード'
-};
+const IMG_MODE_KEY='ps_img_register_mode'; // 'direct' | 'auto'（'normal'モードは廃止。常に直接登録が標準）
+const IMG_MODE_LABELS={direct:'直接登録',auto:'自動登録'};
 function getImgRegisterMode(){
-  const saved=localStorage.getItem(IMG_MODE_KEY)||'normal';
+  const saved=localStorage.getItem(IMG_MODE_KEY)||'direct';
   // 自動登録はデバッグモード限定。デバッグOFF中に自動登録が保存されていた場合は直接登録まで戻す
   if(saved==='auto'&&!isDebugMode())return 'direct';
   return saved;
 }
 function applyImgDirectModeUI(){
   const mode=getImgRegisterMode();
+  const modeRow=document.getElementById('img-mode-row');
   const btn=document.getElementById('img-direct-toggle-btn');
   const txt=document.getElementById('img-direct-toggle-txt');
-  const lbl=document.getElementById('img-mode-lbl');
   const sendBtn=document.getElementById('img-send-btn');
   const fallbackWrap=document.getElementById('img-fallback-day-wrap');
   const fallbackSelect=document.getElementById('img-fallback-day');
   const parseBtn=document.getElementById('img-parse-btn');
-  if(btn){btn.classList.toggle('on',mode!=='normal');}
+  // デバッグOFF時は常に「直接登録」固定のため、切り替えボタン自体が不要になるので非表示にする
+  if(modeRow){modeRow.style.display=isDebugMode()?'flex':'none';}
+  if(btn){btn.classList.toggle('on',mode==='auto');}
   if(txt){txt.textContent=IMG_MODE_LABELS[mode];}
-  if(lbl){lbl.textContent=IMG_MODE_SUB_LABELS[mode];}
   if(sendBtn){
-    sendBtn.textContent=mode==='auto'?'CALへ自動登録する':mode==='direct'?'CALに直接登録する':'CALのプレビューに送る';
+    sendBtn.textContent=mode==='auto'?'CALへ自動登録する':'CALに直接登録する';
   }
   // 自動登録モード中は「対象曜日」の手動指定は不要（常に自動判定＝見出し優先）なので隠す
   if(fallbackWrap){fallbackWrap.style.display=(mode==='auto')?'none':'';}
@@ -3104,13 +3103,12 @@ function applyImgDirectModeUI(){
   if(parseBtn){parseBtn.style.display=(mode==='auto')?'none':'';}
 }
 function cycleImgRegisterMode(){
-  const order=isDebugMode()?['normal','direct','auto']:['normal','direct']; // デバッグモード中以外は自動登録を選べない
+  // デバッグモード中のみ、直接登録⇔自動登録を切り替えられる（デバッグOFF中はボタン自体が非表示のため呼ばれない）
   const current=getImgRegisterMode();
-  const idx=order.indexOf(current);
-  const next=order[(idx+1)%order.length];
+  const next=current==='direct'?'auto':'direct';
   localStorage.setItem(IMG_MODE_KEY,next);
   applyImgDirectModeUI();
-  playClick(next!=='normal');
+  playClick(next==='auto');
 }
 
 // IMGの解析結果をCALへ送信＋学習データを保存
@@ -3132,43 +3130,25 @@ function sendImgItemsToCal(){
   withCat.forEach(it=>{learned[learnKey(it.cur,it.title)]=it.cat;});
   saveLearnedCat(learned);
 
-  const mode=getImgRegisterMode(); // 'normal' | 'direct' | 'auto'
-  // 「自」＝人の確認を介さず自動登録、「手」＝人が直接登録・プレビュー経由のいずれかで送ったもの
+  const mode=getImgRegisterMode(); // 'direct' | 'auto'
+  // 「自」＝人の確認を介さず自動登録、「手」＝人が直接登録で送ったもの
   const src=mode==='auto'?'auto':'manual';
 
-  if(mode==='direct'||mode==='auto'){
-    // 重複判定: 時刻・通貨・色・指標名の4つ全てが完全一致した場合のみ重複とみなす
-    const data=loadCultData();
-    let addedCount=0;
-    mergedItems.forEach(it=>{
-      const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);
-      if(dup)return;
-      data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title,src});
-      addedCount++;
-    });
-    data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
-    saveCultData(data);
-    renderCalendar();
-    playTheme(true);
-    const modeLabel=mode==='auto'?'自動登録':'直接登録';
-    alert(addedCount+'件をCALに'+modeLabel+'しました（重複・同時刻同通貨同重要度の統合分はスキップ）。');
-    return;
-  }
-
-  // CALのプレビュー（_previewItems）に合流。重複（時刻・通貨・色・指標名の4つ全て一致）はスキップ
+  // 重複判定: 時刻・通貨・色・指標名の4つ全てが完全一致した場合のみ重複とみなす
+  const data=loadCultData();
   let addedCount=0;
   mergedItems.forEach(it=>{
-    const dup=_previewItems.some(p=>p.day===it.day&&p.time===(it.time||'')&&p.cur===it.cur&&p.cat===it.cat&&p.event===it.title)
-      || (function(){const d=loadCultData();return d[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);})();
+    const dup=data[it.day].some(e=>e.time===(it.time||'')&&e.cur===it.cur&&e.cat===it.cat&&e.event===it.title);
     if(dup)return;
-    _previewItems.push({day:it.day,time:it.time||'',cur:it.cur,cat:it.cat,event:it.title,src});
+    data[it.day].push({time:it.time||'',cur:it.cur,cat:it.cat,event:it.title,src});
     addedCount++;
   });
-  savePreviewItems();
-  renderPreviewList();
-
+  data.forEach(dayArr=>dayArr.sort((a,b)=>a.time.localeCompare(b.time)));
+  saveCultData(data);
+  renderCalendar();
   playTheme(true);
-  alert(addedCount+'件をCALのプレビューに追加しました（重複・同時刻同通貨同重要度の統合分はスキップ）。CALタブで確認・登録してください。');
+  const modeLabel=mode==='auto'?'自動登録':'直接登録';
+  alert(addedCount+'件をCALに'+modeLabel+'しました（重複・同時刻同通貨同重要度の統合分はスキップ）。');
 }
 
 // 曜日・時刻・通貨・重要度（色）が同じ項目を1件にまとめる。
