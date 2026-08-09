@@ -36,6 +36,7 @@ body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,s
 .sizer-fold-arr:not(.open){transform:rotate(-90deg)}
 .sizer-fold-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
 .sizer-fold-body.open{max-height:600px;opacity:1}
+.sizer-fold-body-tall.open{max-height:4000px;opacity:1}
 .sizer-fold-body.card-body{padding:0 16px}
 .sizer-fold-body.card-body.open{padding:16px}
 #sizer-fold-body-result.sizer-fold-body{padding:0}
@@ -410,6 +411,7 @@ body.metallic .sizer-hist-search-input{background:#F2F3F5;border-color:#1D5DB833
 body.metallic .sizer-today-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%)}
 body.metallic .tab-nav{background:#D0D3D8;border-color:#1D5DB822}
 body.metallic .toggle-btn-cycle{background:#DFE2E6;border-color:#1D5DB844}
+body.metallic .toggle-txt-cycle{color:#20242B}
 body.metallic .toggle-btn-cycle.on{background:#1D5DB818}
 body.metallic .debug-disabled-notice{background:#D0D3D8;color:#4A5563}
 body.metallic .sizer-price-dir-btn{background:#F2F3F5;border-color:#1D5DB833;color:#6B7280}
@@ -863,8 +865,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
 <!-- SETTINGS TAB -->
 <div class="tab-content" id="content-settings">
   <div class="card" style="margin-top:14px;">
-    <div class="card-hdr">表示設定</div>
-    <div class="card-body">
+    <div class="card-hdr sizer-fold-hdr" onclick="toggleSettingsFold('display')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span>表示設定</span>
+      <span class="sizer-fold-arr open" id="settings-fold-arr-display">▼</span>
+    </div>
+    <div class="card-body sizer-fold-body open" id="settings-fold-body-display">
       <div class="toggle-row">
         <div class="toggle-info">
           <div class="toggle-lbl">ボタンの3D効果</div>
@@ -913,8 +918,11 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
   </div>
 
   <div class="card">
-    <div class="card-hdr">変更履歴</div>
-    <div class="card-body">
+    <div class="card-hdr sizer-fold-hdr" onclick="toggleSettingsFold('changelog')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span>変更履歴</span>
+      <span class="sizer-fold-arr open" id="settings-fold-arr-changelog">▼</span>
+    </div>
+    <div class="card-body sizer-fold-body sizer-fold-body-tall open" id="settings-fold-body-changelog">
       <div id="changelog-list"></div>
     </div>
   </div>
@@ -1224,6 +1232,29 @@ function toggleSizerFold(section){
   body.classList.toggle('open',willOpen);
   arr.classList.toggle('open',willOpen);
   playClick(willOpen);
+}
+
+// ===== SETTINGSタブの各セクション（表示設定・変更履歴）の開閉 =====
+// SIZERタブのアコーディオン連動とは無関係な、単純な開閉のみ。状態は次回起動時も保持する
+function toggleSettingsFold(section){
+  const body=document.getElementById('settings-fold-body-'+section);
+  const arr=document.getElementById('settings-fold-arr-'+section);
+  const willOpen=!body.classList.contains('open');
+  body.classList.toggle('open',willOpen);
+  arr.classList.toggle('open',willOpen);
+  localStorage.setItem('ps_settings_fold_'+section,willOpen?'1':'0');
+  playClick(willOpen);
+}
+function applySettingsFoldState(){
+  ['display','changelog'].forEach(section=>{
+    const saved=localStorage.getItem('ps_settings_fold_'+section);
+    if(saved==='0'){
+      const body=document.getElementById('settings-fold-body-'+section);
+      const arr=document.getElementById('settings-fold-arr-'+section);
+      if(body)body.classList.remove('open');
+      if(arr)arr.classList.remove('open');
+    }
+  });
 }
 
 function applyCurrencyUI(){
@@ -2963,6 +2994,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.46',datetime:'2026.08.09 23:13',note:'①METALLIC：計算履歴の操作モード「通常」表示のコントラスト不足（1.11）を修正。②SETタブの「表示設定」「変更履歴」を開閉式に変更、状態は次回起動時も保持'},
   {version:'v3.45',datetime:'2026.08.09 23:02',note:'JPY/USDスイッチの文字色を、3テーマ全てで他のトグルスイッチと統一（アクティブ/非アクティブ問わず明るい色に）。コントラストは既存toggle-btnと同一値のため、新たな視認性懸念はない'},
   {version:'v3.44',datetime:'2026.08.09 22:57',note:'ライトテーマのヘッダーが、ダークテーマと同一の黒背景だった問題を修正。アイボリー系グラデーションに変更し、METALLIC対応時と同じ手順でタイトル文字・テーマボタン・SIZERロゴのコントラストも事前検証・調整'},
   {version:'v3.43',datetime:'2026.08.09 22:51',note:'深層リファクタリング：!important使用箇所に原因未特定の旨と実害がない根拠をコメントで明記。3テーマの口座タブ選択状態（枠線ベース）の一貫性を最終確認'},
@@ -3943,6 +3975,7 @@ updateSaveHistBtnLabel();
 applySizerCopyModeUI();
 applySizerBulkRevertUI();
 applyHeaderVersionFromChangelog();
+applySettingsFoldState();
 </script>
 </body>
 </html>
