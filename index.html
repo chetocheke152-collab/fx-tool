@@ -125,7 +125,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .r-val.blue{color:var(--gold)}
 .r-val.green{color:var(--gold)}
 .sizer-hist-card{margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid var(--gold);overflow:hidden}
-.sizer-hist-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid #D4AF5A22;display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-hist-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--gold);display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sizer-hist-arr{font-size:11px;color:var(--gold);transition:transform 0.2s}
 .sizer-hist-arr.open{transform:rotate(180deg)}
 .sizer-hist-body{max-height:0;overflow:hidden;padding:0 16px;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
@@ -340,6 +340,14 @@ body.metallic .hdr-title{color:#20242B}
 body.metallic .toggle-lbl{color:#20242B}
 body.metallic .toggle-sub{color:#6B7280}
 body.metallic .cal-day:not(.cal-today) .cal-day-name{color:#20242B}
+body.metallic .sizer-hist-num{color:#1D5DB8}
+body.metallic .sizer-hist-pair{color:#1D5DB8}
+body.metallic .sizer-hist-expand-btn.has-price{border-color:#1D5DB866;color:#1D5DB8}
+body.metallic .sizer-hist-price-lbl{color:#1D5DB8}
+body.metallic .sizer-hist-rr{color:#1D5DB899}
+body.metallic .sizer-hist-row{border-bottom-color:#1D5DB80D}
+body.metallic .sizer-hist-row-wrap{border-bottom-color:#1D5DB80D}
+body.metallic .sizer-status-section-hdr{color:#1D5DB8;border-bottom-color:#1D5DB877}
 body.metallic .cat-btn.red{background:#F2F3F5;color:#C23A3D}
 body.metallic .cat-btn.orange{background:#F2F3F5;color:#B87A0A}
 body.metallic .cat-btn.green{background:#F2F3F5;color:#1A9349}
@@ -2949,6 +2957,8 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.37',datetime:'2026.08.09 19:51',note:'METALLICテーマ：区画見出し（注文前/決済済み等）の文字色・下線、各行の区切り線もブルーに統一。絵文字アイコン（📐🔒）は技術的に色変更不可のため対象外'},
+  {version:'v3.36',datetime:'2026.08.09 19:47',note:'METALLICテーマ：計算履歴パネル内の見出し・通貨ペア・ナンバリング・IN/SL/TPラベル・RR比・展開ボタン枠線を全てブルーに統一。登録済みの既存データも表示ロジック側の対応のため自動的に反映される'},
   {version:'v3.35',datetime:'2026.08.09 16:59',note:'METALLICテーマ：CALの通常日付（今日以外）の文字色を濃色に修正。:not()セレクタで今日のハイライト（ブルー）と競合しないよう設計、詳細度の意図しない逆転を事前に検証・回避'},
   {version:'v3.34',datetime:'2026.08.09 16:56',note:'深層リファクタリングにより、インラインstyleのゴールド直書きを全コード横断で根絶（rate-status/display、状態変更ボタン、CAL追加ボタン、5つのモーダル確認ボタン）。CSS変数(--gold)経由での管理に完全統一'},
   {version:'v3.33',datetime:'2026.08.09 16:51',note:'根本原因を修正：インラインstyleの直書きゴールド枠線がCSSクラスの上書きより優先されていた問題（テーマボタン・Resultパネル含む28箇所以上）を発見し、var(--gold)経由に統一。今後同種の問題が起きにくい構造に'},
