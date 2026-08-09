@@ -335,7 +335,7 @@ body.light input:focus,body.light select:focus{background:#FFFFFF;border-color:#
 
 /* Metallic theme（光沢のあるシルバー背景 + ブルーのアクセント。まずは主要要素のみ対応） */
 body.metallic{background:#E8E9EC;color:#20242B;--gold:#1D5DB8}
-body.metallic .hdr{background:#D8DBE0}
+body.metallic .hdr{background:linear-gradient(135deg,#E4E6E9 0%,#D8DBE0 50%,#CBCED4 100%)}
 body.metallic .hdr-title{color:#20242B}
 body.metallic .toggle-lbl{color:#20242B}
 body.metallic .toggle-sub{color:#6B7280}
@@ -359,7 +359,7 @@ body.metallic .sizer-status-advance-btn{background:#1D5DB818}
 body.metallic .cult-add-btn{background:#1D5DB818}
 body.metallic .modal-confirm-btn{background:#1D5DB818}
 body.metallic .hdr-sub{color:#4A5563}
-body.metallic .card{background:#FFFFFF;border-color:#1D5DB822}
+body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%);border-color:#1D5DB822}
 body.metallic .card-hdr{background:#D8DBE0;color:#1D5DB8}
 body.metallic input,body.metallic select{background:#F2F3F5;border-color:#1D5DB844;color:#20242B}
 body.metallic input:focus,body.metallic select:focus{background:#FFFFFF;border-color:#1D5DB8}
@@ -383,25 +383,25 @@ body.metallic .currency-slide-lbl{color:#EAF0FA}
 body.metallic .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#FFFFFF;font-weight:700}
 body.metallic .currency-slide.usd-active .currency-slide-lbl.usd{color:#FFFFFF;font-weight:700}
 body.metallic #theme-btn{color:#1D5DB8;border-color:#1D5DB8}
-body.metallic .cal-day{background:#FFFFFF;border-color:#1D5DB822}
+body.metallic .cal-day{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%);border-color:#1D5DB822}
 body.metallic .cal-day-hdr{background:#D8DBE0}
 body.metallic .cult-hdr{background:#D8DBE0}
 body.metallic .cult-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
 body.metallic .cult-list-hdr{background:#F2F3F5}
-body.metallic .cult-section{background:#FFFFFF;border-color:#1D5DB822}
+body.metallic .cult-section{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%);border-color:#1D5DB822}
 body.metallic .fee-result-box{background:#F2F3F5;border-color:#1D5DB833}
 body.metallic .img-mode-row{background:#F2F3F5}
 body.metallic .img-upload-btn{background:#F2F3F5;border-color:#1D5DB844;color:#1D5DB8}
 body.metallic .pair-btn{background:#F2F3F5;border-color:#1D5DB844;color:#6B7280}
 body.metallic .qbtn{background:#F2F3F5;border-color:#1D5DB833;color:#6B7280}
 body.metallic .result-rows{background:#FFFFFF}
-body.metallic .result-top{background:#FFFFFF;border-bottom:1px solid #1D5DB822}
-body.metallic .sheet{background:#FFFFFF}
-body.metallic .sizer-hist-card{background:#FFFFFF;border-color:#1D5DB822}
+body.metallic .result-top{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%);border-bottom:1px solid #1D5DB822}
+body.metallic .sheet{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%)}
+body.metallic .sizer-hist-card{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%);border-color:#1D5DB822}
 body.metallic .sizer-hist-lot-input{background:#F2F3F5}
 body.metallic .sizer-hist-price-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
 body.metallic .sizer-hist-search-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
-body.metallic .sizer-today-card{background:#FFFFFF}
+body.metallic .sizer-today-card{background:linear-gradient(135deg,#FFFFFF 0%,#F5F6F8 50%,#EBEDF0 100%)}
 body.metallic .tab-nav{background:#D8DBE0;border-color:#1D5DB822}
 body.metallic .toggle-btn-cycle{background:#DFE2E6;border-color:#1D5DB844}
 body.metallic .toggle-btn-cycle.on{background:#1D5DB818}
@@ -2957,6 +2957,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.38',datetime:'2026.08.09 21:26',note:'METALLICテーマに光沢感を追加。主要カード・パネル（.card, .result-top, .sizer-hist-card, .cal-day, .cult-section, .sheet, .sizer-today-card, ヘッダー）を単色背景から微妙なグラデーションに変更し、金属らしい質感を演出'},
   {version:'v3.37',datetime:'2026.08.09 19:51',note:'METALLICテーマ：区画見出し（注文前/決済済み等）の文字色・下線、各行の区切り線もブルーに統一。絵文字アイコン（📐🔒）は技術的に色変更不可のため対象外'},
   {version:'v3.36',datetime:'2026.08.09 19:47',note:'METALLICテーマ：計算履歴パネル内の見出し・通貨ペア・ナンバリング・IN/SL/TPラベル・RR比・展開ボタン枠線を全てブルーに統一。登録済みの既存データも表示ロジック側の対応のため自動的に反映される'},
   {version:'v3.35',datetime:'2026.08.09 16:59',note:'METALLICテーマ：CALの通常日付（今日以外）の文字色を濃色に修正。:not()セレクタで今日のハイライト（ブルー）と競合しないよう設計、詳細度の意図しない逆転を事前に検証・回避'},
