@@ -26,9 +26,9 @@ body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,s
 .currency-slide{position:relative;width:76px;height:26px;background:#D4AF5A;border:1px solid var(--gold);border-radius:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;flex-shrink:0}
 .currency-slide-lbl{position:absolute;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;color:#F0EDE6;transition:color 0.25s ease;pointer-events:none}
 .currency-slide-lbl.jpy{left:8px}
-.currency-slide-lbl.usd{right:7px}
+.currency-slide-lbl.usd{right:8px}
 .currency-slide-knob{position:absolute;top:2px;left:2px;width:36px;height:20px;background:#1A1A1A;border-radius:10px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
-.currency-slide.usd-active .currency-slide-knob{transform:translateX(36px)}
+.currency-slide.usd-active .currency-slide-knob{transform:translateX(34px)}
 .currency-slide.usd-active .currency-slide-lbl.jpy{color:#F0EDE6}
 .currency-slide.usd-active .currency-slide-lbl.usd{color:#F0EDE6;font-weight:700}
 .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F0EDE6;font-weight:700}
@@ -88,7 +88,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .toggle-btn.on .toggle-txt.off-lbl{color:#F0EDE6;font-weight:400}
 .toggle-btn.on .toggle-txt.on-lbl{color:#F0EDE6;font-weight:700}
 .toggle-knob{position:absolute;top:2px;left:2px;width:32px;height:26px;background:#1A1A1A;border-radius:13px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
-.toggle-btn.on .toggle-knob{transform:translateX(32px);background:#1A1A1A}
+.toggle-btn.on .toggle-knob{transform:translateX(30px);background:#1A1A1A}
 /* 2値（ON/OFF）ではなく3状態などを循環するボタン用。左右スイッチでは状態数を正しく表現できないため、
    従来通りの「中央に文字が表示される角丸ボタン」のデザインを維持する（例：計算履歴の操作モード、IMG登録モード） */
 .toggle-btn-cycle{width:68px;height:32px;background:#0D0D0D;border:1px solid #D4AF5A44;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;-webkit-tap-highlight-color:transparent}
@@ -375,8 +375,8 @@ body.metallic .toggle-btn:not(.on) .toggle-txt.off-lbl{color:#F2F3F5}
 body.metallic .toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F2F3F5}
 body.metallic .toggle-btn.on .toggle-txt.off-lbl{color:#F2F3F5}
 body.metallic .toggle-btn.on .toggle-txt.on-lbl{color:#F2F3F5}
-body.metallic .toggle-knob{background:#FFFFFF}
-body.metallic .toggle-btn.on .toggle-knob{background:#FFFFFF}
+body.metallic .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
+body.metallic .toggle-btn.on .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .toggle-row{background:#F2F3F5;border-color:#1D5DB833}
 body.metallic .sizer-hist-hdr{background:#D0D3D8}
 body.metallic .sizer-account-tab{background:#F2F3F5;border-color:#1D5DB833}
@@ -385,7 +385,7 @@ body.metallic .tab-btn.active{background:#1D5DB818}
    確実性を優先して!importantを使用（背景色は非選択時と同一のため、上書きの成否に関わらず実害はない） */
 body.metallic .sizer-account-switch .sizer-account-tab.active{background:#F2F3F5!important;border-color:#1D5DB8;border-width:2px}
 body.metallic .currency-slide{background:#1D5DB8;border-color:#1D5DB8}
-body.metallic .currency-slide-knob{background:#FFFFFF}
+body.metallic .currency-slide-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .currency-slide-lbl{color:#F2F3F5}
 body.metallic .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F2F3F5;font-weight:700}
 body.metallic .currency-slide.usd-active .currency-slide-lbl.usd{color:#F2F3F5;font-weight:700}
@@ -2994,6 +2994,13 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.51',datetime:'2026.08.10 11:25',note:'METALLICテーマ：全ガラス風つまみ（トグル・JPY/USDスイッチ）の透明度をさらに上げ（0.3→0.18）。透明度アップに伴いコントラストも改善（3.53→4.3）'},
+  {version:'v3.50',datetime:'2026.08.10 11:23',note:'METALLICテーマ：トグルスイッチのつまみをさらに透明に（0.4→0.3）。JPY/USDスイッチのつまみにも同じガラス風効果を適用'},
+  {version:'v3.49',datetime:'2026.08.10 11:20',note:'METALLICテーマ限定：トグルスイッチのつまみを半透明シルバーに変更。隠れている側のOFF/ONラベルが、うっすら透けて見えるガラス風デザインを試験導入（ダーク/ライトは変更なし）'},
+  {version:'v3.49',datetime:'2026.08.10 11:07',note:'トグルスイッチにガラス風の半透明デザインを試験導入（3テーマ全対応）。文字は各テーマで最適なコントラストを保つよう、ライト/METALLICは濃色文字に調整'},
+  {version:'v3.48',datetime:'2026.08.10 10:58',note:'スライドスイッチの縁の非対称を根本修正（前回のflexbox化は取り消し、元の構造のまま対応）。translateXの移動量がつまみ自体の幅と同値になっており、ON側の縁が実質0pxになっていたのが真因。ドル円スイッチ・全トグルスイッチ共通で修正'},
+  {version:'v3.48',datetime:'2026.08.10 10:42',note:'JPY/USDスイッチの余白非対称問題を根本修正。left/right絶対位置指定による数値調整（前回の対応は不十分だった）をやめ、flexbox（justify-content:space-between）で左右の対称性をCSSエンジン自身が保証する構造に作り直し'},
+  {version:'v3.47',datetime:'2026.08.10 10:11',note:'JPY/USDスイッチの「縁の幅がズレて見える」問題を修正。ラベル位置がleft:8px/right:7pxと1px非対称だったのが原因、両方8pxに統一（全テーマ共通の見た目のため、テーマ別ではなく構造自体の修正）'},
   {version:'v3.46',datetime:'2026.08.09 23:13',note:'①METALLIC：計算履歴の操作モード「通常」表示のコントラスト不足（1.11）を修正。②SETタブの「表示設定」「変更履歴」を開閉式に変更、状態は次回起動時も保持'},
   {version:'v3.45',datetime:'2026.08.09 23:02',note:'JPY/USDスイッチの文字色を、3テーマ全てで他のトグルスイッチと統一（アクティブ/非アクティブ問わず明るい色に）。コントラストは既存toggle-btnと同一値のため、新たな視認性懸念はない'},
   {version:'v3.44',datetime:'2026.08.09 22:57',note:'ライトテーマのヘッダーが、ダークテーマと同一の黒背景だった問題を修正。アイボリー系グラデーションに変更し、METALLIC対応時と同じ手順でタイトル文字・テーマボタン・SIZERロゴのコントラストも事前検証・調整'},
