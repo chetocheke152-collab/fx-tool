@@ -126,7 +126,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .r-val.blue{color:var(--gold)}
 .r-val.green{color:var(--gold)}
 .sizer-hist-card{margin:14px 14px 0;background:#141414;border-radius:12px;border:1px solid #D4AF5A22;overflow:hidden}
-.sizer-hist-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--gold);display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sizer-hist-hdr{background:#1A1A1A;padding:9px 16px;font-size:9px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border-bottom:1px solid #D4AF5A22;display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sizer-hist-arr{font-size:11px;color:var(--gold);transition:transform 0.2s}
 .sizer-hist-arr.open{transform:rotate(180deg)}
 .sizer-hist-body{max-height:0;overflow:hidden;padding:0 16px;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease,padding 0.4s ease}
@@ -364,7 +364,7 @@ body.metallic .sizer-status-advance-btn{background:#1D5DB818}
 body.metallic .cult-add-btn{background:#1D5DB818}
 body.metallic .modal-confirm-btn{background:#1D5DB818}
 body.metallic .hdr-sub{color:#4A5563}
-body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822}
+body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid #1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .card-hdr{background:#D0D3D8;color:#1D5DB8}
 body.metallic input,body.metallic select{background:#F2F3F5;border-color:#1D5DB844;color:#20242B}
 body.metallic input:focus,body.metallic select:focus{background:#FFFFFF;border-color:#1D5DB8}
@@ -378,7 +378,7 @@ body.metallic .toggle-btn.on .toggle-txt.on-lbl{color:#F2F3F5}
 body.metallic .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .toggle-btn.on .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .toggle-row{background:#F2F3F5;border-color:#1D5DB833}
-body.metallic .sizer-hist-hdr{background:#D0D3D8}
+body.metallic .sizer-hist-hdr{background:#D0D3D8;border-bottom:none}
 body.metallic .sizer-account-tab{background:#F2F3F5;border-color:#1D5DB833}
 body.metallic .tab-btn.active{background:#1D5DB818}
 /* 原因未特定だが、通常のCSS詳細度では上書きされない事象が確認されたため、
@@ -390,12 +390,12 @@ body.metallic .currency-slide-lbl{color:#F2F3F5}
 body.metallic .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F2F3F5;font-weight:700}
 body.metallic .currency-slide.usd-active .currency-slide-lbl.usd{color:#F2F3F5;font-weight:700}
 body.metallic #theme-btn{color:#1D5DB8;border-color:#1D5DB8}
-body.metallic .cal-day{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822}
+body.metallic .cal-day{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .cal-day-hdr{background:#D0D3D8}
 body.metallic .cult-hdr{background:#D0D3D8}
 body.metallic .cult-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
 body.metallic .cult-list-hdr{background:#F2F3F5}
-body.metallic .cult-section{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822}
+body.metallic .cult-section{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .fee-result-box{background:#F2F3F5;border-color:#1D5DB833}
 body.metallic .img-mode-row{background:#F2F3F5}
 body.metallic .img-upload-btn{background:#F2F3F5;border-color:#1D5DB844;color:#1D5DB8}
@@ -403,12 +403,12 @@ body.metallic .pair-btn{background:#F2F3F5;border-color:#1D5DB844;color:#6B7280}
 body.metallic .qbtn{background:#F2F3F5;border-color:#1D5DB833;color:#6B7280}
 body.metallic .result-rows{background:#FFFFFF}
 body.metallic .result-top{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-bottom:1px solid #1D5DB822}
-body.metallic .sheet{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%)}
-body.metallic .sizer-hist-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822}
+body.metallic .sheet{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
+body.metallic .sizer-hist-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid #1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .sizer-hist-lot-input{background:#F2F3F5}
 body.metallic .sizer-hist-price-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
 body.metallic .sizer-hist-search-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
-body.metallic .sizer-today-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%)}
+body.metallic .sizer-today-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .tab-nav{background:#D0D3D8;border-color:#1D5DB822}
 body.metallic .toggle-btn-cycle{background:#DFE2E6;border-color:#1D5DB844}
 body.metallic .toggle-txt-cycle{color:#20242B}
@@ -2994,6 +2994,9 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.54',datetime:'2026.08.10 15:22',note:'METALLICテーマ：これまで存在しなかった光沢グラデーション枚線を新規実装（inset box-shadowによる左上ハイライト/右下陰影）。card・sizer-hist-card・cal-day・cult-section・sheet・sizer-today-cardに適用'},
+  {version:'v3.53',datetime:'2026.08.10 15:17',note:'METALLICテーマ：計算履歴パネルの外枚が他パネルより薄く見える件、border-colorのみの指定を完全なborderプロパティ（幅・スタイル込み）に強化。.cardも同形式に統一し、両者の指定方法を完全に対称化'},
+  {version:'v3.52',datetime:'2026.08.10 15:09',note:'METALLICテーマ：計算履歴パネルだけ見出し下に濃い青線が残っていた問題を修正。TRADE等の標準パネルと同様、border-bottomをnoneに（前回の透過色への変更では不十分だった）'},
   {version:'v3.51',datetime:'2026.08.10 11:25',note:'METALLICテーマ：全ガラス風つまみ（トグル・JPY/USDスイッチ）の透明度をさらに上げ（0.3→0.18）。透明度アップに伴いコントラストも改善（3.53→4.3）'},
   {version:'v3.50',datetime:'2026.08.10 11:23',note:'METALLICテーマ：トグルスイッチのつまみをさらに透明に（0.4→0.3）。JPY/USDスイッチのつまみにも同じガラス風効果を適用'},
   {version:'v3.49',datetime:'2026.08.10 11:20',note:'METALLICテーマ限定：トグルスイッチのつまみを半透明シルバーに変更。隠れている側のOFF/ONラベルが、うっすら透けて見えるガラス風デザインを試験導入（ダーク/ライトは変更なし）'},
