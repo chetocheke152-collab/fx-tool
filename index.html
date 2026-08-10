@@ -11,7 +11,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--gold:#D4AF5A}
+:root{--gold:#D4AF5A;--gold-rgb:212,175,90}
+/* METALLICテーマのアクセントカラー選択（SETタブから変更可能。METALLIC選択時のみ有効。
+   ダーク/ライトテーマは、常に既定のゴールドのまま） */
+body.metallic.color-blue{--gold:#1D5DB8;--gold-rgb:29,93,184}
+body.metallic.color-green{--gold:#1F6B3D;--gold-rgb:31,107,61}
+body.metallic.color-red{--gold:#C0392B;--gold-rgb:192,57,43}
+body.metallic.color-purple{--gold:#7B4EA8;--gold-rgb:123,78,168}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,sans-serif;min-height:100vh;padding-bottom:60px;-webkit-font-smoothing:antialiased}
 .hdr{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%);padding:24px 20px 20px;border-bottom:1px solid #D4AF5A33}
@@ -27,7 +33,7 @@ body{background:#0A0A0A;color:#E8E0D0;font-family:'Noto Sans JP',-apple-system,s
 .currency-slide-lbl{position:absolute;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;color:#F0EDE6;transition:color 0.25s ease;pointer-events:none}
 .currency-slide-lbl.jpy{left:8px}
 .currency-slide-lbl.usd{right:8px}
-.currency-slide-knob{position:absolute;top:2px;left:2px;width:36px;height:20px;background:#1A1A1A;border-radius:10px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.currency-slide-knob{position:absolute;top:2px;left:2px;width:36px;height:20px;background:rgba(26,26,26,0.35);border:1px solid rgba(255,255,255,0.15);border-radius:10px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
 .currency-slide.usd-active .currency-slide-knob{transform:translateX(34px)}
 .currency-slide.usd-active .currency-slide-lbl.jpy{color:#F0EDE6}
 .currency-slide.usd-active .currency-slide-lbl.usd{color:#F0EDE6;font-weight:700}
@@ -75,6 +81,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .qbtn{flex:1;background:#1A1A1A;border:1px solid #D4AF5A33;border-radius:8px;padding:9px 0;font-size:13px;font-weight:700;color:#666;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all 0.15s}
 .qbtn.on{background:#D4AF5A18;border-color:var(--gold);color:var(--gold)}
 .toggle-row{display:flex;align-items:flex-start;justify-content:space-between;padding:14px;background:#1A1A1A;border-radius:8px;border:1px solid #D4AF5A33}
+.color-swatch{width:36px;height:36px;border-radius:50%;border:2px solid transparent;cursor:pointer;-webkit-appearance:none;padding:0;flex-shrink:0;transition:transform 0.15s,border-color 0.15s}
+.color-swatch.selected{border-color:#FFFFFF;transform:scale(1.1);box-shadow:0 0 0 2px currentColor}
 .debug-disabled-notice{margin:14px;padding:30px 16px;text-align:center;font-size:13px;color:#666;background:#141414;border:1px dashed #EF444444;border-radius:12px;letter-spacing:0.3px}
 .toggle-info{flex:1}
 .toggle-lbl{font-size:14px;font-weight:600;color:#E8E0D0}
@@ -87,15 +95,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F0EDE6;font-weight:400}
 .toggle-btn.on .toggle-txt.off-lbl{color:#F0EDE6;font-weight:400}
 .toggle-btn.on .toggle-txt.on-lbl{color:#F0EDE6;font-weight:700}
-.toggle-knob{position:absolute;top:2px;left:2px;width:32px;height:26px;background:#1A1A1A;border-radius:13px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
-.toggle-btn.on .toggle-knob{transform:translateX(30px);background:#1A1A1A}
+.toggle-knob{position:absolute;top:2px;left:2px;width:32px;height:26px;background:rgba(26,26,26,0.35);border:1px solid rgba(255,255,255,0.15);border-radius:13px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.toggle-btn.on .toggle-knob{transform:translateX(30px);background:rgba(26,26,26,0.35)}
 /* 2値（ON/OFF）ではなく3状態などを循環するボタン用。左右スイッチでは状態数を正しく表現できないため、
    従来通りの「中央に文字が表示される角丸ボタン」のデザインを維持する（例：計算履歴の操作モード、IMG登録モード） */
 .toggle-btn-cycle{width:68px;height:32px;background:#0D0D0D;border:1px solid #D4AF5A44;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s,border-color 0.2s;-webkit-tap-highlight-color:transparent}
 .toggle-btn-cycle.on{background:#D4AF5A18;border-color:var(--gold)}
 .toggle-txt-cycle{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#F0EDE6;pointer-events:none;transition:color 0.2s}
 .toggle-btn-cycle.on .toggle-txt-cycle{color:var(--gold)}
-.result-card{margin:14px 14px 0;border-radius:12px;overflow:hidden;border:1px solid #D4AF5A33}
+.result-card{margin:14px 14px 0;border-radius:12px;overflow:hidden;border:1px solid #D4AF5A22}
 .result-top{background:linear-gradient(135deg,#1A1A1A 0%,#0D0D0D 100%);padding:28px 20px 20px;text-align:center;border-bottom:1px solid #D4AF5A22}
 .result-top-lbl{font-size:9px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
 .result-lot{font-family:'Oswald',sans-serif;font-size:58px;font-weight:500;letter-spacing:-2px;color:#333;line-height:1;-webkit-font-smoothing:antialiased}
@@ -335,45 +343,45 @@ body.light input,body.light select{background:#F9F7F2;border-color:#D4AF5A44;col
 body.light input:focus,body.light select:focus{background:#FFFFFF;border-color:#D4AF5A}
 
 /* Metallic theme（光沢のあるシルバー背景 + ブルーのアクセント。まずは主要要素のみ対応） */
-body.metallic{background:#D4D7DC;color:#20242B;--gold:#1D5DB8}
+body.metallic{background:#D4D7DC;color:#20242B;--gold:#1D5DB8;--gold-rgb:29,93,184}
 body.metallic .hdr{background:linear-gradient(135deg,#EEF0F2 0%,#D0D3D8 50%,#B4B8BF 100%)}
 body.metallic .hdr-title{color:#20242B}
 body.metallic .toggle-lbl{color:#20242B}
 body.metallic .toggle-sub{color:#6B7280}
 body.metallic .cal-day:not(.cal-today) .cal-day-name{color:#20242B}
-body.metallic .sizer-hist-num{color:#1D5DB8}
-body.metallic .sizer-hist-pair{color:#1D5DB8}
-body.metallic .sizer-hist-expand-btn.has-price{border-color:#1D5DB866;color:#1D5DB8}
-body.metallic .sizer-hist-price-lbl{color:#1D5DB8}
-body.metallic .sizer-hist-rr{color:#1D5DB899}
-body.metallic .sizer-hist-row{border-bottom-color:#1D5DB80D}
-body.metallic .sizer-hist-row-wrap{border-bottom-color:#1D5DB80D}
-body.metallic .sizer-status-section-hdr{color:#1D5DB8;border-bottom-color:#1D5DB877}
+body.metallic .sizer-hist-num{color:var(--gold)}
+body.metallic .sizer-hist-pair{color:var(--gold)}
+body.metallic .sizer-hist-expand-btn.has-price{border-color:rgba(var(--gold-rgb),0.4);color:var(--gold)}
+body.metallic .sizer-hist-price-lbl{color:var(--gold)}
+body.metallic .sizer-hist-rr{color:rgba(var(--gold-rgb),0.6)}
+body.metallic .sizer-hist-row{border-bottom-color:rgba(var(--gold-rgb),0.051)}
+body.metallic .sizer-hist-row-wrap{border-bottom-color:rgba(var(--gold-rgb),0.051)}
+body.metallic .sizer-status-section-hdr{color:var(--gold);border-bottom-color:rgba(var(--gold-rgb),0.467)}
 body.metallic .cat-btn.red{background:#F2F3F5;color:#C23A3D}
 body.metallic .cat-btn.orange{background:#F2F3F5;color:#B87A0A}
 body.metallic .cat-btn.green{background:#F2F3F5;color:#1A9349}
-body.metallic .btn-3d{background-image:linear-gradient(180deg,#FFFFFFDD 0%,#FFFFFF55 40%,transparent 46%,#00000022 100%);box-shadow:0 9px 0 #00000033,0 12px 22px rgba(0,0,0,0.18),0 0 16px #1D5DB844,inset 0 1px 0 #FFFFFF}
-body.metallic .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000033,0 1px 3px rgba(0,0,0,0.15),0 0 26px #1D5DB8CC,inset 0 1px 0 #FFFFFF}
+body.metallic .btn-3d{background-image:linear-gradient(180deg,#FFFFFFDD 0%,#FFFFFF55 40%,transparent 46%,#00000022 100%);box-shadow:0 9px 0 #00000033,0 12px 22px rgba(0,0,0,0.18),0 0 16px rgba(var(--gold-rgb),0.267),inset 0 1px 0 #FFFFFF}
+body.metallic .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000033,0 1px 3px rgba(0,0,0,0.15),0 0 26px rgba(var(--gold-rgb),0.8),inset 0 1px 0 #FFFFFF}
 body.metallic .btn-3d::after{background:linear-gradient(180deg,#A8B4C4,#5A6B7E)}
 /* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す。テーマ別ルール（特にmetallic）より
    後に定義することで、CSSの記述順序による意図しない上書きを確実に防ぐ */
 body.btn3d-off .btn-3d{background-image:none;box-shadow:none;transform:none;transition:none}
 body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:none}
 body.btn3d-off .btn-3d::after{display:none}
-body.metallic .result-card{border-color:#1D5DB833}
-body.metallic .sizer-status-advance-btn{background:#1D5DB818}
-body.metallic .cult-add-btn{background:#1D5DB818}
-body.metallic .sizer-account-copy-btn{border-color:#1D5DB844;color:#6B7280}
-body.metallic .cal-sort-btn{border-color:#1D5DB844}
-body.metallic .drum-line{border-top-color:#1D5DB8;border-bottom-color:#1D5DB8;background:#1D5DB808}
-body.metallic .modal-confirm-btn{background:#1D5DB818}
+body.metallic .result-card{border-color:rgba(var(--gold-rgb),0.133)}
+body.metallic .sizer-status-advance-btn{background:rgba(var(--gold-rgb),0.094)}
+body.metallic .cult-add-btn{background:rgba(var(--gold-rgb),0.094)}
+body.metallic .sizer-account-copy-btn{border-color:rgba(var(--gold-rgb),0.267);color:#6B7280}
+body.metallic .cal-sort-btn{border-color:rgba(var(--gold-rgb),0.267)}
+body.metallic .drum-line{border-top-color:var(--gold);border-bottom-color:var(--gold);background:rgba(var(--gold-rgb),0.031)}
+body.metallic .modal-confirm-btn{background:rgba(var(--gold-rgb),0.094)}
 body.metallic .hdr-sub{color:#4A5563}
-body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid #1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
-body.metallic .card-hdr{background:#D0D3D8;color:#1D5DB8}
-body.metallic input,body.metallic select{background:#F2F3F5;border-color:#1D5DB844;color:#20242B}
-body.metallic input:focus,body.metallic select:focus{background:#FFFFFF;border-color:#1D5DB8}
-body.metallic .toggle-btn{background:#1D5DB8;border-color:#1D5DB8}
-body.metallic .toggle-btn.on{background:#1D5DB8;border-color:#1D5DB8}
+body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid rgba(var(--gold-rgb),0.133);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
+body.metallic .card-hdr{background:#D0D3D8;color:var(--gold)}
+body.metallic input,body.metallic select{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.267);color:#20242B}
+body.metallic input:focus,body.metallic select:focus{background:#FFFFFF;border-color:var(--gold)}
+body.metallic .toggle-btn{background:var(--gold);border-color:var(--gold)}
+body.metallic .toggle-btn.on{background:var(--gold);border-color:var(--gold)}
 body.metallic .toggle-txt{color:#F2F3F5}
 body.metallic .toggle-btn:not(.on) .toggle-txt.off-lbl{color:#F2F3F5}
 body.metallic .toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F2F3F5}
@@ -381,44 +389,44 @@ body.metallic .toggle-btn.on .toggle-txt.off-lbl{color:#F2F3F5}
 body.metallic .toggle-btn.on .toggle-txt.on-lbl{color:#F2F3F5}
 body.metallic .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .toggle-btn.on .toggle-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
-body.metallic .toggle-row{background:#F2F3F5;border-color:#1D5DB833}
+body.metallic .toggle-row{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2)}
 body.metallic .sizer-hist-hdr{background:#D0D3D8;border-bottom:none}
-body.metallic .sizer-account-tab{background:#F2F3F5;border-color:#1D5DB833}
-body.metallic .tab-btn.active{background:#1D5DB818}
+body.metallic .sizer-account-tab{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2)}
+body.metallic .tab-btn.active{background:rgba(var(--gold-rgb),0.094)}
 /* 原因未特定だが、通常のCSS詳細度では上書きされない事象が確認されたため、
    確実性を優先して!importantを使用（背景色は非選択時と同一のため、上書きの成否に関わらず実害はない） */
-body.metallic .sizer-account-switch .sizer-account-tab.active{background:#F2F3F5!important;border-color:#1D5DB8;border-width:2px}
-body.metallic .currency-slide{background:#1D5DB8;border-color:#1D5DB8}
+body.metallic .sizer-account-switch .sizer-account-tab.active{background:#F2F3F5!important;border-color:var(--gold);border-width:2px}
+body.metallic .currency-slide{background:var(--gold);border-color:var(--gold)}
 body.metallic .currency-slide-knob{background:rgba(212,215,220,0.18);border:1px solid rgba(255,255,255,0.5)}
 body.metallic .currency-slide-lbl{color:#F2F3F5}
 body.metallic .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F2F3F5;font-weight:700}
 body.metallic .currency-slide.usd-active .currency-slide-lbl.usd{color:#F2F3F5;font-weight:700}
-body.metallic #theme-btn{color:#1D5DB8;border-color:#1D5DB8}
-body.metallic .cal-day{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
+body.metallic #theme-btn{color:var(--gold);border-color:var(--gold)}
+body.metallic .cal-day{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:rgba(var(--gold-rgb),0.133);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .cal-day-hdr{background:#D0D3D8}
 body.metallic .cult-hdr{background:#D0D3D8}
-body.metallic .cult-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
+body.metallic .cult-input{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2);color:#20242B}
 body.metallic .cult-list-hdr{background:#F2F3F5}
-body.metallic .cult-section{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:#1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
-body.metallic .fee-result-box{background:#F2F3F5;border-color:#1D5DB833}
+body.metallic .cult-section{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-color:rgba(var(--gold-rgb),0.133);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
+body.metallic .fee-result-box{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2)}
 body.metallic .img-mode-row{background:#F2F3F5}
-body.metallic .img-upload-btn{background:#F2F3F5;border-color:#1D5DB844;color:#1D5DB8}
-body.metallic .pair-btn{background:#F2F3F5;border-color:#1D5DB844;color:#6B7280}
-body.metallic .qbtn{background:#F2F3F5;border-color:#1D5DB833;color:#6B7280}
+body.metallic .img-upload-btn{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.267);color:var(--gold)}
+body.metallic .pair-btn{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.267);color:#6B7280}
+body.metallic .qbtn{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2);color:#6B7280}
 body.metallic .result-rows{background:#FFFFFF}
-body.metallic .result-top{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-bottom:1px solid #1D5DB822}
+body.metallic .result-top{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border-bottom:1px solid rgba(var(--gold-rgb),0.133)}
 body.metallic .sheet{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
-body.metallic .sizer-hist-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid #1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
+body.metallic .sizer-hist-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid rgba(var(--gold-rgb),0.133);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
 body.metallic .sizer-hist-lot-input{background:#F2F3F5}
-body.metallic .sizer-hist-price-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
-body.metallic .sizer-hist-search-input{background:#F2F3F5;border-color:#1D5DB833;color:#20242B}
+body.metallic .sizer-hist-price-input{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2);color:#20242B}
+body.metallic .sizer-hist-search-input{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2);color:#20242B}
 body.metallic .sizer-today-card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
-body.metallic .tab-nav{background:#D0D3D8;border-color:#1D5DB822}
-body.metallic .toggle-btn-cycle{background:#DFE2E6;border-color:#1D5DB844}
+body.metallic .tab-nav{background:#D0D3D8;border-color:rgba(var(--gold-rgb),0.133)}
+body.metallic .toggle-btn-cycle{background:#DFE2E6;border-color:rgba(var(--gold-rgb),0.267)}
 body.metallic .toggle-txt-cycle{color:#20242B}
-body.metallic .toggle-btn-cycle.on{background:#1D5DB818}
+body.metallic .toggle-btn-cycle.on{background:rgba(var(--gold-rgb),0.094)}
 body.metallic .debug-disabled-notice{background:#D0D3D8;color:#4A5563}
-body.metallic .sizer-price-dir-btn{background:#F2F3F5;border-color:#1D5DB833;color:#6B7280}
+body.metallic .sizer-price-dir-btn{background:#F2F3F5;border-color:rgba(var(--gold-rgb),0.2);color:#6B7280}
 body.light .pair-btn{background:#F9F7F2;border-color:#D4AF5A44;color:#888}
 body.light .pair-btn.sel{color:#1A1A1A;border-color:#D4AF5A}
 body.light .sheet{background:#FFFFFF}
@@ -440,18 +448,18 @@ body.light .toggle-btn:not(.on) .toggle-txt.off-lbl{color:#F9F7F2}
 body.light .toggle-btn:not(.on) .toggle-txt.on-lbl{color:#F9F7F2}
 body.light .toggle-btn.on .toggle-txt.off-lbl{color:#F9F7F2}
 body.light .toggle-btn.on .toggle-txt.on-lbl{color:#F9F7F2}
-body.light .toggle-knob{background:#F9F7F2}
-body.light .toggle-btn.on .toggle-knob{background:#F9F7F2}
+body.light .toggle-knob{background:rgba(26,26,26,0.35);border:1px solid rgba(255,255,255,0.2)}
+body.light .toggle-btn.on .toggle-knob{background:rgba(26,26,26,0.35)}
 body.light .toggle-btn-cycle{background:#E8E4DC;border-color:#D4AF5A44}
 body.light .toggle-btn-cycle.on{background:#D4AF5A18;border-color:#D4AF5A}
 body.light .toggle-txt-cycle{color:#8A6E2F}
 body.light .toggle-btn-cycle.on .toggle-txt-cycle{color:#8A6E2F}
 body.light .currency-slide{background:#D4AF5A;border-color:#D4AF5A}
-body.light .currency-slide-knob{background:#F9F7F2}
+body.light .currency-slide-knob{background:rgba(26,26,26,0.35);border:1px solid rgba(255,255,255,0.2)}
 body.light .currency-slide-lbl{color:#F9F7F2}
 body.light .currency-slide:not(.usd-active) .currency-slide-lbl.jpy{color:#F9F7F2;font-weight:700}
 body.light .currency-slide.usd-active .currency-slide-lbl.usd{color:#F9F7F2;font-weight:700}
-body.light .result-card{border-color:#D4AF5A33}
+body.light .result-card{border-color:#D4AF5A22}
 body.light .result-top{background:#FFFFFF;border-bottom:1px solid #D4AF5A22}
 body.light .result-rows{background:#FFFFFF}
 body.light .result-lot{color:#CCC}
@@ -874,7 +882,19 @@ body.light .cal-today .cal-day-name{color:#D4AF5A}
       <span class="sizer-fold-arr open" id="settings-fold-arr-display">▼</span>
     </div>
     <div class="card-body sizer-fold-body open" id="settings-fold-body-display">
-      <div class="toggle-row">
+      <div class="toggle-row" id="accent-color-row" style="flex-direction:column;align-items:stretch;display:none;">
+        <div class="toggle-info" style="margin-bottom:10px;">
+          <div class="toggle-lbl">METALLICのアクセントカラー</div>
+          <div class="toggle-sub">METALLICテーマ選択時のみ、メインカラーをカスタマイズできます</div>
+        </div>
+        <div style="display:flex;gap:10px;" id="color-swatch-row">
+          <button class="color-swatch" data-color="blue" style="background:#1D5DB8" onclick="setAccentColor('blue')" title="ブルー（標準）"></button>
+          <button class="color-swatch" data-color="green" style="background:#1F6B3D" onclick="setAccentColor('green')" title="グリーン"></button>
+          <button class="color-swatch" data-color="red" style="background:#C0392B" onclick="setAccentColor('red')" title="レッド"></button>
+          <button class="color-swatch" data-color="purple" style="background:#7B4EA8" onclick="setAccentColor('purple')" title="パープル"></button>
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:12px;">
         <div class="toggle-info">
           <div class="toggle-lbl">ボタンの3D効果</div>
           <div class="toggle-sub">ONで主要ボタンに光沢・押し込みアニメーションを付与</div>
@@ -2544,6 +2564,28 @@ function toggleTheme(){
     localStorage.setItem('ps_theme','light');
   }
   playTheme(body.classList.contains('light')||body.classList.contains('metallic'));
+  applyAccentColorSwatchUI(); // METALLIC切替時、アクセントカラー選択UIの表示/非表示も更新する
+}
+
+// ===== SETTINGS: METALLICテーマのアクセントカラー選択 =====
+const ACCENT_COLORS=['blue','green','red','purple'];
+const savedAccentColor=localStorage.getItem('ps_accent_color')||'blue';
+if(savedAccentColor!=='blue')document.body.classList.add('color-'+savedAccentColor);
+function setAccentColor(color){
+  ACCENT_COLORS.forEach(c=>document.body.classList.remove('color-'+c));
+  if(color!=='blue')document.body.classList.add('color-'+color);
+  localStorage.setItem('ps_accent_color',color);
+  applyAccentColorSwatchUI();
+  playClick(true);
+}
+function applyAccentColorSwatchUI(){
+  const current=localStorage.getItem('ps_accent_color')||'blue';
+  document.querySelectorAll('.color-swatch').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.color===current);
+  });
+  // METALLICテーマが選択されている時だけ、色選択UI自体を表示する
+  const row=document.getElementById('accent-color-row');
+  if(row)row.style.display=document.body.classList.contains('metallic')?'flex':'none';
 }
 
 // ===== SETTINGS: ボタンの3D効果 ON/OFF =====
@@ -2998,6 +3040,11 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.62',datetime:'2026.08.11 01:16',note:'METALLICのデフォルト・ブルー選択時が白くなる重大バグを修正。前回の一括置換で --gold:var(--gold) という循環参照が誤生成され、CSS変数が無効化されていたのが原因。ベースルール・ブルー選択ルールの2箇所を、正しい直接値(#1D5DB8)に修正'},
+  {version:'v3.61',datetime:'2026.08.11 01:13',note:'METALLICアクセントカラー機能を完全化。パネル見出し文字・トグルスイッチなど44箇所が直書きブルー固定で連動していなかった問題を修正。--gold-rgb変数を新設し、rgba(var(--gold-rgb),透過度)方式で全ての透過度パターンに対応'},
+  {version:'v3.60',datetime:'2026.08.10 20:49',note:'SETタブに「METALLICのアクセントカラー」選択機能を新規実装。METALLIC選択時のみ表示され、ブルー(標準)・グリーン・レッド・パープルから選択可能。ダーク/ライトテーマは影響を受けない'},
+  {version:'v3.59',datetime:'2026.08.10 20:27',note:'ダーク/ライトテーマのトグルスイッチ・JPY/USDスイッチにも、METALLICと同様のガラス風半透明つまみを実装。両テーマとも背景がゴールドのため、黒系半透明（0.35）を採用してコントラストを確保'},
+  {version:'v3.58',datetime:'2026.08.10 20:22',note:'RESULTパネルの枚線だけ透過度が33（他は22）と、ダークテーマの段階から存在していた不統一を発見・修正。全3テーマで.card/.sizer-hist-card/.result-cardの透過度を22に統一'},
   {version:'v3.57',datetime:'2026.08.10 16:37',note:'総合検証により、METALLICテーマの直書きゴールド残存箇所を3件追加発見・修正（sizer-account-copy-btn, cal-sort-btn, drum-line）。機械的な全体スキャンで37個のborder系プロパティを検証、視覚的影響の薄い透過度08〜22の区切り線は対応見送りと判断'},
   {version:'v3.56',datetime:'2026.08.10 16:31',note:'METALLICテーマ：3D効果OFF時、「lotをコピー」「履歴に保存」ボタンの枚がゴールドのまま残っていた問題を修正。copy-btnの直書き枚線をvar(--gold)化。同種の見落としをimg-upload-btnでも発見・修正'},
   {version:'v3.55',datetime:'2026.08.10 16:27',note:'3D効果OFFトグルが機能しない問題を修正。body.btn3d-offの打ち消しルールが、METALLICテーマ用ルールより先に定義されていたため、同一詳細度でMETALLIC側が記述順序で優先されていたのが原因。btn3d-offを全テーマルールの後に再配置し、常に最優先で打ち消されるよう修正'},
@@ -3993,6 +4040,7 @@ applySizerCopyModeUI();
 applySizerBulkRevertUI();
 applyHeaderVersionFromChangelog();
 applySettingsFoldState();
+applyAccentColorSwatchUI();
 </script>
 </body>
 </html>
