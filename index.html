@@ -346,6 +346,9 @@ body.light input:focus,body.light select:focus{background:#FFFFFF;border-color:#
 body.metallic{background:#D4D7DC;color:#20242B;--gold:#1D5DB8;--gold-rgb:29,93,184}
 body.metallic .hdr{background:linear-gradient(135deg,#EEF0F2 0%,#D0D3D8 50%,#B4B8BF 100%)}
 body.metallic .hdr-title{color:#20242B}
+body.metallic .cal-event-cur{color:#20242B}
+body.metallic .sizer-today-cur{color:#20242B}
+body.metallic .r-val{color:#20242B}
 body.metallic .toggle-lbl{color:#20242B}
 body.metallic .toggle-sub{color:#6B7280}
 body.metallic .cal-day:not(.cal-today) .cal-day-name{color:#20242B}
@@ -3040,6 +3043,7 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.63',datetime:'2026.08.11 07:33',note:'METALLICテーマ：CALの通貨ペア(.cal-event-cur)・今日の重要指標簡易表示の通貨ペア(.sizer-today-cur)がアイボリー色固定で視認性1.05だった問題を修正（11.31に改善）。横断チェックでSIZER結果の数値(.r-val)も同様の未対応を発見・修正'},
   {version:'v3.62',datetime:'2026.08.11 01:16',note:'METALLICのデフォルト・ブルー選択時が白くなる重大バグを修正。前回の一括置換で --gold:var(--gold) という循環参照が誤生成され、CSS変数が無効化されていたのが原因。ベースルール・ブルー選択ルールの2箇所を、正しい直接値(#1D5DB8)に修正'},
   {version:'v3.61',datetime:'2026.08.11 01:13',note:'METALLICアクセントカラー機能を完全化。パネル見出し文字・トグルスイッチなど44箇所が直書きブルー固定で連動していなかった問題を修正。--gold-rgb変数を新設し、rgba(var(--gold-rgb),透過度)方式で全ての透過度パターンに対応'},
   {version:'v3.60',datetime:'2026.08.10 20:49',note:'SETタブに「METALLICのアクセントカラー」選択機能を新規実装。METALLIC選択時のみ表示され、ブルー(標準)・グリーン・レッド・パープルから選択可能。ダーク/ライトテーマは影響を受けない'},
