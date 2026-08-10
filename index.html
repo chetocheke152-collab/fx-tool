@@ -111,12 +111,8 @@ body.light .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1
 .btn-3d::after{content:'';position:absolute;left:1px;right:1px;bottom:-9px;height:9px;background:linear-gradient(180deg,#A6813A,#2A2008);border-radius:0 0 8px 8px;z-index:-1;transition:opacity 0.12s ease}
 .btn-3d:active::after{opacity:0}
 body.light .btn-3d::after{background:linear-gradient(180deg,#B8A578,#6B5C3E)}
-/* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す（bodyにクラスを付けるだけの軽量な制御） */
-body.btn3d-off .btn-3d{background-image:none;box-shadow:none;transform:none;transition:none}
-body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:none}
-body.btn3d-off .btn-3d::after{display:none}
 
-.copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:transparent;border:1px solid #D4AF5A44;border-radius:6px;padding:7px 18px;color:var(--gold);font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:transparent;border:1px solid var(--gold);border-radius:6px;padding:7px 18px;color:var(--gold);font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
 .copy-btn:active,.copy-btn.done{border-color:var(--gold);color:var(--gold)}
 .result-rows{background:#141414}
 .result-row{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #D4AF5A11}
@@ -224,7 +220,7 @@ body.btn3d-off .btn-3d::after{display:none}
 .fee-result-val{font-size:17px;font-weight:700;color:var(--gold)}
 .disclaimer{text-align:center;padding:20px 16px 0;font-size:10px;color:#333;letter-spacing:0.5px}
 
-.img-upload-btn{width:100%;padding:14px;background:#1A1A1A;border:2px dashed #D4AF5A44;border-radius:10px;color:var(--gold);font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
+.img-upload-btn{width:100%;padding:14px;background:#1A1A1A;border:2px dashed var(--gold);border-radius:10px;color:var(--gold);font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s}
 .img-mode-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 10px;background:#1A1A1A;border-radius:8px}
 .img-upload-btn:active{border-color:var(--gold);background:#D4AF5A0A}
 .img-clear-btn{padding:0 18px;background:transparent;border:1px solid #333;border-radius:10px;color:#444;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all 0.15s;flex-shrink:0}
@@ -359,9 +355,17 @@ body.metallic .cat-btn.green{background:#F2F3F5;color:#1A9349}
 body.metallic .btn-3d{background-image:linear-gradient(180deg,#FFFFFFDD 0%,#FFFFFF55 40%,transparent 46%,#00000022 100%);box-shadow:0 9px 0 #00000033,0 12px 22px rgba(0,0,0,0.18),0 0 16px #1D5DB844,inset 0 1px 0 #FFFFFF}
 body.metallic .btn-3d:active{transform:var(--btn3d-active-transform);box-shadow:0 1px 0 #00000033,0 1px 3px rgba(0,0,0,0.15),0 0 26px #1D5DB8CC,inset 0 1px 0 #FFFFFF}
 body.metallic .btn-3d::after{background:linear-gradient(180deg,#A8B4C4,#5A6B7E)}
+/* SETTINGSタブのトグルでOFFにした場合、3D効果を打ち消す。テーマ別ルール（特にmetallic）より
+   後に定義することで、CSSの記述順序による意図しない上書きを確実に防ぐ */
+body.btn3d-off .btn-3d{background-image:none;box-shadow:none;transform:none;transition:none}
+body.btn3d-off .btn-3d:active{background-image:none;box-shadow:none;transform:none}
+body.btn3d-off .btn-3d::after{display:none}
 body.metallic .result-card{border-color:#1D5DB833}
 body.metallic .sizer-status-advance-btn{background:#1D5DB818}
 body.metallic .cult-add-btn{background:#1D5DB818}
+body.metallic .sizer-account-copy-btn{border-color:#1D5DB844;color:#6B7280}
+body.metallic .cal-sort-btn{border-color:#1D5DB844}
+body.metallic .drum-line{border-top-color:#1D5DB8;border-bottom-color:#1D5DB8;background:#1D5DB808}
 body.metallic .modal-confirm-btn{background:#1D5DB818}
 body.metallic .hdr-sub{color:#4A5563}
 body.metallic .card{background:linear-gradient(135deg,#FFFFFF 0%,#EAEDF1 45%,#D8DCE2 100%);border:1px solid #1D5DB822;box-shadow:inset 1px 1px 0 rgba(255,255,255,0.7),inset -1px -1px 0 rgba(29,93,184,0.15)}
@@ -2994,6 +2998,9 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.57',datetime:'2026.08.10 16:37',note:'総合検証により、METALLICテーマの直書きゴールド残存箇所を3件追加発見・修正（sizer-account-copy-btn, cal-sort-btn, drum-line）。機械的な全体スキャンで37個のborder系プロパティを検証、視覚的影響の薄い透過度08〜22の区切り線は対応見送りと判断'},
+  {version:'v3.56',datetime:'2026.08.10 16:31',note:'METALLICテーマ：3D効果OFF時、「lotをコピー」「履歴に保存」ボタンの枚がゴールドのまま残っていた問題を修正。copy-btnの直書き枚線をvar(--gold)化。同種の見落としをimg-upload-btnでも発見・修正'},
+  {version:'v3.55',datetime:'2026.08.10 16:27',note:'3D効果OFFトグルが機能しない問題を修正。body.btn3d-offの打ち消しルールが、METALLICテーマ用ルールより先に定義されていたため、同一詳細度でMETALLIC側が記述順序で優先されていたのが原因。btn3d-offを全テーマルールの後に再配置し、常に最優先で打ち消されるよう修正'},
   {version:'v3.54',datetime:'2026.08.10 15:22',note:'METALLICテーマ：これまで存在しなかった光沢グラデーション枚線を新規実装（inset box-shadowによる左上ハイライト/右下陰影）。card・sizer-hist-card・cal-day・cult-section・sheet・sizer-today-cardに適用'},
   {version:'v3.53',datetime:'2026.08.10 15:17',note:'METALLICテーマ：計算履歴パネルの外枚が他パネルより薄く見える件、border-colorのみの指定を完全なborderプロパティ（幅・スタイル込み）に強化。.cardも同形式に統一し、両者の指定方法を完全に対称化'},
   {version:'v3.52',datetime:'2026.08.10 15:09',note:'METALLICテーマ：計算履歴パネルだけ見出し下に濃い青線が残っていた問題を修正。TRADE等の標準パネルと同様、border-bottomをnoneに（前回の透過色への変更では不十分だった）'},
