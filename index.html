@@ -256,6 +256,7 @@ body.light .btn-3d::after{background:linear-gradient(180deg,#B8A578,#6B5C3E)}
 .sizer-today-count{font-size:10px;color:#666}
 .sizer-today-list{margin-top:8px;padding-top:8px;border-top:1px solid #D4AF5A11}
 .sizer-today-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.sizer-today-row-expired{opacity:0.35}
 .sizer-today-time{font-family:'Oswald',sans-serif;color:#888;min-width:40px}
 .sizer-today-cur{font-weight:700;color:#E8E0D0;min-width:32px}
 .sizer-today-name{color:var(--gold);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -284,6 +285,8 @@ body.light .btn-3d::after{background:linear-gradient(180deg,#B8A578,#6B5C3E)}
 .cal-day-badge.danger{background:#EF444418;color:#EF4444}
 .cal-events{padding:6px 0}
 .cal-event{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #D4AF5A08}
+.cal-event-expired{opacity:0.35}
+.cal-event-expired .cal-event-edit,.cal-event-expired .cal-event-del{opacity:0.6}
 .cal-event:last-child{border-bottom:none}
 .cal-event-dot{font-size:13px;flex-shrink:0;width:20px;text-align:center}
 .cal-event-time{font-family:'Oswald',sans-serif;font-size:14px;font-weight:500;color:#888;flex-shrink:0;min-width:44px;letter-spacing:0.5px}
@@ -350,6 +353,9 @@ body.metallic .cal-event-cur{color:#20242B}
 body.metallic .sizer-today-cur{color:#20242B}
 body.metallic .r-val{color:#20242B}
 body.metallic .toggle-lbl{color:#20242B}
+body.metallic .picker-item.center{color:#20242B}
+body.metallic .drum-wrap::before{background:linear-gradient(to bottom,rgba(255,255,255,0.98),rgba(255,255,255,0))}
+body.metallic .drum-wrap::after{background:linear-gradient(to top,rgba(255,255,255,0.98),rgba(255,255,255,0))}
 body.metallic .toggle-sub{color:#6B7280}
 body.metallic .cal-day:not(.cal-today) .cal-day-name{color:#20242B}
 body.metallic .sizer-hist-num{color:var(--gold)}
@@ -1905,8 +1911,12 @@ const SIZER_HIST_MODE_SUBS={
   delete:'×タップで削除（2段階確認）'
 };
 // 通貨ペアの部分一致で計算履歴を絞り込み（表示のみ、データ自体は変更しない）
+// 検索欄に文字を打つたびの即時全件再描画は、連続入力中は特に無駄が大きいため、
+// 入力が一瞬止まったタイミング（150ms）でだけ実行するデバウンス処理を挟む
+let _sizerHistFilterDebounceTimer=null;
 function filterSizerHistory(){
-  renderSizerHistory();
+  clearTimeout(_sizerHistFilterDebounceTimer);
+  _sizerHistFilterDebounceTimer=setTimeout(()=>{renderSizerHistory();},150);
 }
 
 // ===== 口座間コピー機能の有効/無効（SETTINGSタブのトグルで制御。普段は隠しておく） =====
@@ -2335,7 +2345,8 @@ function renderSizerTodayEvents(){
 
   const rowsHtml=events.map(e=>{
     const dot=e.cat==='red'?'🔴':'🟠';
-    return '<div class="sizer-today-row">'
+    const expired=isCalEventExpired(mon,dayIdx,e.time);
+    return '<div class="sizer-today-row'+(expired?' sizer-today-row-expired':'')+'">'
       +'<span class="sizer-today-time">'+(e.time||'--:--')+'</span>'
       +'<span>'+dot+'</span>'
       +'<span class="sizer-today-cur">'+e.cur+'</span>'
@@ -2624,8 +2635,8 @@ function switchTab(tab){
     document.getElementById('content-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
-  if(tab==='cal')renderCalendar();
-  if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();}
+  if(tab==='cal'){renderCalendar();startCalAutoRefresh();}else{stopCalAutoRefresh();}
+  if(tab==='sizer'){renderSizerHistory();renderSizerTodayEvents();startSizerTodayAutoRefresh();}else{stopSizerTodayAutoRefresh();}
   if(tab==='learning')renderLearningList();
   if(tab==='img'){loadTesseractLazy();applyImgDirectModeUI();} // IMGタブを開いた時だけTesseract.jsを読み込む（他タブ利用時の初期化を軽量化）。モード表示も念のため再適用する
   if(tab==='settings')renderChangelogList();
@@ -3043,6 +3054,10 @@ function renderLearningList(){
 // ===== 変更履歴（コード修正のたびに先頭へ1行追加する。簡潔に：バージョン・日時・機能面の要約のみ） =====
 // 配列の先頭が最新。ヘッダーのバージョン表示は、この配列の先頭要素から自動生成される
 const CHANGELOG=[
+  {version:'v3.67',datetime:'2026.08.11 20:23',note:'軽量化：①CAL・SIZER定期更新(1分おき)を、フルHTML再構築からclassList.toggleのみの軽量関数に変更②計算履歴の再描画ロジック自体は既に効率的と判断、検索欄への入力にデバウンス(150ms)を追加し連続打鍵時の無駄な全件再描画を削減'},
+  {version:'v3.66',datetime:'2026.08.11 20:00',note:'METALLICテーマ：ドラムピッカー（通貨ペア選択等）で選択中の項目がアイボリー色固定で視認性1.21だった問題を修正（14.4に改善）。上下端のフェードグラデーションも黒固定だったのを白系に統一。全ピッカー（通貨・時間・通貨・指標名）で共通のため一括改善'},
+  {version:'v3.65',datetime:'2026.08.11 19:58',note:'SIZERタブの「今日の重要指標」簡易表示にも、CALと同じグレーアウト機能を適用（発表10分後）。専用の1分おき自動更新タイマーを追加、CAL用タイマーとは独立して動作しタブ切替に応じて自動停止'},
+  {version:'v3.64',datetime:'2026.08.11 19:54',note:'CALタブ新機能：発表時刻から10分経過した指標を自動的にグレーアウト。1分おきに自動更新（他タブに切り替えると自動停止、無駄な処理を防止）。並び替えモードでは適用しない'},
   {version:'v3.63',datetime:'2026.08.11 07:33',note:'METALLICテーマ：CALの通貨ペア(.cal-event-cur)・今日の重要指標簡易表示の通貨ペア(.sizer-today-cur)がアイボリー色固定で視認性1.05だった問題を修正（11.31に改善）。横断チェックでSIZER結果の数値(.r-val)も同様の未対応を発見・修正'},
   {version:'v3.62',datetime:'2026.08.11 01:16',note:'METALLICのデフォルト・ブルー選択時が白くなる重大バグを修正。前回の一括置換で --gold:var(--gold) という循環参照が誤生成され、CSS変数が無効化されていたのが原因。ベースルール・ブルー選択ルールの2箇所を、正しい直接値(#1D5DB8)に修正'},
   {version:'v3.61',datetime:'2026.08.11 01:13',note:'METALLICアクセントカラー機能を完全化。パネル見出し文字・トグルスイッチなど44箇所が直書きブルー固定で連動していなかった問題を修正。--gold-rgb変数を新設し、rgba(var(--gold-rgb),透過度)方式で全ての透過度パターンに対応'},
@@ -3404,6 +3419,87 @@ function calDateStr(date){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
 }
 
+// ===== CAL指標のグレーアウト判定（発表から10分経過したかどうか） =====
+// mondayDate: その週の月曜0時のDateオブジェクト、dayIdx: 0=月〜5=土、timeStr: 'HH:MM'
+const CAL_EVENT_GRACE_MINUTES=10;
+function isCalEventExpired(mondayDate,dayIdx,timeStr){
+  if(!timeStr)return false; // 時刻未入力の指標は判定不能なため、グレーアウトの対象外
+  const [h,m]=timeStr.split(':').map(Number);
+  if(isNaN(h)||isNaN(m))return false;
+  const eventDate=new Date(mondayDate);
+  eventDate.setDate(mondayDate.getDate()+dayIdx);
+  eventDate.setHours(h,m,0,0);
+  const graceEnd=new Date(eventDate.getTime()+CAL_EVENT_GRACE_MINUTES*60000);
+  return new Date()>=graceEnd;
+}
+
+// CALタブを開いたまま放置していても、グレーアウト状態がリアルタイムで反映されるよう、
+// 1分おきに軽量更新する。他のタブを見ている間は、無駄な処理をしないよう自動的に停止する
+let _calAutoRefreshTimer=null;
+function startCalAutoRefresh(){
+  if(_calAutoRefreshTimer)return; // 既に動いていれば二重に開始しない
+  _calAutoRefreshTimer=setInterval(()=>{
+    // 万が一タブが切り替わっていた場合の保険（switchTab側で止め忘れても、ここで安全に停止する）
+    const calTabActive=document.getElementById('content-cal')?.classList.contains('active');
+    if(!calTabActive){stopCalAutoRefresh();return;}
+    refreshCalExpiredStates();
+  },60000);
+}
+function stopCalAutoRefresh(){
+  if(_calAutoRefreshTimer){clearInterval(_calAutoRefreshTimer);_calAutoRefreshTimer=null;}
+}
+// 1分おきの定期更新専用：HTML全体を作り直す代わりに、既存の.cal-event要素へ
+// グレーアウトのクラスだけを付け外しする（DOM再構築を避け、負荷を最小限にする）。
+// 並び替えモード中は data-event-idx を持つ要素が存在しないため、自然に何もしない
+function refreshCalExpiredStates(){
+  const mon=getWeekMonday();
+  document.querySelectorAll('.cal-day').forEach(dayEl=>{
+    const dayIdx=parseInt(dayEl.dataset.calDayIdx,10);
+    if(isNaN(dayIdx))return;
+    dayEl.querySelectorAll('.cal-event[data-event-idx]').forEach(evEl=>{
+      const timeEl=evEl.querySelector('.cal-event-time');
+      const timeStr=timeEl?timeEl.textContent:'';
+      const expired=isCalEventExpired(mon,dayIdx,timeStr);
+      evEl.classList.toggle('cal-event-expired',expired);
+    });
+  });
+}
+
+// SIZERタブの「今日の重要指標」も、開いたまま放置していればリアルタイムでグレーアウトを反映する
+let _sizerTodayAutoRefreshTimer=null;
+function startSizerTodayAutoRefresh(){
+  if(_sizerTodayAutoRefreshTimer)return;
+  _sizerTodayAutoRefreshTimer=setInterval(()=>{
+    const sizerTabActive=document.getElementById('content-sizer')?.classList.contains('active');
+    if(!sizerTabActive){stopSizerTodayAutoRefresh();return;}
+    refreshSizerTodayExpiredStates();
+  },60000);
+}
+function stopSizerTodayAutoRefresh(){
+  if(_sizerTodayAutoRefreshTimer){clearInterval(_sizerTodayAutoRefreshTimer);_sizerTodayAutoRefreshTimer=null;}
+}
+// CAL側と同じ考え方：件数が少ないため効果は限定的だが、設計の一貫性のため同様に軽量化する
+function refreshSizerTodayExpiredStates(){
+  const wrap=document.getElementById('sizer-today-events');
+  if(!wrap||wrap.style.display==='none')return;
+  const rows=wrap.querySelectorAll('.sizer-today-row');
+  if(rows.length===0)return;
+  const mon=getWeekMonday();
+  const todayStr=calDateStr(new Date());
+  let dayIdx=-1;
+  for(let i=0;i<6;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    if(calDateStr(d)===todayStr){dayIdx=i;break;}
+  }
+  if(dayIdx===-1)return;
+  rows.forEach(rowEl=>{
+    const timeEl=rowEl.querySelector('.sizer-today-time');
+    const timeStr=timeEl?timeEl.textContent:'';
+    const expired=isCalEventExpired(mon,dayIdx,timeStr==='--:--'?'':timeStr);
+    rowEl.classList.toggle('sizer-today-row-expired',expired);
+  });
+}
+
 // ===== CAL DATA (FF+Cult unified) =====
 const CAL_KEY_PROD='ps_cal_v3';
 const CAL_KEY_DEBUG='ps_cal_v3_debug';
@@ -3461,7 +3557,8 @@ function renderCalendar(){
     const events=(calData[i]||[]).map(e=>({
       time:e.time,cur:e.cur,event:e.event||'',
       dot:e.cat==='red'?'🔴':e.cat==='orange'?'🟠':'🟢',
-      regSrc:e.src||'' // IMG経由で登録された場合のみ 'auto' または 'manual'
+      regSrc:e.src||'', // IMG経由で登録された場合のみ 'auto' または 'manual'
+      expired:isCalEventExpired(mon,i,e.time)
     }));
     const hasRed=events.some(e=>e.dot==='🔴'),hasOrange=events.some(e=>e.dot==='🟠');
     const badge=events.length===0?'<span class="cal-day-badge free">FREE</span>':
@@ -3480,7 +3577,7 @@ function renderCalendar(){
           const downDisabled=j===events.length-1?' disabled':'';
           html+=`<div class="cal-event sort-mode"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-sort-btn" onclick="moveCultItem(${i},${j},-1)"${upDisabled}>▲</button><button class="cal-sort-btn" onclick="moveCultItem(${i},${j},1)"${downDisabled}>▼</button></div>`;
         }else{
-          html+=`<div class="cal-event"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
+          html+=`<div class="cal-event${e.expired?' cal-event-expired':''}" data-event-idx="${j}"><span class="cal-event-dot">${e.dot}</span><span class="cal-event-time">${e.time}</span><span class="cal-event-cur">${e.cur}</span>${eventName}<button class="cal-event-edit" onclick="openEditEventSheet(${i},'${e.time}','${e.cur}')">✏️</button><button class="cal-event-del" onclick="cultDel(${i},${j})">×</button></div>`;
         }
       });
       html+=`</div>`;
@@ -4045,6 +4142,7 @@ applySizerBulkRevertUI();
 applyHeaderVersionFromChangelog();
 applySettingsFoldState();
 applyAccentColorSwatchUI();
+startSizerTodayAutoRefresh();
 </script>
 </body>
 </html>
